@@ -29,7 +29,7 @@ constexpr MemoryReference undefined_memory_reference = std::numeric_limits<Memor
 using AllocationCost = unsigned int;
 
 /*
- * Paging algorithms.
+ * Replacement algorithms.
  */
 class ReplacementAlgorithm
 {

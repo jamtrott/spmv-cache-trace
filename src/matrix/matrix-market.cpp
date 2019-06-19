@@ -169,11 +169,6 @@ Size readSize(std::istream & i, Format format)
     }
 }
 
-std::istream & operator>>(std::istream & i, CoordinateEntry & e)
-{
-    return i >> e.i >> e.j >> e.a;
-}
-
 std::vector<CoordinateEntry> readEntries(
     std::istream & i,
     Size const & size)

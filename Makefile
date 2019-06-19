@@ -68,6 +68,7 @@ spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(matrix_a) 
 # Testing
 .PHONY: check
 check: unittest
+	./unittest
 
 # Build the unit testing framework
 gtest_headers = $(GTEST_ROOT)/include/gtest/*.h \

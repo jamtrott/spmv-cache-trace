@@ -1,5 +1,5 @@
 # Configuration
-CXXFLAGS=-O2 -g -fopenmp
+CXXFLAGS=-O2 -g -fopenmp -Wall
 INCLUDES=-Isrc
 LDFLAGS=-lz
 

@@ -43,7 +43,7 @@ cache_simulation_sources = \
 	src/cache-simulation/fifo.cpp \
 	src/cache-simulation/lru.cpp \
 	src/cache-simulation/rand.cpp \
-	src/cache-simulation/page-replacement.cpp
+	src/cache-simulation/replacement.cpp
 cache_simulation_objects := \
 	$(foreach source,$(cache_simulation_sources),$(source:.cpp=.o))
 
@@ -93,7 +93,7 @@ unittest_sources = \
 	test/test_coordinate-matrix.cpp \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
-	test/test_page-replacement.cpp
+	test/test_replacement.cpp
 unittest_objects := \
 	$(foreach source,$(unittest_sources),$(source:.cpp=.o))
 

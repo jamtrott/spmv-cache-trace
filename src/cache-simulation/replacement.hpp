@@ -1,5 +1,5 @@
-#ifndef PAGE_REPLACEMENT_PAGE_REPLACEMENT_HPP
-#define PAGE_REPLACEMENT_PAGE_REPLACEMENT_HPP
+#ifndef REPLACEMENT_HPP
+#define REPLACEMENT_HPP
 
 /*
  * Performance models for page replacement algorithms, loosely
@@ -18,7 +18,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace page_replacement
+namespace replacement
 {
 
 using Page = uintptr_t;

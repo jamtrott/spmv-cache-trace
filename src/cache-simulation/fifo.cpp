@@ -1,10 +1,10 @@
-#include "cache-simulation/page-replacement.hpp"
+#include "cache-simulation/replacement.hpp"
 
 #include <algorithm>
 #include <queue>
 #include <set>
 
-namespace page_replacement
+namespace replacement
 {
 
 FIFO::FIFO(

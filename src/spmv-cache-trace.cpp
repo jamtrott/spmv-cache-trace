@@ -1,6 +1,6 @@
 #include "spmv-cache-trace.hpp"
 
-#include "cache-simulation/page-replacement.hpp"
+#include "cache-simulation/replacement.hpp"
 
 #include <iterator>
 #include <numeric>
@@ -16,10 +16,10 @@ CacheComplexityEstimate estimate_spmv_cache_complexity_private(
     unsigned int cache_line_size)
 {
     auto cache_lines = (cache_size + cache_line_size - 1u) / cache_line_size;
-    auto A = page_replacement::LRU(cache_lines);
+    auto A = replacement::LRU(cache_lines);
     auto w = matrix.spmv_page_reference_string(
         x, y, thread, num_threads, cache_line_size);
-    auto cache_misses = page_replacement::cost(A, w);
+    auto cache_misses = replacement::cost(A, w);
     return cache_misses;
 }
 
@@ -48,7 +48,7 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
     unsigned int cache_size,
     unsigned int cache_line_size)
 {
-    using RefString = page_replacement::PageReferenceString;
+    using RefString = replacement::PageReferenceString;
     std::vector<RefString> ws(num_threads);
     std::vector<RefString::const_iterator> its(num_threads);
     std::vector<RefString::const_iterator> ends(num_threads);
@@ -60,8 +60,8 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
     }
 
     auto cache_lines = (cache_size + cache_line_size - 1u) / cache_line_size;
-    auto A = page_replacement::LRU(cache_lines);
-    auto cache_misses = page_replacement::cost(A, ws);
+    auto A = replacement::LRU(cache_lines);
+    auto cache_misses = replacement::cost(A, ws);
     return cache_misses;
 }
 

@@ -1,11 +1,11 @@
-#include "cache-simulation/page-replacement.hpp"
+#include "cache-simulation/replacement.hpp"
 
 #include <iterator>
 #include <numeric>
 #include <ostream>
 #include <utility>
 
-namespace page_replacement
+namespace replacement
 {
 
 unsigned int cost(
@@ -57,7 +57,7 @@ std::ostream & operator<<(
 
     o << '(';
     std::copy(std::begin(w), std::end(w) - 1u,
-              std::ostream_iterator<page_replacement::Page>(o, ", "));
+              std::ostream_iterator<replacement::Page>(o, ", "));
     return o << w[w.size()-1u] << ')';
 }
 

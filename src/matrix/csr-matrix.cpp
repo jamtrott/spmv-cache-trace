@@ -25,11 +25,11 @@ Matrix::Matrix()
 }
 
 Matrix::Matrix(
-    int rows,
-    int columns,
-    int numEntries,
-    int row_alignment,
-    index_array_type const row_ptr,
+    index_type rows,
+    index_type columns,
+    size_type numEntries,
+    index_type row_alignment,
+    size_array_type const row_ptr,
     index_array_type const column_index,
     value_array_type const value)
     : rows(rows)
@@ -58,7 +58,7 @@ std::size_t Matrix::index_size() const
         + sizeof(decltype(column_index)::value_type) * column_index.size();
 }
 
-int Matrix::num_padding_entries() const
+size_type Matrix::num_padding_entries() const
 {
     return 0;
 }
@@ -73,23 +73,23 @@ std::size_t Matrix::index_padding_size() const
     return sizeof(decltype(column_index)::value_type) * num_padding_entries();
 }
 
-int Matrix::spmv_rows_per_thread(int thread, int num_threads) const
+index_type Matrix::spmv_rows_per_thread(int thread, int num_threads) const
 {
-    int rows_per_thread = (rows + num_threads - 1) / num_threads;
-    int start_row = std::min(rows, thread * rows_per_thread);
-    int end_row = std::min(rows, (thread + 1) * rows_per_thread);
-    int rows = end_row - start_row;
+    index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
+    index_type start_row = std::min(rows, thread * rows_per_thread);
+    index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
+    index_type rows = end_row - start_row;
     return rows;
 }
 
-int Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
+size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
 {
-    int rows_per_thread = (rows + num_threads - 1) / num_threads;
-    int start_row = std::min(rows, thread * rows_per_thread);
-    int end_row = std::min(rows, (thread + 1) * rows_per_thread);
-    int start_nonzero = row_ptr[start_row];
-    int end_nonzero = row_ptr[end_row];
-    int nonzeros = end_nonzero - start_nonzero;
+    index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
+    index_type start_row = std::min(rows, thread * rows_per_thread);
+    index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
+    size_type start_nonzero = row_ptr[start_row];
+    size_type end_nonzero = row_ptr[end_row];
+    size_type nonzeros = end_nonzero - start_nonzero;
     return nonzeros;
 }
 
@@ -100,22 +100,22 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     int num_threads,
     int cache_line_size) const
 {
-    int rows_per_thread = (rows + num_threads - 1) / num_threads;
-    int start_row = std::min(rows, thread * rows_per_thread);
-    int end_row = std::min(rows, (thread + 1) * rows_per_thread);
-    int rows = end_row - start_row;
-    int start_nonzero = row_ptr[start_row];
-    int end_nonzero = row_ptr[end_row];
-    int nonzeros = end_nonzero - start_nonzero;
+    index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
+    index_type start_row = std::min(rows, thread * rows_per_thread);
+    index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
+    index_type rows = end_row - start_row;
+    size_type start_nonzero = row_ptr[start_row];
+    size_type end_nonzero = row_ptr[end_row];
+    size_type nonzeros = end_nonzero - start_nonzero;
 
-    int num_references = 3 * nonzeros + 2 * rows + 1;
+    size_type num_references = 3 * nonzeros + 2 * rows + 1;
     auto w = std::vector<uintptr_t>(num_references, 0ul);
-    int l = 0;
+    size_type l = 0;
     w[l++] = uintptr_t(&row_ptr[start_row]) / cache_line_size;
-    for (int i = start_row; i < end_row; ++i) {
+    for (index_type i = start_row; i < end_row; ++i) {
         w[l++] = uintptr_t(&row_ptr[i+1]) / cache_line_size;
-        for (int k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
-            auto j = column_index[k];
+        for (size_type k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
+            index_type j = column_index[k];
             w[l++] = uintptr_t(&column_index[k]) / cache_line_size;
             w[l++] = uintptr_t(&value[k]) / cache_line_size;
             w[l++] = uintptr_t(&x[j]) / cache_line_size;
@@ -175,7 +175,7 @@ Matrix from_matrix_market(
 
 Matrix from_matrix_market_row_aligned(
     matrix_market::Matrix const & m,
-    int row_alignment)
+    index_type row_alignment)
 {
     if (m.header.format != matrix_market::Format::coordinate)
         throw std::invalid_argument("Expected matrix in coordinate format");
@@ -184,11 +184,11 @@ Matrix from_matrix_market_row_aligned(
         matrix_market::Matrix::Order::row_major);
 
     // Compute the length of each row, including padding for alignment
-    Matrix::index_array_type row_ptr(m.rows()+1u, 0u);
-    auto k = 0;
-    auto l = 0;
-    for (auto r = 0; r < m.rows(); ++r) {
-        while (l < entries.size() && entries[l].i - 1 == r) {
+    size_array_type row_ptr(m.rows() + 1, 0);
+    size_type k = 0;
+    size_type l = 0;
+    for (index_type r = 0; r < m.rows(); ++r) {
+        while (l < (size_type) entries.size() && entries[l].i - 1 == r) {
             l++;
             k++;
         }
@@ -197,13 +197,13 @@ Matrix from_matrix_market_row_aligned(
     }
 
     // Determine the column indices and values
-    Matrix::index_array_type columns(row_ptr[m.rows()], 0);
-    Matrix::value_array_type values(row_ptr[m.rows()], 0.0);
+    index_array_type columns(row_ptr[m.rows()], 0);
+    value_array_type values(row_ptr[m.rows()], 0.0);
     k = 0;
     l = 0;
-    for (auto r = 0; r < m.rows(); ++r) {
-        while (l < entries.size() && entries[l].i - 1 == r) {
-            columns[k] = entries[l].j - 1u;
+    for (index_type r = 0; r < m.rows(); ++r) {
+        while (l < (size_type) entries.size() && entries[l].i - 1 == r) {
+            columns[k] = entries[l].j - 1;
             values[k] = entries[l].a;
             ++k;
             ++l;
@@ -221,11 +221,11 @@ Matrix from_matrix_market_row_aligned(
         row_alignment, row_ptr, columns, values);
 }
 
-csr_matrix::Matrix::value_array_type operator*(
+csr_matrix::value_array_type operator*(
     csr_matrix::Matrix const & A,
-    csr_matrix::Matrix::value_array_type const & x)
+    csr_matrix::value_array_type const & x)
 {
-    if (A.columns != x.size()) {
+    if (A.columns != (index_type) x.size()) {
         throw std::invalid_argument(
             "Size mismatch: "s +
             "A.size()="s + (
@@ -233,12 +233,12 @@ csr_matrix::Matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
-    csr_matrix::Matrix::value_array_type y(A.rows, 0.0);
+    csr_matrix::value_array_type y(A.rows, 0.0);
     spmv(A, x, y);
     return y;
 }
 
-int spmv_rows_per_thread(
+index_type spmv_rows_per_thread(
     Matrix const & A,
     int thread,
     int num_threads)
@@ -246,7 +246,7 @@ int spmv_rows_per_thread(
     return A.spmv_rows_per_thread(thread, num_threads);
 }
 
-int spmv_nonzeros_per_thread(
+size_type spmv_nonzeros_per_thread(
     Matrix const & A,
     int thread,
     int num_threads)

@@ -3,6 +3,7 @@
 
 #include "util/aligned-allocator.hpp"
 
+#include <cstdint>
 #include <iosfwd>
 #include <vector>
 
@@ -11,22 +12,24 @@ namespace matrix_market { class Matrix; }
 namespace csr_matrix
 {
 
+typedef int32_t size_type;
+typedef int32_t index_type;
+typedef double value_type;
+typedef std::vector<size_type, aligned_allocator<index_type, 64>> size_array_type;
+typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
+typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
+
 struct Matrix
 {
 public:
 
-    typedef int index_type;
-    typedef double value_type;
-    typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
-    typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
-
 public:
     Matrix();
-    Matrix(int rows,
-           int columns,
-           int numEntries,
-           int row_alignment,
-           index_array_type const row_ptr,
+    Matrix(index_type rows,
+           index_type columns,
+           size_type numEntries,
+           index_type row_alignment,
+           size_array_type const row_ptr,
            index_array_type const column_index,
            value_array_type const value);
 
@@ -38,12 +41,12 @@ public:
     std::size_t size() const;
     std::size_t value_size() const;
     std::size_t index_size() const;
-    int num_padding_entries() const;
+    size_type num_padding_entries() const;
     std::size_t value_padding_size() const;
     std::size_t index_padding_size() const;
 
-    int spmv_rows_per_thread(int thread, int num_threads) const;
-    int spmv_nonzeros_per_thread(int thread, int num_threads) const;
+    index_type spmv_rows_per_thread(int thread, int num_threads) const;
+    size_type spmv_nonzeros_per_thread(int thread, int num_threads) const;
 
     std::vector<uintptr_t> spmv_memory_reference_reference_string(
         value_array_type const & x,
@@ -53,11 +56,11 @@ public:
         int cache_line_size) const;
 
 public:
-    int const rows;
-    int const columns;
-    int const numEntries;
-    int row_alignment;
-    index_array_type const row_ptr;
+    index_type const rows;
+    index_type const columns;
+    size_type const numEntries;
+    index_type row_alignment;
+    size_array_type const row_ptr;
     index_array_type const column_index;
     value_array_type const value;
 };
@@ -70,74 +73,74 @@ Matrix from_matrix_market(
 
 Matrix from_matrix_market_row_aligned(
     matrix_market::Matrix const & m,
-    int row_alignment);
+    index_type row_alignment);
 
-Matrix::value_array_type operator*(
+value_array_type operator*(
     Matrix const & A,
-    Matrix::value_array_type const & x);
+    value_array_type const & x);
 
 void spmv(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y,
-    int chunk_size = 0);
+    value_array_type const & x,
+    value_array_type & y,
+    index_type chunk_size = 0);
 
 void spmv_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll2(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll2_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll2_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll4(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll4_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_unroll4_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_regular_traffic(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
 void spmv_irregular_traffic(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
-int spmv_rows_per_thread(
+index_type spmv_rows_per_thread(
     Matrix const & A,
     int thread,
     int num_threads);
 
-int spmv_nonzeros_per_thread(
+size_type spmv_nonzeros_per_thread(
     Matrix const & A,
     int thread,
     int num_threads);

@@ -12,6 +12,13 @@ namespace matrix_market { class Matrix; }
 namespace source_vector_only_matrix
 {
 
+typedef int32_t size_type;
+typedef int32_t index_type;
+typedef double value_type;
+typedef std::vector<size_type, aligned_allocator<index_type, 64>> size_array_type;
+typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
+typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
+
 enum class Order { general, column_major, row_major };
 
 std::string to_string(Order o);
@@ -19,18 +26,11 @@ std::string to_string(Order o);
 class Matrix
 {
 public:
-
-    typedef unsigned int index_type;
-    typedef double value_type;
-    typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
-    typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
-
-public:
     Matrix();
     Matrix(
-        unsigned int rows,
-        unsigned int columns,
-        unsigned int numEntries,
+        index_type rows,
+        index_type columns,
+        size_type numEntries,
         Order order,
         index_array_type const & row_index,
         index_array_type const & column_index,
@@ -44,7 +44,7 @@ public:
     std::size_t size() const;
     std::size_t value_size() const;
     std::size_t index_size() const;
-    unsigned int num_padding_entries() const;
+    size_type num_padding_entries() const;
     std::size_t value_padding_size() const;
     std::size_t index_padding_size() const;
 
@@ -56,9 +56,9 @@ public:
         unsigned int cache_line_size) const;
 
 public:
-    unsigned int const rows;
-    unsigned int const columns;
-    unsigned int const numEntries;
+    index_type const rows;
+    index_type const columns;
+    size_type const numEntries;
     Order const order;
     index_array_type const row_index;
     index_array_type const column_index;
@@ -77,12 +77,12 @@ Matrix from_matrix_market(
 
 void spmv(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y);
+    value_array_type const & x,
+    value_array_type & y);
 
-Matrix::value_array_type operator*(
+value_array_type operator*(
     Matrix const & A,
-    Matrix::value_array_type const & x);
+    value_array_type const & x);
 
 }
 

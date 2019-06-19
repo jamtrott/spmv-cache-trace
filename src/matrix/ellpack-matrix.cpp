@@ -27,10 +27,10 @@ Matrix::Matrix()
 }
 
 Matrix::Matrix(
-    unsigned int rows,
-    unsigned int columns,
-    unsigned int numEntries,
-    unsigned int rowLength,
+    index_type rows,
+    index_type columns,
+    size_type numEntries,
+    index_type rowLength,
     index_array_type const & column_index,
     value_array_type const & value,
     bool skip_padding)
@@ -59,7 +59,7 @@ std::size_t Matrix::index_size() const
     return sizeof(decltype(column_index)::value_type) * column_index.size();
 }
 
-unsigned int Matrix::num_padding_entries() const
+size_type Matrix::num_padding_entries() const
 {
     return value.size() - numEntries;
 }
@@ -82,10 +82,10 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     unsigned int cache_line_size) const
 {
     auto w = std::vector<uintptr_t>{};
-    for (auto i = 0u; i < rows; ++i) {
-        for (auto l = 0u; l < rowLength; ++l) {
-            auto k = i * rowLength + l;
-            auto j = column_index[k];
+    for (index_type i = 0u; i < rows; ++i) {
+        for (index_type l = 0u; l < rowLength; ++l) {
+            size_type k = i * rowLength + l;
+            index_type j = column_index[k];
             w.push_back(uintptr_t(&x[j]) / cache_line_size);
         }
         w.push_back(uintptr_t(&y[i]) / cache_line_size);
@@ -152,21 +152,21 @@ Matrix from_matrix_market(
         matrix_market::Matrix::Order::row_major);
 
     // Insert the values and column indices with the required padding
-    Matrix::index_array_type columns(numEntries, 0u);
-    Matrix::value_array_type values(numEntries, 0.0);
-    auto k = 0u;
-    auto l = 0u;
-    for (auto r = 0u; r < m.rows(); ++r) {
-        while (k < entries.size() && entries[k].i - 1u == r) {
-            columns[l] = entries[k].j - 1u;
+    index_array_type columns(numEntries, 0u);
+    value_array_type values(numEntries, 0.0);
+    size_type k = 0;
+    size_type l = 0;
+    for (index_type r = 0; r < m.rows(); ++r) {
+        while (k < (size_type) entries.size() && entries[k].i - 1 == r) {
+            columns[l] = entries[k].j - 1;
             values[l] = entries[k].a;
             ++k;
             ++l;
         }
-        while (l < (r + 1u) * row_length) {
+        while (l < (r + 1) * row_length) {
             columns[l] = skip_padding
-                ? std::numeric_limits<unsigned int>::max()
-                : entries[k-1u].j - 1u;
+                ? std::numeric_limits<index_type>::max()
+                : entries[k-1].j - 1;
             values[l] = 0.0;
             ++l;
         }
@@ -181,16 +181,17 @@ namespace
 {
 
 void __attribute__ ((noinline)) ellpack_spmv(
-    unsigned int const rows,
-    unsigned int const rowLength,
-    unsigned int const * column_index,
-    double const * value,
-    double const * x,
-    double * y)
+    index_type const rows,
+    index_type const rowLength,
+    index_type const * column_index,
+    value_type const * value,
+    value_type const * x,
+    value_type * y)
 {
-    unsigned int i, k, l;
-    for (i = 0u; i < rows; ++i) {
-        for (l = 0u; l < rowLength; ++l) {
+    index_type i, l;
+    size_type k;
+    for (i = 0; i < rows; ++i) {
+        for (l = 0; l < rowLength; ++l) {
             k = i * rowLength + l;
             y[i] += value[k] * x[column_index[k]];
         }
@@ -198,21 +199,22 @@ void __attribute__ ((noinline)) ellpack_spmv(
 }
 
 void ellpack_spmv_skip_padding(
-    unsigned int const rows,
-    unsigned int const rowLength,
-    unsigned int const * column_index,
-    double const * value,
-    double const * x,
-    double * y)
+    index_type const rows,
+    index_type const rowLength,
+    index_type const * column_index,
+    value_type const * value,
+    value_type const * x,
+    value_type * y)
 {
-    unsigned int i, j, k, l;
-    double z;
+    index_type i, j, k;
+    size_type l;
+    value_type z;
     for (i = 0u; i < rows; ++i) {
         z = 0.0;
         for (j = 0u; j < rowLength; ++j) {
             l = i * rowLength + j;
             k = column_index[l];
-            if (k == std::numeric_limits<unsigned int>::max())
+            if (k == std::numeric_limits<index_type>::max())
                 break;
             z += value[l] * x[k];
         }
@@ -224,18 +226,18 @@ void ellpack_spmv_skip_padding(
 
 void spmv(
     ellpack_matrix::Matrix const & A,
-    ellpack_matrix::Matrix::value_array_type const & x,
-    ellpack_matrix::Matrix::value_array_type & y)
+    ellpack_matrix::value_array_type const & x,
+    ellpack_matrix::value_array_type & y)
 {
     ellpack_spmv(A.rows, A.rowLength, A.column_index.data(),
                  A.value.data(), x.data(), y.data());
 }
 
-ellpack_matrix::Matrix::value_array_type operator*(
+ellpack_matrix::value_array_type operator*(
     Matrix const & A,
-    ellpack_matrix::Matrix::value_array_type const & x)
+    ellpack_matrix::value_array_type const & x)
 {
-    if (A.columns != x.size()) {
+    if (A.columns != (index_type) x.size()) {
         throw std::invalid_argument(
             "Size mismatch: "s +
             "A.size()="s + (
@@ -243,7 +245,7 @@ ellpack_matrix::Matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
-    ellpack_matrix::Matrix::value_array_type y(A.rows, 0.0);
+    ellpack_matrix::value_array_type y(A.rows, 0.0);
     if (!A.skip_padding) {
         ellpack_spmv(
             A.rows, A.rowLength, A.column_index.data(),

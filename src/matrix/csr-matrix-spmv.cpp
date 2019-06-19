@@ -15,92 +15,92 @@
 using namespace csr_matrix;
 
 inline void csr_spmv_inner_loop(
-    int i,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type i,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
-    double z = 0.0;
-    for (int k = p[i]; k < p[i+1]; ++k)
+    value_type z = 0.0;
+    for (size_type k = p[i]; k < p[i+1]; ++k)
         z += a[k] * x[j[k]];
     y[i] += z;
 }
 
 inline void csr_spmv_inner_loop_regular_traffic(
-    int i,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type i,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
-    double z = 0.0;
-    for (int k = p[i]; k < p[i+1]; ++k)
+    value_type z = 0.0;
+    for (size_type k = p[i]; k < p[i+1]; ++k)
         z += a[k];
     y[i] += z;
 }
 
 inline void csr_spmv_inner_loop_irregular_traffic(
-    int i,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type i,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
-    double z = 0.0;
-    for (int k = p[i]; k < p[i+1]; ++k)
+    value_type z = 0.0;
+    for (size_type k = p[i]; k < p[i+1]; ++k)
         z += x[j[k]];
     y[i] += z;
 }
 
 inline void csr_spmv(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y,
-    int chunk_size)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y,
+    index_type chunk_size)
 {
     #pragma omp for nowait schedule(static, chunk_size)
-    for (int i = 0; i < m; ++i) {
+    for (index_type i = 0; i < m; ++i) {
         csr_spmv_inner_loop(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll2(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~1); i+=2) {
+    for (index_type i = 0; i < (m & ~1); i+=2) {
         csr_spmv_inner_loop(i, p, j, a, x, y);
         csr_spmv_inner_loop(i+1, p, j, a, x, y);
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~1); i < m; ++i) {
+    for (index_type i = (m & ~1); i < m; ++i) {
         csr_spmv_inner_loop(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll4(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~3); i+=4) {
+    for (index_type i = 0; i < (m & ~3); i+=4) {
         csr_spmv_inner_loop(i, p, j, a, x, y);
         csr_spmv_inner_loop(i+1, p, j, a, x, y);
         csr_spmv_inner_loop(i+2, p, j, a, x, y);
@@ -108,44 +108,44 @@ inline void csr_spmv_unroll4(
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~3); i < m; ++i) {
+    for (index_type i = (m & ~3); i < m; ++i) {
         csr_spmv_inner_loop(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_regular_traffic(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < m; ++i) {
+    for (index_type i = 0; i < m; ++i) {
         csr_spmv_inner_loop_regular_traffic(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_irregular_traffic(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < m; ++i) {
+    for (index_type i = 0; i < m; ++i) {
         csr_spmv_inner_loop_irregular_traffic(i, p, j, a, x, y);
     }
 }
 
 void csr_matrix::spmv(
     csr_matrix::Matrix const & A,
-    csr_matrix::Matrix::value_array_type const & x,
-    csr_matrix::Matrix::value_array_type & y,
-    int chunk_size)
+    csr_matrix::value_array_type const & x,
+    csr_matrix::value_array_type & y,
+    index_type chunk_size)
 {
     if (chunk_size <= 0) {
         int num_threads = omp_get_num_threads();
@@ -160,8 +160,8 @@ void csr_matrix::spmv(
 
 void csr_matrix::spmv_unroll2(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll2(
         A.rows, A.row_ptr.data(),
@@ -171,8 +171,8 @@ void csr_matrix::spmv_unroll2(
 
 void csr_matrix::spmv_unroll4(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll4(
         A.rows, A.row_ptr.data(),
@@ -182,8 +182,8 @@ void csr_matrix::spmv_unroll4(
 
 void csr_matrix::spmv_regular_traffic(
     csr_matrix::Matrix const & A,
-    csr_matrix::Matrix::value_array_type const & x,
-    csr_matrix::Matrix::value_array_type & y)
+    csr_matrix::value_array_type const & x,
+    csr_matrix::value_array_type & y)
 {
     csr_spmv_regular_traffic(
         A.rows, A.row_ptr.data(),
@@ -193,8 +193,8 @@ void csr_matrix::spmv_regular_traffic(
 
 void csr_matrix::spmv_irregular_traffic(
     csr_matrix::Matrix const & A,
-    csr_matrix::Matrix::value_array_type const & x,
-    csr_matrix::Matrix::value_array_type & y)
+    csr_matrix::value_array_type const & x,
+    csr_matrix::value_array_type & y)
 {
     csr_spmv_irregular_traffic(
         A.rows, A.row_ptr.data(),
@@ -204,19 +204,19 @@ void csr_matrix::spmv_irregular_traffic(
 
 #ifdef __AVX__
 inline void csr_spmv_inner_loop_avx128(
-    int i,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type i,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     __m64 j_;
     __m128d z_ = _mm_setzero_pd();
     __m128d a_;
     __m128d x_;
 
-    int k = p[i];
+    size_type k = p[i];
     if ((k & 1) && (k < p[i+1])) {
         a_ = _mm_load_sd(&a[k]);
         x_ = _mm_load_sd(&x[j[k]]);
@@ -243,49 +243,49 @@ inline void csr_spmv_inner_loop_avx128(
 }
 
 inline void csr_spmv_avx128(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < m; ++i) {
+    for (index_type i = 0; i < m; ++i) {
         csr_spmv_inner_loop_avx128(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll2_avx128(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~1); i+=2) {
+    for (index_type i = 0; i < (m & ~1); i+=2) {
         csr_spmv_inner_loop_avx128(i, p, j, a, x, y);
         csr_spmv_inner_loop_avx128(i+1, p, j, a, x, y);
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~1); i < m; ++i) {
+    for (index_type i = (m & ~1); i < m; ++i) {
         csr_spmv_inner_loop_avx128(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll4_avx128(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~3); i+=4) {
+    for (index_type i = 0; i < (m & ~3); i+=4) {
         csr_spmv_inner_loop_avx128(i, p, j, a, x, y);
         csr_spmv_inner_loop_avx128(i+1, p, j, a, x, y);
         csr_spmv_inner_loop_avx128(i+2, p, j, a, x, y);
@@ -293,15 +293,15 @@ inline void csr_spmv_unroll4_avx128(
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~3); i < m; ++i) {
+    for (index_type i = (m & ~3); i < m; ++i) {
         csr_spmv_inner_loop_avx128(i, p, j, a, x, y);
     }
 }
 
 void csr_matrix::spmv_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_avx128(
         A.rows, A.row_ptr.data(),
@@ -311,8 +311,8 @@ void csr_matrix::spmv_avx128(
 
 void csr_matrix::spmv_unroll2_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll2_avx128(
         A.rows, A.row_ptr.data(),
@@ -322,8 +322,8 @@ void csr_matrix::spmv_unroll2_avx128(
 
 void csr_matrix::spmv_unroll4_avx128(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll4_avx128(
         A.rows, A.row_ptr.data(),
@@ -334,18 +334,18 @@ void csr_matrix::spmv_unroll4_avx128(
 
 #ifdef __AVX2__
 inline void csr_spmv_inner_loop_avx256(
-    int i,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type i,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     __m128i j_;
     __m256d a_;
     __m256d x_;
     __m256d z_ = _mm256_setzero_pd();
-    int k = p[i];
+    size_type k = p[i];
 
     if ((k & 1) && (k < p[i+1])) {
         assert(k < p[i+1]);
@@ -399,49 +399,49 @@ inline void csr_spmv_inner_loop_avx256(
 }
 
 inline void csr_spmv_avx256(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < m; ++i) {
+    for (index_type i = 0; i < m; ++i) {
         csr_spmv_inner_loop_avx256(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll2_avx256(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~1); i+=2) {
+    for (index_type i = 0; i < (m & ~1); i+=2) {
         csr_spmv_inner_loop_avx256(i, p, j, a, x, y);
         csr_spmv_inner_loop_avx256(i+1, p, j, a, x, y);
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~1); i < m; ++i) {
+    for (index_type i = (m & ~1); i < m; ++i) {
         csr_spmv_inner_loop_avx256(i, p, j, a, x, y);
     }
 }
 
 inline void csr_spmv_unroll4_avx256(
-    int m,
-    int const * p,
-    int const * j,
-    double const * a,
-    double const * x,
-    double * y)
+    index_type m,
+    size_type const * p,
+    index_type const * j,
+    value_type const * a,
+    value_type const * x,
+    value_type * y)
 {
     #pragma omp for nowait
-    for (int i = 0; i < (m & ~3); i+=4) {
+    for (index_type i = 0; i < (m & ~3); i+=4) {
         csr_spmv_inner_loop_avx256(i, p, j, a, x, y);
         csr_spmv_inner_loop_avx256(i+1, p, j, a, x, y);
         csr_spmv_inner_loop_avx256(i+2, p, j, a, x, y);
@@ -449,15 +449,15 @@ inline void csr_spmv_unroll4_avx256(
     }
 
     #pragma omp single nowait
-    for (int i = (m & ~3); i < m; ++i) {
+    for (index_type i = (m & ~3); i < m; ++i) {
         csr_spmv_inner_loop_avx256(i, p, j, a, x, y);
     }
 }
 
 void csr_matrix::spmv_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_avx256(
         A.rows, A.row_ptr.data(),
@@ -467,8 +467,8 @@ void csr_matrix::spmv_avx256(
 
 void csr_matrix::spmv_unroll2_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll2_avx256(
         A.rows, A.row_ptr.data(),
@@ -478,8 +478,8 @@ void csr_matrix::spmv_unroll2_avx256(
 
 void csr_matrix::spmv_unroll4_avx256(
     Matrix const & A,
-    Matrix::value_array_type const & x,
-    Matrix::value_array_type & y)
+    value_array_type const & x,
+    value_array_type & y)
 {
     csr_spmv_unroll4_avx256(
         A.rows, A.row_ptr.data(),

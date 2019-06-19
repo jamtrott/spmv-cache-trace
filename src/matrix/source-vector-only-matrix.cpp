@@ -38,9 +38,9 @@ Matrix::Matrix()
 }
 
 Matrix::Matrix(
-    unsigned int rows,
-    unsigned int columns,
-    unsigned int numEntries,
+    index_type rows,
+    index_type columns,
+    size_type numEntries,
     Order order,
     index_array_type const & row_index,
     index_array_type const & column_index,
@@ -71,7 +71,7 @@ std::size_t Matrix::index_size() const
         + sizeof(decltype(column_index)::value_type) * column_index.size();
 }
 
-unsigned int Matrix::num_padding_entries() const
+size_type Matrix::num_padding_entries() const
 {
     return 0u;
 }
@@ -96,7 +96,8 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     unsigned int cache_line_size) const
 {
     auto w = std::vector<uintptr_t>(2 * numEntries);
-    for (auto k = 0u, l = 0u; k < numEntries; ++k, l += 2) {
+    size_type k, l;
+    for (k = 0, l = 0; k < numEntries; ++k, l += 2) {
         auto j = column_index[k];
         w[l] = uintptr_t(&column_index[k]) / cache_line_size;
         w[l+1] = uintptr_t(&x[j]) / cache_line_size;
@@ -177,9 +178,9 @@ Matrix from_matrix_market(
             { return std::tie(a.i, a.j) < std::tie(b.i, b.j); });
     }
 
-    Matrix::index_array_type rows(entries.size());
-    Matrix::index_array_type columns(entries.size());
-    Matrix::value_array_type values(entries.size());
+    index_array_type rows(entries.size());
+    index_array_type columns(entries.size());
+    value_array_type values(entries.size());
     for (auto k = 0u; k < entries.size(); ++k) {
         rows[k] = entries[k].i - 1u;
         columns[k] = entries[k].j - 1u;
@@ -195,15 +196,16 @@ namespace
 {
 
 void source_vector_only_spmv(
-    unsigned int const numEntries,
-    unsigned int const * row_index,
-    unsigned int const * column_index,
-    double const * value,
-    double const * x,
-    double * y)
+    size_type const numEntries,
+    index_type const * row_index,
+    index_type const * column_index,
+    value_type const * value,
+    value_type const * x,
+    value_type * y)
 {
-    unsigned int j, k;
-    double z = 0.0;
+    index_type j;
+    size_type k;
+    value_type z = 0.0;
     for (k = 0u; k < numEntries; ++k) {
         j = column_index[k];
         z += 1.1 * x[j];
@@ -215,18 +217,18 @@ void source_vector_only_spmv(
 
 void spmv(
     source_vector_only_matrix::Matrix const & A,
-    source_vector_only_matrix::Matrix::value_array_type const & x,
-    source_vector_only_matrix::Matrix::value_array_type & y)
+    source_vector_only_matrix::value_array_type const & x,
+    source_vector_only_matrix::value_array_type & y)
 {
     source_vector_only_spmv(A.numEntries, A.row_index.data(), A.column_index.data(),
              A.value.data(), x.data(), y.data());
 }
 
-source_vector_only_matrix::Matrix::value_array_type operator*(
+source_vector_only_matrix::value_array_type operator*(
     source_vector_only_matrix::Matrix const & A,
-    source_vector_only_matrix::Matrix::value_array_type const & x)
+    source_vector_only_matrix::value_array_type const & x)
 {
-    if (A.columns != x.size()) {
+    if (A.columns != (index_type) x.size()) {
         throw std::invalid_argument(
             "Size mismatch: "s +
             "A.size()="s + (
@@ -234,7 +236,7 @@ source_vector_only_matrix::Matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
-    source_vector_only_matrix::Matrix::value_array_type y(A.rows, 0.0);
+    source_vector_only_matrix::value_array_type y(A.rows, 0.0);
     source_vector_only_spmv(
         A.numEntries, A.row_index.data(), A.column_index.data(),
         A.value.data(), x.data(), y.data());

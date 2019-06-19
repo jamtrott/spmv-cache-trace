@@ -1,6 +1,7 @@
 #ifndef MATRIX_MARKET_HPP
 #define MATRIX_MARKET_HPP
 
+#include <cstdint>
 #include <iosfwd>
 #include <stdexcept>
 #include <string>
@@ -8,6 +9,10 @@
 
 namespace matrix_market
 {
+
+typedef int32_t size_type;
+typedef int32_t index_type;
+typedef double value_type;
 
 enum class Object { matrix };
 enum class Format { coordinate, array };
@@ -27,23 +32,23 @@ using Comments = std::vector<std::string>;
 class Size
 {
 public:
-    std::size_t const rows;
-    std::size_t const columns;
-    std::size_t const numEntries;
+    index_type const rows;
+    index_type const columns;
+    size_type const numEntries;
 };
 
 struct CoordinateEntry
 {
-    std::size_t i;
-    std::size_t j;
-    double a;
+    index_type i;
+    index_type j;
+    value_type a;
 
     CoordinateEntry()
         : i(0u), j(0u), a(0.0)
     {
     }
 
-    CoordinateEntry(std::size_t i, std::size_t j, double a)
+    CoordinateEntry(index_type i, index_type j, value_type a)
         : i(i), j(j), a(a)
     {
     }
@@ -58,12 +63,12 @@ using Entries = std::vector<CoordinateEntry>;
 class Matrix
 {
 public:
-    std::size_t rows() const;
-    std::size_t columns() const;
-    std::size_t numEntries() const;
-    std::size_t maxRowLength() const;
+    index_type rows() const;
+    index_type columns() const;
+    size_type numEntries() const;
+    index_type maxRowLength() const;
 
-    std::vector<std::size_t> rowLengths() const;
+    std::vector<index_type> rowLengths() const;
 
     enum class Order { column_major, row_major };
     std::vector<CoordinateEntry> sortedCoordinateEntries(Order o) const;

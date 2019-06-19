@@ -21,17 +21,17 @@ bool matrix_market::operator==(
     return a.i == b.i && a.j == b.j && a.a == b.a;
 }
 
-std::size_t Matrix::rows() const
+index_type Matrix::rows() const
 {
     return size.rows;
 }
 
-std::size_t Matrix::columns() const
+index_type Matrix::columns() const
 {
     return size.columns;
 }
 
-std::size_t Matrix::numEntries() const
+size_type Matrix::numEntries() const
 {
     return size.numEntries;
 }
@@ -39,7 +39,7 @@ std::size_t Matrix::numEntries() const
 /*
  * Compute the length of the longest row
  */
-std::size_t Matrix::maxRowLength() const
+index_type Matrix::maxRowLength() const
 {
     auto row_lengths = rowLengths();
     return *std::max_element(
@@ -49,10 +49,9 @@ std::size_t Matrix::maxRowLength() const
 /*
  * Compute the length of each row
  */
-std::vector<std::size_t> Matrix::rowLengths() const
+std::vector<index_type> Matrix::rowLengths() const
 {
-    using Entry = matrix_market::CoordinateEntry;
-    std::vector<std::size_t> row_lengths(size.rows, 0u);
+    std::vector<index_type> row_lengths(size.rows, 0u);
     std::for_each(
         std::cbegin(entries), std::cend(entries),
         [&row_lengths] (auto const & a) { ++row_lengths[a.i-1u]; });
@@ -159,11 +158,12 @@ Size readSize(std::istream & i, Format format)
 
     std::stringstream s{line};
     if (format == Format::coordinate) {
-        std::size_t rows, columns, numEntries;
+        index_type rows, columns;
+        size_type numEntries;
         s >> rows >> columns >> numEntries;
         return Size{rows, columns, numEntries};
     } else {
-        std::size_t rows, columns;
+        index_type rows, columns;
         s >> rows >> columns;
         return Size{rows, columns, 0u};
     }
@@ -185,7 +185,7 @@ std::vector<CoordinateEntry> readEntries(
         size.numEntries,
         std::back_inserter(entries));
 
-    if (entries.size() != size.numEntries) {
+    if (size.numEntries != (size_type) entries.size()) {
         std::stringstream s;
         s << "Failed to parse entries: "
           << "Expected " << size.numEntries << " entries, "

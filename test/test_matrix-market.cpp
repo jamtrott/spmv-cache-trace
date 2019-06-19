@@ -27,11 +27,11 @@ TEST(matrix_market, from_stream)
     ASSERT_EQ("real", m.header.field);
     ASSERT_EQ("general", m.header.symmetry);
     ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1u, m.size.rows);
-    ASSERT_EQ(1u, m.size.columns);
-    ASSERT_EQ(1u, m.size.numEntries);
-    ASSERT_EQ(1u, m.entries[0].i);
-    ASSERT_EQ(1u, m.entries[0].j);
+    ASSERT_EQ(1, m.size.rows);
+    ASSERT_EQ(1, m.size.columns);
+    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.entries[0].i);
+    ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
 }
 
@@ -56,11 +56,11 @@ TEST(matrix_market, from_stream_gz)
     ASSERT_EQ("real", m.header.field);
     ASSERT_EQ("general", m.header.symmetry);
     ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1u, m.size.rows);
-    ASSERT_EQ(1u, m.size.columns);
-    ASSERT_EQ(1u, m.size.numEntries);
-    ASSERT_EQ(1u, m.entries[0].i);
-    ASSERT_EQ(1u, m.entries[0].j);
+    ASSERT_EQ(1, m.size.rows);
+    ASSERT_EQ(1, m.size.columns);
+    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.entries[0].i);
+    ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
 }
 
@@ -86,7 +86,7 @@ Matrix test_matrix()
 TEST(matrix_market, maxRowLength)
 {
     auto m = test_matrix();
-    ASSERT_EQ(3u, m.maxRowLength());
+    ASSERT_EQ(3, m.maxRowLength());
 }
 
 TEST(matrix_market, sort_entries_row_major)
@@ -97,14 +97,14 @@ TEST(matrix_market, sort_entries_row_major)
     auto size = m.size;
     ASSERT_EQ(size.numEntries, entries.size());
     std::vector<CoordinateEntry> expected({
-            CoordinateEntry{1u, 1u, 1.0},
-            CoordinateEntry{1u, 2u, 2.0},
-            CoordinateEntry{1u, 4u, 3.0},
-            CoordinateEntry{2u, 1u, 4.0},
-            CoordinateEntry{2u, 2u, 1.0},
-            CoordinateEntry{3u, 3u, 3.0},
-            CoordinateEntry{4u, 4u, 2.0},
-            CoordinateEntry{4u, 5u, 1.0}});
+            CoordinateEntry{1, 1, 1.0},
+            CoordinateEntry{1, 2, 2.0},
+            CoordinateEntry{1, 4, 3.0},
+            CoordinateEntry{2, 1, 4.0},
+            CoordinateEntry{2, 2, 1.0},
+            CoordinateEntry{3, 3, 3.0},
+            CoordinateEntry{4, 4, 2.0},
+            CoordinateEntry{4, 5, 1.0}});
     ASSERT_TRUE(
         std::equal(
             std::begin(entries), std::end(entries),
@@ -119,14 +119,14 @@ TEST(matrix_market, sort_entries_column_major)
     auto size = m.size;
     ASSERT_EQ(size.numEntries, entries.size());
     std::vector<CoordinateEntry> expected({
-            CoordinateEntry{1u, 1u, 1.0},
-            CoordinateEntry{2u, 1u, 4.0},
-            CoordinateEntry{1u, 2u, 2.0},
-            CoordinateEntry{2u, 2u, 1.0},
-            CoordinateEntry{3u, 3u, 3.0},
-            CoordinateEntry{1u, 4u, 3.0},
-            CoordinateEntry{4u, 4u, 2.0},
-            CoordinateEntry{4u, 5u, 1.0}});
+            CoordinateEntry{1, 1, 1.0},
+            CoordinateEntry{2, 1, 4.0},
+            CoordinateEntry{1, 2, 2.0},
+            CoordinateEntry{2, 2, 1.0},
+            CoordinateEntry{3, 3, 3.0},
+            CoordinateEntry{1, 4, 3.0},
+            CoordinateEntry{4, 4, 2.0},
+            CoordinateEntry{4, 5, 1.0}});
     ASSERT_TRUE(
         std::equal(
             std::begin(entries), std::end(entries),
@@ -1002,11 +1002,11 @@ TEST(matrix_market, from_stream_tar)
     ASSERT_EQ("real", m.header.field);
     ASSERT_EQ("general", m.header.symmetry);
     ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1u, m.size.rows);
-    ASSERT_EQ(1u, m.size.columns);
-    ASSERT_EQ(1u, m.size.numEntries);
-    ASSERT_EQ(1u, m.entries[0].i);
-    ASSERT_EQ(1u, m.entries[0].j);
+    ASSERT_EQ(1, m.size.rows);
+    ASSERT_EQ(1, m.size.columns);
+    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.entries[0].i);
+    ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
 }
 
@@ -1042,10 +1042,10 @@ TEST(matrix_market, from_stream_tar_gz)
     ASSERT_EQ("real", m.header.field);
     ASSERT_EQ("general", m.header.symmetry);
     ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1u, m.size.rows);
-    ASSERT_EQ(1u, m.size.columns);
-    ASSERT_EQ(1u, m.size.numEntries);
-    ASSERT_EQ(1u, m.entries[0].i);
-    ASSERT_EQ(1u, m.entries[0].j);
+    ASSERT_EQ(1, m.size.rows);
+    ASSERT_EQ(1, m.size.columns);
+    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.entries[0].i);
+    ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
 }

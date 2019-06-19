@@ -27,9 +27,9 @@ std::string to_string(Order o)
 }
 
 Matrix::Matrix()
-    : rows(0u)
-    , columns(0u)
-    , numEntries(0u)
+    : rows(0)
+    , columns(0)
+    , numEntries(0)
     , order(Order::general)
     , row_index()
     , column_index()
@@ -38,9 +38,9 @@ Matrix::Matrix()
 }
 
 Matrix::Matrix(
-    unsigned int rows,
-    unsigned int columns,
-    unsigned int numEntries,
+    index_type rows,
+    index_type columns,
+    size_type numEntries,
     Order order,
     index_array_type const & row_index,
     index_array_type const & column_index,
@@ -71,9 +71,9 @@ std::size_t Matrix::index_size() const
         + sizeof(decltype(column_index)::value_type) * column_index.size();
 }
 
-unsigned int Matrix::num_padding_entries() const
+size_type Matrix::num_padding_entries() const
 {
-    return 0u;
+    return 0;
 }
 
 std::size_t Matrix::value_padding_size() const
@@ -95,9 +95,9 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     unsigned int cache_line_size) const
 {
     auto w = std::vector<uintptr_t>(5 * numEntries);
-    for (auto k = 0u, l = 0u; k < numEntries; ++k, l += 5u) {
-        auto i = row_index[k];
-        auto j = column_index[k];
+    for (size_type k = 0, l = 0; k < numEntries; ++k, l += 5) {
+        index_type i = row_index[k];
+        index_type j = column_index[k];
         w[l] = uintptr_t(&row_index[k]) / cache_line_size;
         w[l+1] = uintptr_t(&column_index[k]) / cache_line_size;
         w[l+2] = uintptr_t(&value[k]) / cache_line_size;
@@ -134,7 +134,7 @@ std::ostream & operator<<(
     std::ostream & o,
     std::vector<T, allocator> const & v)
 {
-    if (v.size() == 0u)
+    if (v.size() == 0)
         return o << "[]";
 
     o << '[';
@@ -180,12 +180,12 @@ Matrix from_matrix_market(
             { return std::tie(a.i, a.j) < std::tie(b.i, b.j); });
     }
 
-    Matrix::index_array_type rows(entries.size());
-    Matrix::index_array_type columns(entries.size());
-    Matrix::value_array_type values(entries.size());
-    for (auto k = 0u; k < entries.size(); ++k) {
-        rows[k] = entries[k].i - 1u;
-        columns[k] = entries[k].j - 1u;
+    index_array_type rows(entries.size());
+    index_array_type columns(entries.size());
+    value_array_type values(entries.size());
+    for (size_type k = 0u; k < (size_type) entries.size(); ++k) {
+        rows[k] = entries[k].i - 1;
+        columns[k] = entries[k].j - 1;
         values[k] = entries[k].a;
     }
 
@@ -198,15 +198,16 @@ namespace
 {
 
 void coo_spmv(
-    unsigned int const numEntries,
-    unsigned int const * row_index,
-    unsigned int const * column_index,
-    double const * value,
-    double const * x,
-    double * y)
+    size_type const numEntries,
+    index_type const * row_index,
+    index_type const * column_index,
+    value_type const * value,
+    value_type const * x,
+    value_type * y)
 {
-    unsigned int i, j, k;
-    for (k = 0u; k < numEntries; ++k) {
+    index_type i, j;
+    size_type k;
+    for (k = 0; k < numEntries; ++k) {
         i = row_index[k];
         j = column_index[k];
         y[i] += value[k] * x[j];
@@ -217,18 +218,18 @@ void coo_spmv(
 
 void spmv(
     coo_matrix::Matrix const & A,
-    coo_matrix::Matrix::value_array_type const & x,
-    coo_matrix::Matrix::value_array_type & y)
+    coo_matrix::value_array_type const & x,
+    coo_matrix::value_array_type & y)
 {
     coo_spmv(A.numEntries, A.row_index.data(), A.column_index.data(),
              A.value.data(), x.data(), y.data());
 }
 
-coo_matrix::Matrix::value_array_type operator*(
+coo_matrix::value_array_type operator*(
     coo_matrix::Matrix const & A,
-    coo_matrix::Matrix::value_array_type const & x)
+    coo_matrix::value_array_type const & x)
 {
-    if (A.columns != x.size()) {
+    if (A.columns != (index_type) x.size()) {
         throw std::invalid_argument(
             "Size mismatch: "s +
             "A.size()="s + (
@@ -236,7 +237,7 @@ coo_matrix::Matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
-    coo_matrix::Matrix::value_array_type y(A.rows, 0.0);
+    coo_matrix::value_array_type y(A.rows, 0.0);
     coo_spmv(
         A.numEntries, A.row_index.data(), A.column_index.data(),
         A.value.data(), x.data(), y.data());

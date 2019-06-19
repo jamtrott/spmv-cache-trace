@@ -21,10 +21,10 @@
 namespace replacement
 {
 
-using Page = uintptr_t;
-using MemoryReferenceString = std::vector<Page>;
-using MemoryReferenceSet = std::unordered_set<Page>;
-constexpr Page undefined_page = std::numeric_limits<Page>::max();
+using MemoryReference = uintptr_t;
+using MemoryReferenceString = std::vector<MemoryReference>;
+using MemoryReferenceSet = std::unordered_set<MemoryReference>;
+constexpr MemoryReference undefined_page = std::numeric_limits<MemoryReference>::max();
 
 using AllocationCost = unsigned int;
 
@@ -47,7 +47,7 @@ public:
     {
     }
 
-    virtual AllocationCost allocate(Page const & x) = 0;
+    virtual AllocationCost allocate(MemoryReference const & x) = 0;
 
 protected:
     // The number of cache lines that fit in the cache
@@ -66,10 +66,10 @@ class RAND
 public:
     RAND(
         unsigned int cache_lines,
-        MemoryReferenceSet const & pages = PageSet());
+        MemoryReferenceSet const & pages = MemoryReferenceSet());
     ~RAND();
 
-    AllocationCost allocate(Page const & x) override;
+    AllocationCost allocate(MemoryReference const & x) override;
 };
 
 /*
@@ -81,13 +81,13 @@ class FIFO
 public:
     FIFO(
         unsigned int cache_lines,
-        std::vector<Page> const & pages = std::vector<Page>());
+        std::vector<MemoryReference> const & pages = std::vector<MemoryReference>());
     ~FIFO();
 
-    AllocationCost allocate(Page const & x) override;
+    AllocationCost allocate(MemoryReference const & x) override;
 
 private:
-    std::queue<Page> q;
+    std::queue<MemoryReference> q;
 };
 
 /*
@@ -99,13 +99,13 @@ class LRU
 public:
     LRU(
         unsigned int cache_lines,
-        std::vector<Page> const & pages = std::vector<Page>());
+        std::vector<MemoryReference> const & pages = std::vector<MemoryReference>());
     ~LRU();
 
-    AllocationCost allocate(Page const & x) override;
+    AllocationCost allocate(MemoryReference const & x) override;
 
 private:
-    CircularBuffer<Page> q;
+    CircularBuffer<MemoryReference> q;
 };
 
 /*

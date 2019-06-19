@@ -9,7 +9,7 @@ namespace replacement
 
 FIFO::FIFO(
     unsigned int cache_lines,
-    std::vector<Page> const & initial_state)
+    std::vector<MemoryReference> const & initial_state)
     : PagingAlgorithm(
         cache_lines,
         MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
@@ -23,7 +23,7 @@ FIFO::~FIFO()
 {
 }
 
-AllocationCost FIFO::allocate(Page const & x)
+AllocationCost FIFO::allocate(MemoryReference const & x)
 {
     auto it = pages.find(x);
     if (it != std::cend(pages) && x == *it)

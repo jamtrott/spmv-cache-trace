@@ -10,7 +10,7 @@ namespace replacement
 
 LRU::LRU(
     unsigned int cache_lines,
-    std::vector<Page> const & initial_state)
+    std::vector<MemoryReference> const & initial_state)
     : PagingAlgorithm(
         cache_lines,
         MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
@@ -24,7 +24,7 @@ LRU::~LRU()
 {
 }
 
-AllocationCost LRU::allocate(Page const & x)
+AllocationCost LRU::allocate(MemoryReference const & x)
 {
     auto it = pages.find(x);
     if (it != std::end(pages) && x == *it) {

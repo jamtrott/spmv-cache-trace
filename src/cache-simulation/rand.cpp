@@ -17,7 +17,7 @@ RAND::~RAND()
 {
 }
 
-AllocationCost RAND::allocate(Page const & x)
+AllocationCost RAND::allocate(MemoryReference const & x)
 {
     if (std::find(std::cbegin(pages), std::cend(pages), x) != std::cend(pages)) {
         return 0u;

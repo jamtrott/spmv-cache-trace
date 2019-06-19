@@ -57,7 +57,7 @@ std::ostream & operator<<(
 
     o << '(';
     std::copy(std::begin(w), std::end(w) - 1u,
-              std::ostream_iterator<replacement::Page>(o, ", "));
+              std::ostream_iterator<replacement::MemoryReference>(o, ", "));
     return o << w[w.size()-1u] << ')';
 }
 

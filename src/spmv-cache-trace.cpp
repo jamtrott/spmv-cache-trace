@@ -48,7 +48,7 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
     unsigned int cache_size,
     unsigned int cache_line_size)
 {
-    using RefString = replacement::PageReferenceString;
+    using RefString = replacement::MemoryReferenceString;
     std::vector<RefString> ws(num_threads);
     std::vector<RefString::const_iterator> its(num_threads);
     std::vector<RefString::const_iterator> ends(num_threads);

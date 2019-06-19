@@ -10,7 +10,7 @@ namespace replacement
 
 unsigned int cost(
     PagingAlgorithm & A,
-    PageReferenceString const & w)
+    MemoryReferenceString const & w)
 {
     auto cost = 0ul;
     for (auto const & x : w)
@@ -20,7 +20,7 @@ unsigned int cost(
 
 std::vector<unsigned int> cost(
     PagingAlgorithm & A,
-    std::vector<PageReferenceString> const & ws)
+    std::vector<MemoryReferenceString> const & ws)
 {
     auto P = ws.size();
 
@@ -50,7 +50,7 @@ std::vector<unsigned int> cost(
 
 std::ostream & operator<<(
     std::ostream & o,
-    PageReferenceString const & w)
+    MemoryReferenceString const & w)
 {
     if (w.size() == 0u)
         return o << "()";

@@ -22,7 +22,7 @@ namespace replacement
 {
 
 using Page = uintptr_t;
-using PageReferenceString = std::vector<Page>;
+using MemoryReferenceString = std::vector<Page>;
 using PageSet = std::unordered_set<Page>;
 constexpr Page undefined_page = std::numeric_limits<Page>::max();
 
@@ -114,7 +114,7 @@ private:
  */
 unsigned int cost(
     PagingAlgorithm & A,
-    PageReferenceString const & w);
+    MemoryReferenceString const & w);
 
 /*
  * Compute the cost (number of page placements) of processing page
@@ -127,11 +127,11 @@ unsigned int cost(
  */
 std::vector<unsigned int> cost(
     PagingAlgorithm & A,
-    std::vector<PageReferenceString> const & ws);
+    std::vector<MemoryReferenceString> const & ws);
 
 std::ostream & operator<<(
     std::ostream & o,
-    PageReferenceString const & v);
+    MemoryReferenceString const & v);
 
 }
 

@@ -31,12 +31,6 @@ std::map<std::string, MatrixFormat> const matrix_formats{
 #endif
     {"ellpack", MatrixFormat::ellpack},
     {"source_vector_only", MatrixFormat::source_vector_only},
-#ifdef HAVE_CUDA
-    {"cuda_coo", MatrixFormat::cuda_coo},
-    {"cuda_csr", MatrixFormat::cuda_csr},
-    {"cuda_ellpack", MatrixFormat::cuda_ellpack},
-    {"cuda_sliced_ellpack", MatrixFormat::cuda_sliced_ellpack},
-#endif
 };
 
 std::string matrix_format_name(
@@ -104,32 +98,6 @@ Matrix::Matrix(MatrixFormat format, source_vector_only_matrix::Matrix && m)
 {
 }
 
-#ifdef HAVE_CUDA
-Matrix::Matrix(MatrixFormat format, cuda_coo_matrix::Matrix && m)
-    : _format(format)
-    , _cuda_coo_matrix(std::move(std::move(m)))
-{
-}
-
-Matrix::Matrix(MatrixFormat format, cuda_csr_matrix::Matrix && m)
-    : _format(format)
-    , _cuda_csr_matrix(std::move(m))
-{
-}
-
-Matrix::Matrix(MatrixFormat format, cuda_ellpack_matrix::Matrix && m)
-    : _format(format)
-    , _cuda_ellpack_matrix(std::move(m))
-{
-}
-
-Matrix::Matrix(MatrixFormat format, cuda_sliced_ellpack_matrix::Matrix && m)
-    : _format(format)
-    , _cuda_sliced_ellpack_matrix(std::move(m))
-{
-}
-#endif
-
 MatrixFormat Matrix::format() const
 {
     return _format;
@@ -153,12 +121,6 @@ unsigned int Matrix::rows() const
         return _csr_matrix.rows;
     case MatrixFormat::ellpack: return _ellpack_matrix.rows;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.rows;
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo: return _cuda_coo_matrix.rows;
-    case MatrixFormat::cuda_csr: return _cuda_csr_matrix.rows;
-    case MatrixFormat::cuda_ellpack: return _cuda_ellpack_matrix.rows;
-    case MatrixFormat::cuda_sliced_ellpack: return _cuda_sliced_ellpack_matrix.rows;
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -182,12 +144,6 @@ unsigned int Matrix::columns() const
         return _csr_matrix.columns;
     case MatrixFormat::ellpack: return _ellpack_matrix.columns;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.columns;
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo: return _cuda_coo_matrix.columns;
-    case MatrixFormat::cuda_csr: return _cuda_csr_matrix.columns;
-    case MatrixFormat::cuda_ellpack: return _cuda_ellpack_matrix.columns;
-    case MatrixFormat::cuda_sliced_ellpack: return _cuda_sliced_ellpack_matrix.columns;
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -211,12 +167,6 @@ unsigned int Matrix::nonzeros() const
         return _csr_matrix.numEntries;
     case MatrixFormat::ellpack: return _ellpack_matrix.numEntries;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.numEntries;
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo: return _cuda_coo_matrix.numEntries;
-    case MatrixFormat::cuda_csr: return _cuda_csr_matrix.numEntries;
-    case MatrixFormat::cuda_ellpack: return _cuda_ellpack_matrix.numEntries;
-    case MatrixFormat::cuda_sliced_ellpack: return _cuda_sliced_ellpack_matrix.numEntries;
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -240,12 +190,6 @@ std::size_t Matrix::size() const
         return _csr_matrix.size();
     case MatrixFormat::ellpack: return _ellpack_matrix.size();
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.size();
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo: return _cuda_coo_matrix.size();
-    case MatrixFormat::cuda_csr: return _cuda_csr_matrix.size();
-    case MatrixFormat::cuda_ellpack: return _cuda_ellpack_matrix.size();
-    case MatrixFormat::cuda_sliced_ellpack: return _cuda_sliced_ellpack_matrix.size();
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -253,9 +197,6 @@ std::size_t Matrix::size() const
 
 void Matrix::synchronize()
 {
-#ifdef HAVE_CUDA
-    cudaDeviceSynchronize();
-#endif
 }
 
 std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
@@ -288,20 +229,6 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     case MatrixFormat::source_vector_only:
         return _source_vector_only_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo:
-        return _cuda_coo_matrix.spmv_memory_reference_reference_string(
-            x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
-    case MatrixFormat::cuda_csr:
-        return _cuda_csr_matrix.spmv_memory_reference_reference_string(
-            x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
-    case MatrixFormat::cuda_ellpack:
-        return _cuda_ellpack_matrix.spmv_memory_reference_reference_string(
-            x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
-    case MatrixFormat::cuda_sliced_ellpack:
-        return _cuda_sliced_ellpack_matrix.spmv_memory_reference_reference_string(
-            x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -335,16 +262,6 @@ Matrix from_matrix_market(
         return Matrix(matrix_format, ellpack_matrix::from_matrix_market_default(m));
     case MatrixFormat::source_vector_only:
         return Matrix(matrix_format, source_vector_only_matrix::from_matrix_market_general(m));
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo:
-        return Matrix(matrix_format, cuda_coo_matrix::from_matrix_market(m));
-    case MatrixFormat::cuda_csr:
-        return Matrix(matrix_format, cuda_csr_matrix::from_matrix_market(m));
-    case MatrixFormat::cuda_ellpack:
-        return Matrix(matrix_format, cuda_ellpack_matrix::from_matrix_market(m));
-    case MatrixFormat::cuda_sliced_ellpack:
-        return Matrix(matrix_format, cuda_sliced_ellpack_matrix::from_matrix_market_default(m));
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -378,14 +295,6 @@ Vector::Vector(
         _vector = std::vector<double, aligned_allocator<double, 64u>>(
             std::cbegin(v), std::cend(v));
         break;
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo:
-    case MatrixFormat::cuda_csr:
-    case MatrixFormat::cuda_ellpack:
-    case MatrixFormat::cuda_sliced_ellpack:
-        _cuda_vector = cuda::vector<double>(v);
-        break;
-#endif
     default:
         throw std::logic_error("Not implemented");
     }
@@ -400,18 +309,6 @@ std::vector<double, aligned_allocator<double, 64u>> const & Vector::vector() con
 {
     return _vector;
 }
-
-#ifdef HAVE_CUDA
-cuda::vector<double> & Vector::cuda_vector()
-{
-    return _cuda_vector;
-}
-
-cuda::vector<double> const & Vector::cuda_vector() const
-{
-    return _cuda_vector;
-}
-#endif
 
 Vector make_vector(
     MatrixFormat const & format,
@@ -472,24 +369,6 @@ void spmv(
     case MatrixFormat::source_vector_only:
         source_vector_only_matrix::spmv(m._source_vector_only_matrix, x._vector, y._vector);
         break;
-#ifdef HAVE_CUDA
-    case MatrixFormat::cuda_coo:
-        cuda_coo_matrix::spmv(m._cuda_coo_matrix, x._cuda_vector, y._cuda_vector);
-        cudaDeviceSynchronize();
-        break;
-    case MatrixFormat::cuda_csr:
-        cuda_csr_matrix::spmv(m._cuda_csr_matrix, x._cuda_vector, y._cuda_vector);
-        cudaDeviceSynchronize();
-        break;
-    case MatrixFormat::cuda_ellpack:
-        cuda_ellpack_matrix::spmv(m._cuda_ellpack_matrix, x._cuda_vector, y._cuda_vector);
-        cudaDeviceSynchronize();
-        break;
-    case MatrixFormat::cuda_sliced_ellpack:
-        cuda_sliced_ellpack_matrix::spmv(m._cuda_sliced_ellpack_matrix, x._cuda_vector, y._cuda_vector);
-        cudaDeviceSynchronize();
-        break;
-#endif
     default:
         throw std::logic_error("Not implemented");
     }

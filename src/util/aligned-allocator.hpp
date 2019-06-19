@@ -1,5 +1,5 @@
-#ifndef LINSPARSE_ALIGNED_ALLOCATOR_HPP
-#define LINSPARSE_ALIGNED_ALLOCATOR_HPP
+#ifndef ALIGNED_ALLOCATOR_HPP
+#define ALIGNED_ALLOCATOR_HPP
 
 #include <cstddef>
 #include <cstdlib>

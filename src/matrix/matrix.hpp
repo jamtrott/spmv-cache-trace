@@ -1,5 +1,5 @@
-#ifndef MATRIX_MATRIX_HPP
-#define MATRIX_MATRIX_HPP
+#ifndef MATRIX_HPP
+#define MATRIX_HPP
 
 #include "coordinate-matrix.hpp"
 #include "csr-matrix.hpp"

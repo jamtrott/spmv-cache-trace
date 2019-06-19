@@ -34,7 +34,7 @@ std::vector<unsigned int> cost(
             T_max = T[p];
     }
 
-    // Compute the number of page placements for an interleaved
+    // Compute the number of replacements for an interleaved
     // reference string.
     std::vector<unsigned int> cost(P, 0u);
     for (auto t = 0u; t < T_max; ++t) {

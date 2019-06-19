@@ -2,7 +2,7 @@
 #define REPLACEMENT_HPP
 
 /*
- * Performance models for page replacement algorithms, loosely
+ * Performance models for replacement algorithms, loosely
  * based on the paper:
  *
  * Alfred V. Aho, Peter J. Denning, and Jeffrey D. Ullman (1971):
@@ -58,7 +58,7 @@ protected:
 };
 
 /*
- * A random page replacement policy.
+ * A random replacement policy.
  */
 class RAND
     : public PagingAlgorithm
@@ -66,14 +66,14 @@ class RAND
 public:
     RAND(
         unsigned int cache_lines,
-        MemoryReferenceSet const & pages = MemoryReferenceSet());
+        MemoryReferenceSet const & memory_references = MemoryReferenceSet());
     ~RAND();
 
     AllocationCost allocate(MemoryReference const & x) override;
 };
 
 /*
- * A first-in-first-out page replacement policy.
+ * A first-in-first-out replacement policy.
  */
 class FIFO
     : public PagingAlgorithm
@@ -91,7 +91,7 @@ private:
 };
 
 /*
- * A least-recently used page replacement policy.
+ * A least-recently used replacement policy.
  */
 class LRU
     : public PagingAlgorithm
@@ -109,18 +109,18 @@ private:
 };
 
 /*
- * Compute the cost (number of page placements) of processing a
- * page reference string with a given paging algorithm and initial state.
+ * Compute the cost (number of replacements) of processing a memory
+ * reference string with a given replacement algorithm and initial state.
  */
 unsigned int cost(
     PagingAlgorithm & A,
     MemoryReferenceString const & w);
 
 /*
- * Compute the cost (number of page placements) of processing page
+ * Compute the cost (number of replacements) of processing memory
  * reference strings for multiple processors with a shared cache.
  *
- * In this case, it is assumed that the page reference string of the
+ * In this case, it is assumed that the memory reference strings of the
  * different CPUs are perfectly interleaved.  In reality, scheduling
  * may be unfair and memory access latencies vary, causing some CPUs
  * to be delayed more than others.

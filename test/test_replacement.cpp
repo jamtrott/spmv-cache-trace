@@ -3,7 +3,7 @@
 #include <gtest/gtest.h>
 
 /*
- * Test a page replacement algorithm that replaces a random page.
+ * Test a replacement algorithm that replaces a random cache block.
  */
 TEST(replacement, rand_empty)
 {
@@ -39,7 +39,7 @@ TEST(replacement, rand_replacement)
 }
 
 /*
- * Test a page replacement algorithm that replaces a page according to
+ * Test a replacement algorithm that replaces a cache block according to
  * the first-in-first-out policy.
  */
 TEST(replacement, fifo_empty)
@@ -83,7 +83,7 @@ TEST(replacement, fifo_replacement_with_initial_state)
 }
 
 /*
- * Test a page replacement algorithm that replaces a page according to
+ * Test a replacement algorithm that replaces a cache block according to
  * the least recently used policy.
  */
 TEST(replacement, lru_empty)
@@ -127,7 +127,7 @@ TEST(replacement, lru_replacement_with_initial_state)
 }
 
 /*
- * Test counting the number of page replacements for multiple threads
+ * Test counting the number of replacements for multiple threads
  * with a shared cache.
  */
 TEST(memory_reference_replcament, lru_replacement_two_threads_shared_cache)

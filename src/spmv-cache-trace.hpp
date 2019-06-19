@@ -1,5 +1,5 @@
-#ifndef SPMVPROF_ESTIMATE_PAGING_HPP
-#define SPMVPROF_ESTIMATE_PAGING_HPP
+#ifndef SPMV_CACHE_TRACE_HPP
+#define SPMV_CACHE_TRACE_HPP
 
 #include "matrix/matrix.hpp"
 

@@ -9,7 +9,7 @@ namespace replacement
 {
 
 unsigned int cost(
-    PagingAlgorithm & A,
+    ReplacementAlgorithm & A,
     MemoryReferenceString const & w)
 {
     auto cost = 0ul;
@@ -19,7 +19,7 @@ unsigned int cost(
 }
 
 std::vector<unsigned int> cost(
-    PagingAlgorithm & A,
+    ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws)
 {
     auto P = ws.size();

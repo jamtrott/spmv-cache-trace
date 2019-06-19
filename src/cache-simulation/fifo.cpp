@@ -10,7 +10,7 @@ namespace replacement
 FIFO::FIFO(
     unsigned int cache_lines,
     std::vector<MemoryReference> const & initial_state)
-    : PagingAlgorithm(
+    : ReplacementAlgorithm(
         cache_lines,
         MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
     , q()

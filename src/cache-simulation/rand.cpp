@@ -9,7 +9,7 @@ namespace replacement
 RAND::RAND(
     unsigned int cache_lines,
     MemoryReferenceSet const & memory_references)
-    : PagingAlgorithm(cache_lines, memory_references)
+    : ReplacementAlgorithm(cache_lines, memory_references)
 {
 }
 

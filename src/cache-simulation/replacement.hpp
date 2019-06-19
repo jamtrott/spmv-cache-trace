@@ -31,10 +31,10 @@ using AllocationCost = unsigned int;
 /*
  * Paging algorithms.
  */
-class PagingAlgorithm
+class ReplacementAlgorithm
 {
 public:
-    PagingAlgorithm(
+    ReplacementAlgorithm(
         unsigned int cache_lines,
         MemoryReferenceSet const & _memory_references)
         : cache_lines(cache_lines)
@@ -43,7 +43,7 @@ public:
         memory_references.reserve(cache_lines);
     }
 
-    virtual ~PagingAlgorithm()
+    virtual ~ReplacementAlgorithm()
     {
     }
 
@@ -61,7 +61,7 @@ protected:
  * A random replacement policy.
  */
 class RAND
-    : public PagingAlgorithm
+    : public ReplacementAlgorithm
 {
 public:
     RAND(
@@ -76,7 +76,7 @@ public:
  * A first-in-first-out replacement policy.
  */
 class FIFO
-    : public PagingAlgorithm
+    : public ReplacementAlgorithm
 {
 public:
     FIFO(
@@ -94,7 +94,7 @@ private:
  * A least-recently used replacement policy.
  */
 class LRU
-    : public PagingAlgorithm
+    : public ReplacementAlgorithm
 {
 public:
     LRU(
@@ -113,7 +113,7 @@ private:
  * reference string with a given replacement algorithm and initial state.
  */
 unsigned int cost(
-    PagingAlgorithm & A,
+    ReplacementAlgorithm & A,
     MemoryReferenceString const & w);
 
 /*
@@ -126,7 +126,7 @@ unsigned int cost(
  * to be delayed more than others.
  */
 std::vector<unsigned int> cost(
-    PagingAlgorithm & A,
+    ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws);
 
 std::ostream & operator<<(

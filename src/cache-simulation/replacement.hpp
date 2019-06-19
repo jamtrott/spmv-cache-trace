@@ -23,7 +23,7 @@ namespace replacement
 
 using Page = uintptr_t;
 using MemoryReferenceString = std::vector<Page>;
-using PageSet = std::unordered_set<Page>;
+using MemoryReferenceSet = std::unordered_set<Page>;
 constexpr Page undefined_page = std::numeric_limits<Page>::max();
 
 using AllocationCost = unsigned int;
@@ -36,7 +36,7 @@ class PagingAlgorithm
 public:
     PagingAlgorithm(
         unsigned int cache_lines,
-        PageSet const & _pages)
+        MemoryReferenceSet const & _pages)
         : cache_lines(cache_lines)
         , pages(_pages)
     {
@@ -54,7 +54,7 @@ protected:
     unsigned int cache_lines;
 
     // The subset cache lines residing in the cache
-    PageSet pages;
+    MemoryReferenceSet pages;
 };
 
 /*
@@ -66,7 +66,7 @@ class RAND
 public:
     RAND(
         unsigned int cache_lines,
-        PageSet const & pages = PageSet());
+        MemoryReferenceSet const & pages = PageSet());
     ~RAND();
 
     AllocationCost allocate(Page const & x) override;

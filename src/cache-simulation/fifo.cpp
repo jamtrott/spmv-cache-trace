@@ -12,7 +12,7 @@ FIFO::FIFO(
     std::vector<Page> const & initial_state)
     : PagingAlgorithm(
         cache_lines,
-        PageSet(std::begin(initial_state), std::end(initial_state)))
+        MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
     , q()
 {
     for (auto & page : initial_state)

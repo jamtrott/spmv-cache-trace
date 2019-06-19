@@ -17,7 +17,7 @@ CacheComplexityEstimate estimate_spmv_cache_complexity_private(
 {
     auto cache_lines = (cache_size + cache_line_size - 1u) / cache_line_size;
     auto A = replacement::LRU(cache_lines);
-    auto w = matrix.spmv_page_reference_string(
+    auto w = matrix.spmv_memory_reference_reference_string(
         x, y, thread, num_threads, cache_line_size);
     auto cache_misses = replacement::cost(A, w);
     return cache_misses;
@@ -53,7 +53,7 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
     std::vector<RefString::const_iterator> its(num_threads);
     std::vector<RefString::const_iterator> ends(num_threads);
     for (auto n = 0u; n < num_threads; n++) {
-        ws[n] = matrix.spmv_page_reference_string(
+        ws[n] = matrix.spmv_memory_reference_reference_string(
             x, y, n, num_threads, cache_line_size);
         its[n] = std::cbegin(ws[n]);
         ends[n] = std::cend(ws[n]);

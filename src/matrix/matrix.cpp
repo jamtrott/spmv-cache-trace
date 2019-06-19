@@ -258,7 +258,7 @@ void Matrix::synchronize()
 #endif
 }
 
-std::vector<uintptr_t> Matrix::spmv_page_reference_string(
+std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     Vector const & x,
     Vector const & y,
     unsigned int thread,
@@ -267,7 +267,7 @@ std::vector<uintptr_t> Matrix::spmv_page_reference_string(
 {
     switch (_format) {
     case MatrixFormat::coo:
-        return _coo_matrix.spmv_page_reference_string(
+        return _coo_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::csr:
     case MatrixFormat::csr_avx128:
@@ -280,26 +280,26 @@ std::vector<uintptr_t> Matrix::spmv_page_reference_string(
     case MatrixFormat::csr_unroll4_avx256:
     case MatrixFormat::csr_regular_traffic:
     case MatrixFormat::csr_irregular_traffic:
-        return _csr_matrix.spmv_page_reference_string(
+        return _csr_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::ellpack:
-        return _ellpack_matrix.spmv_page_reference_string(
+        return _ellpack_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::source_vector_only:
-        return _source_vector_only_matrix.spmv_page_reference_string(
+        return _source_vector_only_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
 #ifdef HAVE_CUDA
     case MatrixFormat::cuda_coo:
-        return _cuda_coo_matrix.spmv_page_reference_string(
+        return _cuda_coo_matrix.spmv_memory_reference_reference_string(
             x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::cuda_csr:
-        return _cuda_csr_matrix.spmv_page_reference_string(
+        return _cuda_csr_matrix.spmv_memory_reference_reference_string(
             x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::cuda_ellpack:
-        return _cuda_ellpack_matrix.spmv_page_reference_string(
+        return _cuda_ellpack_matrix.spmv_memory_reference_reference_string(
             x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::cuda_sliced_ellpack:
-        return _cuda_sliced_ellpack_matrix.spmv_page_reference_string(
+        return _cuda_sliced_ellpack_matrix.spmv_memory_reference_reference_string(
             x.cuda_vector(), y.cuda_vector(), thread, num_threads, cache_line_size);
 #endif
     default:

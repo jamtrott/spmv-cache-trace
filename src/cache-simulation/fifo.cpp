@@ -15,8 +15,8 @@ FIFO::FIFO(
         MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
     , q()
 {
-    for (auto & page : initial_state)
-        q.emplace(page);
+    for (auto & memory_reference : initial_state)
+        q.emplace(memory_reference);
 }
 
 FIFO::~FIFO()
@@ -25,15 +25,15 @@ FIFO::~FIFO()
 
 AllocationCost FIFO::allocate(MemoryReference const & x)
 {
-    auto it = pages.find(x);
-    if (it != std::cend(pages) && x == *it)
+    auto it = memory_references.find(x);
+    if (it != std::cend(memory_references) && x == *it)
         return 0u;
 
-    pages.insert(x);
-    if (pages.size() > cache_lines) {
+    memory_references.insert(x);
+    if (memory_references.size() > cache_lines) {
         auto y = q.front();
         q.pop();
-        pages.erase(y);
+        memory_references.erase(y);
     }
     q.emplace(x);
     return 1u;

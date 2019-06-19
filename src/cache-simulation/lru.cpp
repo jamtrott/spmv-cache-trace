@@ -16,8 +16,8 @@ LRU::LRU(
         MemoryReferenceSet(std::begin(initial_state), std::end(initial_state)))
     , q(2*cache_lines)
 {
-    for (auto & page : initial_state)
-        q.emplace_back(page);
+    for (auto & memory_reference : initial_state)
+        q.emplace_back(memory_reference);
 }
 
 LRU::~LRU()
@@ -26,8 +26,8 @@ LRU::~LRU()
 
 AllocationCost LRU::allocate(MemoryReference const & x)
 {
-    auto it = pages.find(x);
-    if (it != std::end(pages) && x == *it) {
+    auto it = memory_references.find(x);
+    if (it != std::end(memory_references) && x == *it) {
         auto rit = std::find(std::crbegin(q), std::crend(q), x);
         if (rit != std::crend(q)) {
             auto it = std::begin(q) + q.size() - (rit + 1 - std::crbegin(q));
@@ -36,11 +36,11 @@ AllocationCost LRU::allocate(MemoryReference const & x)
         return 0u;
     }
 
-    pages.insert(x);
-    if (pages.size() > cache_lines) {
+    memory_references.insert(x);
+    if (memory_references.size() > cache_lines) {
         auto y = q.front();
         q.pop_front();
-        pages.erase(y);
+        memory_references.erase(y);
     }
     q.emplace_back(x);
     return 1u;

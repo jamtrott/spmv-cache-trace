@@ -74,7 +74,7 @@ std::size_t Matrix::index_padding_size() const
     return sizeof(decltype(column_index)::value_type) * num_padding_entries();
 }
 
-std::vector<uintptr_t> Matrix::spmv_page_reference_string(
+std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,

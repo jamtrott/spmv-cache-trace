@@ -61,7 +61,7 @@ public:
     std::size_t size() const;
     void synchronize();
 
-    std::vector<uintptr_t> spmv_page_reference_string(
+    std::vector<uintptr_t> spmv_memory_reference_reference_string(
         Vector const & x,
         Vector const & y,
         unsigned int thread,

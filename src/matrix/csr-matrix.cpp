@@ -93,7 +93,7 @@ int Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
     return nonzeros;
 }
 
-std::vector<uintptr_t> Matrix::spmv_page_reference_string(
+std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     int thread,

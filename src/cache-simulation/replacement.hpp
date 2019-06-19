@@ -24,7 +24,7 @@ namespace replacement
 using MemoryReference = uintptr_t;
 using MemoryReferenceString = std::vector<MemoryReference>;
 using MemoryReferenceSet = std::unordered_set<MemoryReference>;
-constexpr MemoryReference undefined_page = std::numeric_limits<MemoryReference>::max();
+constexpr MemoryReference undefined_memory_reference = std::numeric_limits<MemoryReference>::max();
 
 using AllocationCost = unsigned int;
 
@@ -36,11 +36,11 @@ class PagingAlgorithm
 public:
     PagingAlgorithm(
         unsigned int cache_lines,
-        MemoryReferenceSet const & _pages)
+        MemoryReferenceSet const & _memory_references)
         : cache_lines(cache_lines)
-        , pages(_pages)
+        , memory_references(_memory_references)
     {
-        pages.reserve(cache_lines);
+        memory_references.reserve(cache_lines);
     }
 
     virtual ~PagingAlgorithm()
@@ -54,7 +54,7 @@ protected:
     unsigned int cache_lines;
 
     // The subset cache lines residing in the cache
-    MemoryReferenceSet pages;
+    MemoryReferenceSet memory_references;
 };
 
 /*
@@ -81,7 +81,7 @@ class FIFO
 public:
     FIFO(
         unsigned int cache_lines,
-        std::vector<MemoryReference> const & pages = std::vector<MemoryReference>());
+        std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
     ~FIFO();
 
     AllocationCost allocate(MemoryReference const & x) override;
@@ -99,7 +99,7 @@ class LRU
 public:
     LRU(
         unsigned int cache_lines,
-        std::vector<MemoryReference> const & pages = std::vector<MemoryReference>());
+        std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
     ~LRU();
 
     AllocationCost allocate(MemoryReference const & x) override;

@@ -13,7 +13,7 @@ TEST(replacement, rand_empty)
     ASSERT_EQ(0u, replacement::cost(A, w));
 }
 
-TEST(replacement, rand_single_page_single_reference)
+TEST(replacement, rand_single_memory_reference_single_reference)
 {
     auto m = 4u;
     auto A = replacement::RAND(m);
@@ -21,7 +21,7 @@ TEST(replacement, rand_single_page_single_reference)
     ASSERT_EQ(1u, replacement::cost(A, w));
 }
 
-TEST(replacement, rand_single_page_multiple_references)
+TEST(replacement, rand_single_memory_reference_multiple_references)
 {
     auto m = 4u;
     auto A = replacement::RAND(m);
@@ -50,7 +50,7 @@ TEST(replacement, fifo_empty)
     ASSERT_EQ(0u, replacement::cost(A, w));
 }
 
-TEST(replacement, fifo_single_page_single_reference)
+TEST(replacement, fifo_single_memory_reference_single_reference)
 {
     auto m = 4u;
     auto A = replacement::FIFO(m);
@@ -58,7 +58,7 @@ TEST(replacement, fifo_single_page_single_reference)
     ASSERT_EQ(1u, replacement::cost(A, w));
 }
 
-TEST(replacement, fifo_single_page_multiple_references)
+TEST(replacement, fifo_single_memory_reference_multiple_references)
 {
     auto m = 4u;
     auto A = replacement::FIFO(m);
@@ -94,7 +94,7 @@ TEST(replacement, lru_empty)
     ASSERT_EQ(0u, replacement::cost(A, w));
 }
 
-TEST(replacement, lru_single_page_single_reference)
+TEST(replacement, lru_single_memory_reference_single_reference)
 {
     auto m = 4u;
     auto A = replacement::LRU(m);
@@ -102,7 +102,7 @@ TEST(replacement, lru_single_page_single_reference)
     ASSERT_EQ(1u, replacement::cost(A, w));
 }
 
-TEST(replacement, lru_single_page_multiple_references)
+TEST(replacement, lru_single_memory_reference_multiple_references)
 {
     auto m = 4u;
     auto A = replacement::LRU(m);
@@ -130,7 +130,7 @@ TEST(replacement, lru_replacement_with_initial_state)
  * Test counting the number of page replacements for multiple threads
  * with a shared cache.
  */
-TEST(page_replcament, lru_replacement_two_threads_shared_cache)
+TEST(memory_reference_replcament, lru_replacement_two_threads_shared_cache)
 {
     {
         auto m = 4u;

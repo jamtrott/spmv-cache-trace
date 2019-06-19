@@ -45,7 +45,7 @@ public:
     int spmv_rows_per_thread(int thread, int num_threads) const;
     int spmv_nonzeros_per_thread(int thread, int num_threads) const;
 
-    std::vector<uintptr_t> spmv_page_reference_string(
+    std::vector<uintptr_t> spmv_memory_reference_reference_string(
         value_array_type const & x,
         value_array_type const & y,
         int thread,

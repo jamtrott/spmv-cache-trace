@@ -9,7 +9,7 @@
 
 using namespace std::literals::string_literals;
 
-namespace linsparse
+namespace matrix
 {
 
 std::map<std::string, MatrixFormat> const matrix_formats{

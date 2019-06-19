@@ -11,7 +11,7 @@
 #include <iosfwd>
 #include <string>
 
-namespace linsparse
+namespace matrix
 {
 
 enum class MatrixFormat

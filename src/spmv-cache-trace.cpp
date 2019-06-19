@@ -7,9 +7,9 @@
 #include <ostream>
 
 CacheComplexityEstimate estimate_spmv_cache_complexity_private(
-    linsparse::Matrix const & matrix,
-    linsparse::Vector const & x,
-    linsparse::Vector const & y,
+    matrix::Matrix const & matrix,
+    matrix::Vector const & x,
+    matrix::Vector const & y,
     unsigned int thread,
     unsigned int num_threads,
     unsigned int cache_size,
@@ -24,9 +24,9 @@ CacheComplexityEstimate estimate_spmv_cache_complexity_private(
 }
 
 std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_private(
-    linsparse::Matrix const & matrix,
-    linsparse::Vector const & x,
-    linsparse::Vector const & y,
+    matrix::Matrix const & matrix,
+    matrix::Vector const & x,
+    matrix::Vector const & y,
     unsigned int num_threads,
     unsigned int cache_size,
     unsigned int cache_line_size)
@@ -41,9 +41,9 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_private(
 }
 
 std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
-    linsparse::Matrix const & matrix,
-    linsparse::Vector const & x,
-    linsparse::Vector const & y,
+    matrix::Matrix const & matrix,
+    matrix::Vector const & x,
+    matrix::Vector const & y,
     unsigned int num_threads,
     unsigned int cache_size,
     unsigned int cache_line_size)
@@ -66,9 +66,9 @@ std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity_shared(
 }
 
 std::vector<CacheComplexityEstimate> estimate_spmv_cache_complexity(
-    linsparse::Matrix const & matrix,
-    linsparse::Vector const & x,
-    linsparse::Vector const & y,
+    matrix::Matrix const & matrix,
+    matrix::Vector const & x,
+    matrix::Vector const & y,
     unsigned int num_threads,
     unsigned int cache_size,
     unsigned int cache_line_size,

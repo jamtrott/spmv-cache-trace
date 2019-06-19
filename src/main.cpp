@@ -25,7 +25,7 @@ char const * argp_program_bug_address = "<james@simula.no>";
 struct arguments
 {
     arguments()
-        : matrix_format(linsparse::MatrixFormat::csr)
+        : matrix_format(matrix::MatrixFormat::csr)
         , list_matrix_formats(false)
         , matrix_path()
         , cache_size(32768)
@@ -36,7 +36,7 @@ struct arguments
     {
     }
 
-    linsparse::MatrixFormat matrix_format;
+    matrix::MatrixFormat matrix_format;
     bool list_matrix_formats;
     std::string matrix_path;
     unsigned int cache_size;
@@ -70,8 +70,8 @@ error_t parse_option(int key, char * arg, argp_state * state)
                 std::begin(format), std::end(format),
                 std::begin(format),
                 [] (unsigned char c) { return std::tolower(c); });
-            args.matrix_format = linsparse::find_matrix_format(format);
-            if (args.matrix_format == linsparse::MatrixFormat::none)
+            args.matrix_format = matrix::find_matrix_format(format);
+            if (args.matrix_format == matrix::MatrixFormat::none)
                 argp_error(state, "Unknown sparse matrix format: %s", arg);
         }
         break;
@@ -120,7 +120,7 @@ error_t parse_option(int key, char * arg, argp_state * state)
 
 auto load_spmv_data(
     std::string const & matrix_path,
-    linsparse::MatrixFormat const & matrix_format,
+    matrix::MatrixFormat const & matrix_format,
     std::ostream & o,
     bool verbose)
 {
@@ -128,9 +128,9 @@ auto load_spmv_data(
         matrix_path, o, verbose);
     auto A = from_matrix_market(
         market_matrix, matrix_format, o, verbose);
-    auto x = linsparse::make_vector(
+    auto x = matrix::make_vector(
         matrix_format, std::vector<double>(market_matrix.columns(), 1.0));
-    auto y = linsparse::make_vector(
+    auto y = matrix::make_vector(
         matrix_format, std::vector<double>(market_matrix.rows(), 0.0));
     return std::make_tuple(std::move(A), x, y);
 }
@@ -171,7 +171,7 @@ int main(int argc, char ** argv)
     }
 
     if (args.list_matrix_formats) {
-        linsparse::list_matrix_formats(std::cout);
+        matrix::list_matrix_formats(std::cout);
         return 0;
     }
 
@@ -190,7 +190,7 @@ int main(int argc, char ** argv)
         auto x = std::move(std::get<1>(p));
         auto y = std::move(std::get<2>(p));
 
-        auto matrix_format_s = linsparse::matrix_format_name(matrix_format);
+        auto matrix_format_s = matrix::matrix_format_name(matrix_format);
         auto rows = A.rows();
         auto columns = A.columns();
         auto nonzeros = A.nonzeros();

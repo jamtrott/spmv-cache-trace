@@ -185,7 +185,7 @@ int main(int argc, char ** argv)
 
     try {
         auto p = load_spmv_data(
-            matrix_path, matrix_format, std::cout, args.verbose);
+            matrix_path, matrix_format, std::cout, verbose);
         auto A = std::move(std::get<0>(p));
         auto x = std::move(std::get<1>(p));
         auto y = std::move(std::get<2>(p));

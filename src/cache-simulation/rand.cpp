@@ -24,7 +24,6 @@ AllocationCost RAND::allocate(MemoryReference const & x)
     }
 
     if (memory_references.size() == cache_lines) {
-        auto y = *std::begin(memory_references);
         memory_references.erase(std::begin(memory_references));
     }
     memory_references.insert(x);

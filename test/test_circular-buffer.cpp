@@ -127,16 +127,24 @@ TEST(circular_buffer, reverse_iterator)
     ASSERT_EQ(std::crbegin(b), std::crend(b));
 
     b.push_back(0);
-    ASSERT_EQ(0, *std::next(std::crbegin(b)));
+    ASSERT_EQ(1, b.size());
+    ASSERT_TRUE(std::crbegin(b) != std::crend(b));
+    ASSERT_EQ(0, *std::crbegin(b));
     ASSERT_EQ(std::crend(b), std::next(std::crbegin(b)));
 
     b.push_back(1);
+    ASSERT_EQ(2, b.size());
+    ASSERT_TRUE(std::crbegin(b) != std::crend(b));
     ASSERT_EQ(1, *(std::crbegin(b)));
+    ASSERT_TRUE((std::crbegin(b) + 1u) != std::crend(b));
     ASSERT_EQ(0, *(std::crbegin(b) + 1u));
     ASSERT_EQ(std::crend(b), std::crbegin(b) + 2u);
 
     b.push_back(2);
+    ASSERT_EQ(2, b.size());
+    ASSERT_TRUE(std::crbegin(b) != std::crend(b));
     ASSERT_EQ(2, *(std::crbegin(b)));
+    ASSERT_TRUE((std::crbegin(b) + 1u) != std::crend(b));
     ASSERT_EQ(1, *(std::crbegin(b) + 1u));
     ASSERT_EQ(std::crend(b), std::crbegin(b) + 2u);
 }

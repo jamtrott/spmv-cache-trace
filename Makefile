@@ -1,5 +1,6 @@
 # Configuration
-CXXFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
+CFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
+CXXFLAGS=$(CFLAGS)
 INCLUDES=-Isrc
 LDFLAGS=-lz
 
@@ -10,18 +11,27 @@ all: spmv-cache-trace
 
 # Libraries
 util_a = src/util/util.a
-util_sources = \
+util_c_sources = \
+	src/util/json.c
+util_c_headers = \
+	src/util/json.h
+util_c_objects := \
+	$(foreach source,$(util_c_sources),$(source:.c=.o))
+util_cxx_sources = \
 	src/util/tarstream.cpp \
 	src/util/zlibstream.cpp
-util_headers = \
+util_cxx_headers = \
+	src/util/circular-buffer.hpp \
 	src/util/tarstream.hpp \
 	src/util/zlibstream.hpp
-util_objects := \
-	$(foreach source,$(util_sources),$(source:.cpp=.o))
+util_cxx_objects := \
+	$(foreach source,$(util_cxx_sources),$(source:.cpp=.o))
 
-$(util_objects): %.o: %.cpp $(util_headers)
+$(util_c_objects): %.o: %.c $(util_c_headers)
+	$(CC) -c $(CFLAGS) $(INCLUDES) $< -o $@
+$(util_cxx_objects): %.o: %.cpp $(util_cxx_headers)
 	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@
-$(util_a): $(util_objects)
+$(util_a): $(util_c_objects) $(util_cxx_objects)
 	$(AR) $(ARFLAGS) $@ $^
 
 matrix_a = src/matrix/matrix.a
@@ -106,6 +116,7 @@ gtest_main.a: gtest-all.o gtest_main.o
 unittest_sources = \
 	test/test_aligned-allocator.cpp \
 	test/test_circular-buffer.cpp \
+	test/test_json.cpp \
 	test/test_matrix-market.cpp \
 	test/test_coordinate-matrix.cpp \
 	test/test_csr-matrix.cpp \
@@ -124,7 +135,7 @@ unittest: $(unittest_objects) $(cache_simulation_a) $(matrix_a) $(util_a) gtest_
 # Clean
 .PHONY: clean
 clean:
-	rm -f $(util_objects) $(util_a)
+	rm -f $(util_c_objects) $(util_cxx_objects) $(util_a)
 	rm -f $(matrix_objects) $(matrix_a)
 	rm -f $(cache_simulation_objects) $(cache_simulation_a)
 	rm -f $(spmv_cache_trace_objects)

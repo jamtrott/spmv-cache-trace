@@ -1,5 +1,6 @@
 #include "ellpack-matrix.hpp"
 #include "matrix-market.hpp"
+#include "matrix-error.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -141,7 +142,7 @@ Matrix from_matrix_market(
     bool skip_padding)
 {
     if (m.header.format != matrix_market::Format::coordinate)
-        throw std::invalid_argument("Expected matrix in coordinate format");
+        throw matrix::matrix_error("Expected matrix in coordinate format");
     auto const & size = m.size;
 
     // Compute the row length and number of entries (including padding)
@@ -238,7 +239,7 @@ ellpack_matrix::value_array_type operator*(
     ellpack_matrix::value_array_type const & x)
 {
     if (A.columns != (index_type) x.size()) {
-        throw std::invalid_argument(
+        throw matrix::matrix_error(
             "Size mismatch: "s +
             "A.size()="s + (
                 std::to_string(A.rows) + "x"s + std::to_string(A.columns)) + ", " +

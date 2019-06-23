@@ -36,6 +36,10 @@ enum class MatrixFormat
 std::string matrix_format_name(
     MatrixFormat const & format);
 
+std::ostream & operator<<(
+    std::ostream & o,
+    MatrixFormat const & format);
+
 MatrixFormat find_matrix_format(
     std::string const & name);
 

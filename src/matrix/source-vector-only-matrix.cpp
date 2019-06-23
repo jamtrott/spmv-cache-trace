@@ -1,5 +1,6 @@
 #include "source-vector-only-matrix.hpp"
 #include "matrix-market.hpp"
+#include "matrix-error.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -22,7 +23,7 @@ std::string to_string(Order o)
     case Order::column_major: return "column major";
     case Order::row_major: return "row major";
     default:
-        throw std::invalid_argument("Unknown matrix order");
+        throw matrix::matrix_error("Unknown matrix order");
     }
 }
 
@@ -123,7 +124,7 @@ std::ostream & operator<<(std::ostream & o, Order order)
     case Order::column_major: return o << "column-major";
     case Order::row_major: return o << "row-major";
     default:
-      throw std::invalid_argument("Invalid matrix order");
+      throw matrix::matrix_error("Invalid matrix order");
     }
 }
 
@@ -162,7 +163,7 @@ Matrix from_matrix_market(
     Order o)
 {
     if (m.header.format != matrix_market::Format::coordinate)
-        throw std::invalid_argument("Expected matrix in coordinate format");
+        throw matrix::matrix_error("Expected matrix in coordinate format");
     auto const & size = m.size;
 
     auto entries = m.entries;
@@ -229,7 +230,7 @@ source_vector_only_matrix::value_array_type operator*(
     source_vector_only_matrix::value_array_type const & x)
 {
     if (A.columns != (index_type) x.size()) {
-        throw std::invalid_argument(
+        throw matrix::matrix_error(
             "Size mismatch: "s +
             "A.size()="s + (
                 std::to_string(A.rows) + "x"s + std::to_string(A.columns)) + ", " +

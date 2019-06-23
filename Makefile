@@ -32,6 +32,7 @@ matrix_sources = \
 	src/matrix/ellpack-matrix.cpp \
 	src/matrix/source-vector-only-matrix.cpp \
 	src/matrix/matrix.cpp \
+	src/matrix/matrix-error.cpp \
 	src/matrix/matrix-market.cpp
 matrix_headers = \
 	src/matrix/coordinate-matrix.hpp \
@@ -39,6 +40,7 @@ matrix_headers = \
 	src/matrix/ellpack-matrix.hpp \
 	src/matrix/source-vector-only-matrix.hpp \
 	src/matrix/matrix.hpp \
+	src/matrix/matrix-error.hpp \
 	src/matrix/matrix-market.hpp
 matrix_objects := \
 	$(foreach source,$(matrix_sources),$(source:.cpp=.o))

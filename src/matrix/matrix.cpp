@@ -1,4 +1,5 @@
 #include "matrix.hpp"
+#include "matrix-error.hpp"
 
 #include <algorithm>
 #include <iterator>
@@ -42,7 +43,14 @@ std::string matrix_format_name(
             return it->first;
     }
 
-    throw std::invalid_argument("Unknown matrix format");
+    throw matrix_error("Unknown matrix format");
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    MatrixFormat const & format)
+{
+    return o << matrix_format_name(format);
 }
 
 MatrixFormat find_matrix_format(
@@ -122,7 +130,7 @@ unsigned int Matrix::rows() const
     case MatrixFormat::ellpack: return _ellpack_matrix.rows;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.rows;
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -145,7 +153,7 @@ unsigned int Matrix::columns() const
     case MatrixFormat::ellpack: return _ellpack_matrix.columns;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.columns;
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -168,7 +176,7 @@ unsigned int Matrix::nonzeros() const
     case MatrixFormat::ellpack: return _ellpack_matrix.numEntries;
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.numEntries;
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -191,7 +199,7 @@ std::size_t Matrix::size() const
     case MatrixFormat::ellpack: return _ellpack_matrix.size();
     case MatrixFormat::source_vector_only: return _source_vector_only_matrix.size();
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -230,7 +238,7 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
         return _source_vector_only_matrix.spmv_memory_reference_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -263,7 +271,7 @@ Matrix from_matrix_market(
     case MatrixFormat::source_vector_only:
         return Matrix(matrix_format, source_vector_only_matrix::from_matrix_market_general(m));
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -296,7 +304,7 @@ Vector::Vector(
             std::cbegin(v), std::cend(v));
         break;
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -370,7 +378,7 @@ void spmv(
         source_vector_only_matrix::spmv(m._source_vector_only_matrix, x._vector, y._vector);
         break;
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -393,7 +401,7 @@ int spmv_rows_per_thread(
     case MatrixFormat::csr_irregular_traffic:
         return csr_matrix::spmv_rows_per_thread(m._csr_matrix, thread, num_threads);
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 
@@ -416,7 +424,7 @@ int spmv_nonzeros_per_thread(
     case MatrixFormat::csr_irregular_traffic:
         return csr_matrix::spmv_nonzeros_per_thread(m._csr_matrix, thread, num_threads);
     default:
-        throw std::logic_error("Not implemented");
+        throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);
     }
 }
 

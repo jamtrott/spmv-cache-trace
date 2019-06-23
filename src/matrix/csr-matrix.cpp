@@ -1,5 +1,6 @@
 #include "csr-matrix.hpp"
 #include "matrix-market.hpp"
+#include "matrix-error.hpp"
 
 #include <ostream>
 #include <iterator>
@@ -178,7 +179,7 @@ Matrix from_matrix_market_row_aligned(
     index_type row_alignment)
 {
     if (m.header.format != matrix_market::Format::coordinate)
-        throw std::invalid_argument("Expected matrix in coordinate format");
+        throw matrix::matrix_error("Expected matrix in coordinate format");
     auto const & size = m.size;
     auto entries = m.sortedCoordinateEntries(
         matrix_market::Matrix::Order::row_major);
@@ -226,7 +227,7 @@ csr_matrix::value_array_type operator*(
     csr_matrix::value_array_type const & x)
 {
     if (A.columns != (index_type) x.size()) {
-        throw std::invalid_argument(
+        throw matrix::matrix_error(
             "Size mismatch: "s +
             "A.size()="s + (
                 std::to_string(A.rows) + "x"s + std::to_string(A.columns)) + ", " +

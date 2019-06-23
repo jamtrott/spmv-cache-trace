@@ -3,6 +3,7 @@
 #include <zlib.h>
 
 #include <cstring>
+#include <istream>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -67,7 +68,7 @@ int zlibstreambuf::underflow()
                 if (err != Z_OK) {
                     auto s = std::stringstream{};
                     s << "inflateInit2(" << zs << ", 15+32)";
-                    throw std::system_error(err, zlib::error_category(), s.str());
+                    throw zlibstream_error(err, s.str());
                 }
                 stream_initialized = true;
             }
@@ -80,7 +81,7 @@ int zlibstreambuf::underflow()
             if (err != Z_OK && err != Z_STREAM_END) {
                 auto s = std::stringstream{};
                 s << "inflate(" << zs << ", Z_NO_FLUSH)";
-                throw std::system_error(err, zlib::error_category(), s.str());
+                throw zlibstream_error(err, s.str());
             }
 
             in_buf_it = zs.next_in;
@@ -94,6 +95,42 @@ int zlibstreambuf::underflow()
     return this->gptr() == this->egptr()
         ? std::char_traits<char>::eof()
         : std::char_traits<char>::to_int_type(*this->gptr());
+}
+
+zlibstream_base::zlibstream_base(std::streambuf * sbuf)
+    : sbuf_(sbuf)
+{
+}
+
+izlibstream::izlibstream(std::streambuf * sbuf)
+    : zlibstream_base(sbuf)
+    , std::ios(&this->sbuf_)
+    , std::istream(&this->sbuf_)
+{
+}
+
+struct error_category
+    : public std::error_category
+{
+    char const * name() const noexcept override
+    {
+        return "zlib::error_category";
+    }
+
+    std::string message(int ev) const override
+    {
+        return std::string(zError(ev));
+    }
+};
+
+zlibstream_error::zlibstream_error(int ev, const std::string & what_arg)
+    : std::system_error(ev, zlib::error_category(), what_arg)
+{
+}
+
+zlibstream_error::zlibstream_error(int ev, const char * what_arg)
+    : std::system_error(ev, zlib::error_category(), what_arg)
+{
 }
 
 }

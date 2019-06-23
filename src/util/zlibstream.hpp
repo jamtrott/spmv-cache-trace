@@ -4,29 +4,11 @@
 #include <zlib.h>
 
 #include <cstring>
+#include <istream>
 #include <ostream>
-#include <sstream>
 #include <string>
 #include <system_error>
 #include <vector>
-
-namespace zlib
-{
-
-struct error_category : std::error_category
-{
-    char const * name() const noexcept override
-    {
-        return "zlib::error_category";
-    }
-
-    std::string message(int ev) const override
-    {
-        return std::string(zError(ev));
-    }
-};
-
-}
 
 std::ostream & operator<<(std::ostream & o, z_stream const & zs);
 
@@ -60,10 +42,12 @@ private:
     bool stream_initialized;
 };
 
-struct zlibstream_base
+class zlibstream_base
 {
+public:
+    zlibstream_base(std::streambuf * sbuf);
+protected:
     zlibstreambuf sbuf_;
-    zlibstream_base(std::streambuf * sbuf) : sbuf_(sbuf) {}
 };
 
 class izlibstream
@@ -71,12 +55,14 @@ class izlibstream
     , public std::istream
 {
 public:
-    izlibstream(std::streambuf * sbuf)
-        : zlibstream_base(sbuf)
-        , std::ios(&this->sbuf_)
-        , std::istream(&this->sbuf_)
-    {
-    }
+    izlibstream(std::streambuf * sbuf);
+};
+
+struct zlibstream_error
+    : public std::system_error
+{
+    zlibstream_error(int ev, const std::string & what_arg);
+    zlibstream_error(int ev, const char * what_arg);
 };
 
 }

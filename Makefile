@@ -1,5 +1,5 @@
 # Configuration
-CXXFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address
+CXXFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
 INCLUDES=-Isrc
 LDFLAGS=-lz
 

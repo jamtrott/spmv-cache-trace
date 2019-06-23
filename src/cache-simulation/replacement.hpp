@@ -26,7 +26,8 @@ using MemoryReferenceString = std::vector<MemoryReference>;
 using MemoryReferenceSet = std::unordered_set<MemoryReference>;
 constexpr MemoryReference undefined_memory_reference = std::numeric_limits<MemoryReference>::max();
 
-using AllocationCost = unsigned int;
+using cache_size_type = uint64_t;
+using cache_miss_type = uint64_t;
 
 /*
  * Replacement algorithms.
@@ -35,7 +36,7 @@ class ReplacementAlgorithm
 {
 public:
     ReplacementAlgorithm(
-        unsigned int cache_lines,
+        cache_size_type cache_lines,
         MemoryReferenceSet const & _memory_references)
         : cache_lines(cache_lines)
         , memory_references(_memory_references)
@@ -47,11 +48,11 @@ public:
     {
     }
 
-    virtual AllocationCost allocate(MemoryReference const & x) = 0;
+    virtual cache_miss_type allocate(MemoryReference const & x) = 0;
 
 protected:
     // The number of cache lines that fit in the cache
-    unsigned int cache_lines;
+    cache_size_type cache_lines;
 
     // The subset cache lines residing in the cache
     MemoryReferenceSet memory_references;
@@ -65,11 +66,11 @@ class RAND
 {
 public:
     RAND(
-        unsigned int cache_lines,
+        cache_size_type cache_lines,
         MemoryReferenceSet const & memory_references = MemoryReferenceSet());
     ~RAND();
 
-    AllocationCost allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(MemoryReference const & x) override;
 };
 
 /*
@@ -80,11 +81,11 @@ class FIFO
 {
 public:
     FIFO(
-        unsigned int cache_lines,
+        cache_size_type cache_lines,
         std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
     ~FIFO();
 
-    AllocationCost allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(MemoryReference const & x) override;
 
 private:
     std::queue<MemoryReference> q;
@@ -98,11 +99,11 @@ class LRU
 {
 public:
     LRU(
-        unsigned int cache_lines,
+        cache_size_type cache_lines,
         std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
     ~LRU();
 
-    AllocationCost allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(MemoryReference const & x) override;
 
 private:
     CircularBuffer<MemoryReference> q;
@@ -112,7 +113,7 @@ private:
  * Compute the cost (number of replacements) of processing a memory
  * reference string with a given replacement algorithm and initial state.
  */
-unsigned int cost(
+cache_miss_type cost(
     ReplacementAlgorithm & A,
     MemoryReferenceString const & w);
 
@@ -125,7 +126,7 @@ unsigned int cost(
  * may be unfair and memory access latencies vary, causing some CPUs
  * to be delayed more than others.
  */
-std::vector<unsigned int> cost(
+std::vector<cache_miss_type> cost(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws);
 

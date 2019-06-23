@@ -9,7 +9,7 @@ namespace replacement
 {
 
 LRU::LRU(
-    unsigned int cache_lines,
+    cache_size_type cache_lines,
     std::vector<MemoryReference> const & initial_state)
     : ReplacementAlgorithm(
         cache_lines,
@@ -24,7 +24,7 @@ LRU::~LRU()
 {
 }
 
-AllocationCost LRU::allocate(MemoryReference const & x)
+cache_miss_type LRU::allocate(MemoryReference const & x)
 {
     auto it = memory_references.find(x);
     if (it != std::end(memory_references) && x == *it) {

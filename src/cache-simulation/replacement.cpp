@@ -8,7 +8,7 @@
 namespace replacement
 {
 
-unsigned int cost(
+cache_miss_type cost(
     ReplacementAlgorithm & A,
     MemoryReferenceString const & w)
 {
@@ -18,7 +18,7 @@ unsigned int cost(
     return cost;
 }
 
-std::vector<unsigned int> cost(
+std::vector<cache_miss_type> cost(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws)
 {
@@ -26,7 +26,7 @@ std::vector<unsigned int> cost(
 
     // Get the the length of each CPU's reference string and the
     // longest reference string.
-    std::vector<unsigned int> T(P, 0u);
+    std::vector<MemoryReference> T(P, 0u);
     auto T_max = 0u;
     for (auto p = 0u; p < P; ++p) {
         T[p] = ws[p].size();
@@ -36,7 +36,7 @@ std::vector<unsigned int> cost(
 
     // Compute the number of replacements for an interleaved
     // reference string.
-    std::vector<unsigned int> cost(P, 0u);
+    std::vector<cache_miss_type> cost(P, 0u);
     for (auto t = 0u; t < T_max; ++t) {
         for (auto p = 0u; p < P; ++p) {
             if (t < T[p]) {

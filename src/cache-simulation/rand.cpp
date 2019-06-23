@@ -7,7 +7,7 @@ namespace replacement
 {
 
 RAND::RAND(
-    unsigned int cache_lines,
+    cache_size_type cache_lines,
     MemoryReferenceSet const & memory_references)
     : ReplacementAlgorithm(cache_lines, memory_references)
 {
@@ -17,7 +17,7 @@ RAND::~RAND()
 {
 }
 
-AllocationCost RAND::allocate(MemoryReference const & x)
+cache_miss_type RAND::allocate(MemoryReference const & x)
 {
     if (std::find(std::cbegin(memory_references), std::cend(memory_references), x) != std::cend(memory_references)) {
         return 0u;

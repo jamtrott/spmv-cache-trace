@@ -8,7 +8,7 @@ namespace replacement
 {
 
 FIFO::FIFO(
-    unsigned int cache_lines,
+    cache_size_type cache_lines,
     std::vector<MemoryReference> const & initial_state)
     : ReplacementAlgorithm(
         cache_lines,
@@ -23,7 +23,7 @@ FIFO::~FIFO()
 {
 }
 
-AllocationCost FIFO::allocate(MemoryReference const & x)
+cache_miss_type FIFO::allocate(MemoryReference const & x)
 {
     auto it = memory_references.find(x);
     if (it != std::cend(memory_references) && x == *it)

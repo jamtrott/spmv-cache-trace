@@ -6,6 +6,7 @@
 #include <limits>
 #include <new>
 #include <system_error>
+#include <errno.h>
 
 /*
  * An allocator for memory with specific alignment requirements.  This
@@ -56,10 +57,20 @@ public:
     pointer allocate(size_type n)
     {
         pointer p = nullptr;
+
+#ifdef USE_ALIGNED_ALLOC
         p = reinterpret_cast<pointer>(
             aligned_alloc(alignment, n * sizeof(value_type)));
         if (!p)
-            throw std::bad_alloc();
+            throw std::system_error(errno, std::generic_category());
+#elif USE_POSIX_MEMALIGN
+        int ret = posix_memalign(
+            (void **) &p, alignment, n * sizeof(value_type));
+        if (ret != 0)
+            throw std::system_error(ret, std::generic_category());
+#else
+#error "Missing support for aligned memory allocation"
+#endif
 
         if (first_touch)
             touch(p, n);

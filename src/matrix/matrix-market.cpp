@@ -11,6 +11,9 @@
 #include <tuple>
 #include <vector>
 
+#include <errno.h>
+#include <string.h>
+
 using namespace matrix_market;
 using namespace std::literals::string_literals;
 
@@ -79,7 +82,7 @@ std::vector<CoordinateEntry> Matrix::sortedCoordinateEntries(
     return sorted_entries;
 }
 
-parse_error::parse_error(std::string const & s) throw()
+matrix_market_error::matrix_market_error(std::string const & s) throw()
     : std::runtime_error(s)
 {}
 
@@ -95,7 +98,7 @@ Object readObject(std::istream & i)
         auto s = std::stringstream{};
         s << "Failed to parse header: "
           << "Expected \"matrix\", got \"" << object << "\"";
-        throw parse_error{s.str()};
+        throw matrix_market_error{s.str()};
     }
 
     return Object::matrix;
@@ -113,7 +116,7 @@ Format readFormat(std::istream & i) {
 
     auto s = std::stringstream{};
     s << "Expected \"coordinate\" or \"array\", got \"" << format << "\"";
-    throw parse_error{s.str()};
+    throw matrix_market_error{s.str()};
 }
 
 Header readHeader(std::istream & i)
@@ -129,7 +132,7 @@ Header readHeader(std::istream & i)
         auto s = std::stringstream{};
         s << "Failed to parse header: "
           << "Expected \"%%MatrixMarket\", got \"" << identifier << "\"";
-        throw parse_error{s.str()};
+        throw matrix_market_error{s.str()};
     }
 
     auto object = readObject(s);
@@ -154,7 +157,7 @@ Size readSize(std::istream & i, Format format)
 {
     std::string line;
     if (!std::getline(i, line))
-        throw parse_error{"Failed to parse size"};
+        throw matrix_market_error{"Failed to parse size"};
 
     std::stringstream s{line};
     if (format == Format::coordinate) {
@@ -185,7 +188,7 @@ std::vector<CoordinateEntry> readEntries(
         s << "Failed to parse entries: "
           << "Expected " << size.numEntries << " entries, "
           << "got " << entries.size() << " entries.";
-        throw parse_error{s.str()};
+        throw matrix_market_error{s.str()};
     }
     return entries;
 }
@@ -358,7 +361,7 @@ matrix_market::Matrix load_matrix(
         o << "Loading matrix from " << path << '\n';
     auto f = std::ifstream{path};
     if (!f)
-        throw std::runtime_error("Failed to open file: "s + path);
+        throw matrix_market::matrix_market_error(strerror(errno));
 
     if (ends_with(path, ".tar.gz"s)) {
         return load_compressed_matrix(f, path, ".tar.gz"s, o, verbose);

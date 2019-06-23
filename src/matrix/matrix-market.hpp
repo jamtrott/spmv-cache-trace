@@ -83,12 +83,6 @@ public:
 bool operator==(Matrix const & A, Matrix const & B);
 std::ostream & operator<<(std::ostream & o, matrix_market::Matrix const & m);
 
-class parse_error : public std::runtime_error
-{
-public:
-    parse_error(std::string const & s) throw();
-};
-
 Matrix fromStream(std::istream & i);
 
 std::ostream & toStream(
@@ -100,6 +94,13 @@ matrix_market::Matrix load_matrix(
     std::string const & path,
     std::ostream & o,
     bool verbose = false);
+
+class matrix_market_error
+    : public std::runtime_error
+{
+public:
+    matrix_market_error(std::string const & s) throw();
+};
 
 }
 

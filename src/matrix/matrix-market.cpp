@@ -347,9 +347,13 @@ matrix_market::Matrix load_compressed_matrix(
     if (verbose)
         o << "Loading compressed matrix from " << path << ':' << filename << '\n';
 
-    zlib::izlibstream gzstream(f.rdbuf());
-    tar::itarstream stream(gzstream.rdbuf(), filename);
-    return matrix_market::fromStream(stream);
+    try {
+        zlib::izlibstream gzstream(f.rdbuf());
+        tar::itarstream stream(gzstream.rdbuf(), filename);
+        return matrix_market::fromStream(stream);
+    } catch (zlib::zlibstream_error const & e) {
+        throw matrix_market::matrix_market_error(e.what());
+    }
 }
 
 matrix_market::Matrix load_matrix(

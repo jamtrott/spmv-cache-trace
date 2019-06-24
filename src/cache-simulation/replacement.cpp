@@ -26,7 +26,7 @@ std::vector<cache_miss_type> cost(
 
     // Get the the length of each CPU's reference string and the
     // longest reference string.
-    std::vector<MemoryReference> T(P, 0u);
+    std::vector<memory_reference_type> T(P, 0u);
     auto T_max = 0u;
     for (auto p = 0u; p < P; ++p) {
         T[p] = ws[p].size();
@@ -57,7 +57,7 @@ std::ostream & operator<<(
 
     o << '(';
     std::copy(std::begin(w), std::end(w) - 1u,
-              std::ostream_iterator<replacement::MemoryReference>(o, ", "));
+              std::ostream_iterator<replacement::memory_reference_type>(o, ", "));
     return o << w[w.size()-1u] << ')';
 }
 

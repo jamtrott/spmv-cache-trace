@@ -77,7 +77,8 @@ TEST(replacement, fifo_replacement)
 TEST(replacement, fifo_replacement_with_initial_state)
 {
     auto m = 4u;
-    auto A = replacement::FIFO(m, std::vector<replacement::MemoryReference>{0u, 1u, 2u});
+    auto A = replacement::FIFO(
+        m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
     auto w = replacement::MemoryReferenceString{0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u};
     ASSERT_EQ(1u, replacement::cost(A, w));
 }
@@ -121,7 +122,8 @@ TEST(replacement, lru_replacement)
 TEST(replacement, lru_replacement_with_initial_state)
 {
     auto m = 4u;
-    auto A = replacement::LRU(m, std::vector<replacement::MemoryReference>{0u, 1u, 2u});
+    auto A = replacement::LRU(
+        m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
     auto w = replacement::MemoryReferenceString{0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u};
     ASSERT_EQ(1u, replacement::cost(A, w));
 }
@@ -134,7 +136,8 @@ TEST(memory_reference_replcament, lru_replacement_two_threads_shared_cache)
 {
     {
         auto m = 4u;
-        auto A = replacement::LRU(m, std::vector<replacement::MemoryReference>{0u, 1u, 2u});
+        auto A = replacement::LRU(
+            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u},
             {}};
@@ -145,7 +148,8 @@ TEST(memory_reference_replcament, lru_replacement_two_threads_shared_cache)
 
     {
         auto m = 4u;
-        auto A = replacement::LRU(m, std::vector<replacement::MemoryReference>{0u, 1u, 2u});
+        auto A = replacement::LRU(
+            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {0u, 1u, 2u, 3u, 0u, 1u, 2u, 3u},
             {0u, 1u, 2u, 3u}};
@@ -156,7 +160,8 @@ TEST(memory_reference_replcament, lru_replacement_two_threads_shared_cache)
 
     {
         auto m = 4u;
-        auto A = replacement::LRU(m, std::vector<replacement::MemoryReference>{0u, 1u, 2u});
+        auto A = replacement::LRU(
+            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {0u, 1u, 2u, 3u, 2u, 7u, 2u, 3u},
             {4u, 5u, 6u, 7u, 6u, 5u, 6u, 7u}};

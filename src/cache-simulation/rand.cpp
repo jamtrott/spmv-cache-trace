@@ -17,7 +17,7 @@ RAND::~RAND()
 {
 }
 
-cache_miss_type RAND::allocate(MemoryReference const & x)
+cache_miss_type RAND::allocate(memory_reference_type const & x)
 {
     if (std::find(std::cbegin(memory_references), std::cend(memory_references), x) != std::cend(memory_references)) {
         return 0u;

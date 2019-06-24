@@ -21,13 +21,12 @@
 namespace replacement
 {
 
-using MemoryReference = uintptr_t;
-using MemoryReferenceString = std::vector<MemoryReference>;
-using MemoryReferenceSet = std::unordered_set<MemoryReference>;
-constexpr MemoryReference undefined_memory_reference = std::numeric_limits<MemoryReference>::max();
-
+using memory_reference_type = uintptr_t;
 using cache_size_type = uint64_t;
 using cache_miss_type = uint64_t;
+
+using MemoryReferenceString = std::vector<memory_reference_type>;
+using MemoryReferenceSet = std::unordered_set<memory_reference_type>;
 
 /*
  * Replacement algorithms.
@@ -48,7 +47,7 @@ public:
     {
     }
 
-    virtual cache_miss_type allocate(MemoryReference const & x) = 0;
+    virtual cache_miss_type allocate(memory_reference_type const & x) = 0;
 
 protected:
     // The number of cache lines that fit in the cache
@@ -70,7 +69,7 @@ public:
         MemoryReferenceSet const & memory_references = MemoryReferenceSet());
     ~RAND();
 
-    cache_miss_type allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(memory_reference_type const & x) override;
 };
 
 /*
@@ -82,13 +81,13 @@ class FIFO
 public:
     FIFO(
         cache_size_type cache_lines,
-        std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
+        std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~FIFO();
 
-    cache_miss_type allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(memory_reference_type const & x) override;
 
 private:
-    std::queue<MemoryReference> q;
+    std::queue<memory_reference_type> q;
 };
 
 /*
@@ -100,13 +99,13 @@ class LRU
 public:
     LRU(
         cache_size_type cache_lines,
-        std::vector<MemoryReference> const & memory_references = std::vector<MemoryReference>());
+        std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~LRU();
 
-    cache_miss_type allocate(MemoryReference const & x) override;
+    cache_miss_type allocate(memory_reference_type const & x) override;
 
 private:
-    CircularBuffer<MemoryReference> q;
+    CircularBuffer<memory_reference_type> q;
 };
 
 /*

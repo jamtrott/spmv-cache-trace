@@ -4,7 +4,17 @@ The code in this repository is used to perform trace-based simulations of cache 
 Based on a few, reasonable assumptions, we estimate the number of cache misses incurred by each thread in a parallel computation with irregular memory access patterns. This is achieved by simulating the behaviour of a memory hierarchy which may consist of both private and shared caches.
 
 ## Trace configuration
-The `spmv-cache-trace` program uses a *trace configuration* to define the memory hierarchy and the set of threads to use for a given simulation. The configuration is given by a file in JSON format. For example, the following shows a trace configuration that can be used for a simulation with two threads using a cache hierarchy with three levels of caches:
+The `spmv-cache-trace` program uses a *trace configuration* to describe the memory hierarchy and the set of threads to use for a given simulation. The configuration is given by a file in JSON format, as shown below.
+
+The trace configuration consists of three parts:
+
+1. The *cache hierarchy* describes the size of each cache and its cache lines, as well as how caches are shared. The cache sizes and cache line sizes are given in bytes. For each cache, the `"parent"` is the next level of the memory hierarchy, or, equivalently, the next cache to search whenever a cache miss occurs.
+
+1. *NUMA domains* describe one or more regions that partition the main memory in case of a *non-uniform memory access (NUMA)* system.
+
+1. *Thread affinities* describe the number of threads, as well as specifying which (first-level) cache and NUMA domain that each thread belongs to.
+
+The following example is a trace configuration for a simulation that might correspond to using two threads on a two-socket system with a shared third-level cache:
 ```json
 "trace-config": {
   "caches": {
@@ -14,10 +24,13 @@ The `spmv-cache-trace` program uses a *trace configuration* to define the memory
     "L2-1": {"size":   262144, "line_size": 64, "parents": ["L3"]},
     "L3":   {"size": 20971520, "line_size": 64, "parents": []}
   },
-  "thread_affinities": ["L1-0", "L1-1"]
+  "numa_domains": ["DRAM-0", "DRAM-1"],
+  "thread_affinities": [
+    {"cache": "L1-0", "numa_domain": "DRAM-0"},
+    {"cache": "L1-1", "numa_domain": "DRAM-1"}
+  ]
 }
 ```
-First, each cache is specified by its size (in bytes), the size of its cache lines (in bytes), and its "parents", which is the next set of caches that are searched whenever a cache miss occurs. Second, each thread that takes part in the parallel computation is given a "thread affinity", specifying which (first-level) cache that the thread belongs to.
 
 ## Sparse matrix-vector multiplication
 The sparse matrix-vector multiplication kernels require a matrix stored in the *matrix market* format. Alternatively, a gzip-compressed tarball may be provided that contains a directory and a matrix within that directory that have the same name as the tarball. For example, `test.tar.gz` should contain the matrix `test/test.mtx`. This is the format provided by the *SuiteSparse Matrix Collection* (https://sparse.tamu.edu/).
@@ -37,7 +50,11 @@ will produce the following output:
     "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"]},
     "L3": {"size": 20971520, "line_size": 64, "parents": []}
   },
-  "thread_affinities": ["L1-0", "L1-1"]
+  "numa_domains": ["DRAM-0", "DRAM-1"],
+  "thread_affinities": [
+    {"cache": "L1-0", "numa_domain": "DRAM-0"},
+    {"cache": "L1-1", "numa_domain": "DRAM-1"}
+  ]
 },
 "kernel": {
   "name": "spmv",
@@ -49,11 +66,11 @@ will produce the following output:
   "matrix_size": 35708
 },
 "cache-misses": {
-  "L1-0": [423, 0],
-  "L1-1": [0, 462],
-  "L2-0": [423, 0],
-  "L2-1": [0, 462],
-  "L3": [396, 450]
+  "L1-0": [[423, 0], [0, 0]],
+  "L1-1": [[0, 0], [35, 427]],
+  "L2-0": [[423, 0], [0, 0]],
+  "L2-1": [[0, 0], [35, 427]],
+  "L3": [[396, 0], [23, 427]]
 }
 ```
-From the `"cache-misses"`, we may deduce that the first thread incurred 423 cache misses for the first and second-level caches, and 396 cache misses for the third-level cache. The corresponding numbers for the second thread are 462 cache misses for the first- and second-level caches, and 450 for the third-level cache.
+For each cache, the cache misses are given for each combination of thread and NUMA domain. Thus, for the third-level cache, the first thread incurred 396 cache misses that would have to be fetched from the first NUMA domain, and none for the second NUMA domain. The second thread incurred 23 cache misses for the first NUMA domain, and 427 for the second NUMA domain.

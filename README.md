@@ -16,7 +16,7 @@ The trace configuration consists of three parts:
 
 The following example is a trace configuration for a simulation that might correspond to using two threads on a two-socket system with a shared third-level cache:
 ```json
-"trace-config": {
+{
   "caches": {
     "L1-0": {"size":    32768, "line_size": 64, "parents": ["L2-0"]},
     "L1-1": {"size":    32768, "line_size": 64, "parents": ["L2-1"]},
@@ -42,35 +42,37 @@ $ ./spmv-cache-trace --trace-config trace-config.json -m suitesparse/HB/1138_bus
 ```
 will produce the following output:
 ```json
-"trace-config": {
-  "caches": {
-    "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"]},
-    "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"]},
-    "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"]},
-    "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"]},
-    "L3": {"size": 20971520, "line_size": 64, "parents": []}
+{
+  "trace-config": {
+    "caches": {
+      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"]},
+      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"]},
+      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"]},
+      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"]},
+      "L3": {"size": 20971520, "line_size": 64, "parents": []}
+    },
+    "numa_domains": ["DRAM-0", "DRAM-1"],
+    "thread_affinities": [
+      {"cache": "L1-0", "numa_domain": "DRAM-0"},
+      {"cache": "L1-1", "numa_domain": "DRAM-1"}
+    ]
   },
-  "numa_domains": ["DRAM-0", "DRAM-1"],
-  "thread_affinities": [
-    {"cache": "L1-0", "numa_domain": "DRAM-0"},
-    {"cache": "L1-1", "numa_domain": "DRAM-1"}
-  ]
-},
-"kernel": {
-  "name": "spmv",
-  "matrix_path": "/work/data/suitesparse/HB/1138_bus.tar.gz",
-  "matrix_format": "csr",
-  "rows": 1138,
-  "columns": 1138,
-  "nonzeros": 2596,
-  "matrix_size": 35708
-},
-"cache-misses": {
-  "L1-0": [[423, 0], [0, 0]],
-  "L1-1": [[0, 0], [35, 427]],
-  "L2-0": [[423, 0], [0, 0]],
-  "L2-1": [[0, 0], [35, 427]],
-  "L3": [[396, 0], [23, 427]]
+  "kernel": {
+    "name": "spmv",
+    "matrix_path": "/work/data/suitesparse/HB/1138_bus.tar.gz",
+    "matrix_format": "csr",
+    "rows": 1138,
+    "columns": 1138,
+    "nonzeros": 2596,
+    "matrix_size": 35708
+  },
+  "cache-misses": {
+    "L1-0": [[423, 0], [0, 0]],
+    "L1-1": [[0, 0], [35, 427]],
+    "L2-0": [[423, 0], [0, 0]],
+    "L2-1": [[0, 0], [35, 427]],
+    "L3": [[396, 0], [23, 427]]
+  }
 }
 ```
 For each cache, the cache misses are given for each combination of thread and NUMA domain. Thus, for the third-level cache, the first thread incurred 396 cache misses that would have to be fetched from the first NUMA domain, and none for the second NUMA domain. The second thread incurred 23 cache misses for the first NUMA domain, and 427 for the second NUMA domain.

@@ -122,7 +122,7 @@ private:
  * Compute the cost (number of replacements) of processing a memory
  * reference string with a given replacement algorithm and initial state.
  */
-std::vector<cache_miss_type> cost(
+std::vector<cache_miss_type> trace_cache_misses(
     ReplacementAlgorithm & A,
     MemoryReferenceString const & w,
     numa_domain_type num_numa_domains);
@@ -136,7 +136,7 @@ std::vector<cache_miss_type> cost(
  * may be unfair and memory access latencies vary, causing some CPUs
  * to be delayed more than others.
  */
-std::vector<std::vector<cache_miss_type>> cost(
+std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws,
     numa_domain_type num_numa_domains);

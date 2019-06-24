@@ -112,7 +112,7 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     int num_cache_lines = (cache.size + (cache.line_size-1)) / cache.line_size;
     replacement::LRU replacement_algorithm(num_cache_lines);
     std::vector<std::vector<cache_miss_type>> active_threads_cache_misses =
-        replacement::cost(
+        replacement::trace_cache_misses(
             replacement_algorithm,
             memory_reference_strings,
             num_numa_domains);

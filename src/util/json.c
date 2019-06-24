@@ -664,8 +664,6 @@ struct json_stream json_parse_array(struct json * x, struct json_stream stream)
     stream = json_parse_element(y, stream);
     if (json_is_invalid(y)) {
         copy_json_parser_error(x, y);
-        x->type = invalid_t;
-        x->string = strdup(json_to_error(y));
         json_free(y);
         return stream;
     }

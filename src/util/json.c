@@ -445,6 +445,27 @@ const char * json_parser_error(struct json_stream s, const char * description)
     return error;
 }
 
+void make_json_parser_error(
+    struct json * x,
+    struct json_stream stream,
+    const char * description)
+{
+    if (x->string)
+        free((void *) x->string);
+    x->type = invalid_t;
+    x->string = json_parser_error(stream, description);
+}
+
+void copy_json_parser_error(
+    struct json * x,
+    struct json * y)
+{
+    if (x->string)
+        free((void *) x->string);
+    x->type = invalid_t;
+    x->string = strdup(json_to_error(y));
+}
+
 struct json_stream json_parse_element(struct json * x, struct json_stream stream);
 
 struct json_stream json_parse_whitespace(struct json_stream stream)
@@ -490,9 +511,8 @@ struct json_stream json_parse_int(struct json * x, struct json_stream stream)
         return stream;
     }
 
-    x->type = invalid_t;
-    x->string = json_parser_error(
-        stream, "Ill-formed expression: Expected '0'-'9' or '-'");
+    make_json_parser_error(
+        x, stream, "Ill-formed expression: Expected '0'-'9' or '-'");
     return stream;
 }
 
@@ -503,9 +523,8 @@ struct json_stream json_parse_frac(struct json * x, struct json_stream stream)
     stream = json_stream_advance(stream, 1, false);
 
     if (!json_is_digit(*(stream.s))) {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '0'-'9'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '0'-'9'");
         return stream;
     }
 
@@ -537,9 +556,8 @@ struct json_stream json_parse_exp(struct json * x, struct json_stream stream)
     }
 
     if (!json_is_digit(*(stream.s))) {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '0'-'9'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '0'-'9'");
         return stream;
     }
 
@@ -582,9 +600,8 @@ struct json_stream json_parse_string(struct json * x, struct json_stream stream)
 {
     struct json_stream start = stream;
     if (*(stream.s) != '"') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '\"'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '\"'");
         return stream;
     }
     stream = json_stream_advance(stream, 1, true);
@@ -593,9 +610,8 @@ struct json_stream json_parse_string(struct json * x, struct json_stream stream)
     // and escape sequences.
     while (*(stream.s) != '"') {
         if (*(stream.s) < 0x001F) {
-            x->type = invalid_t;
-            x->string = json_parser_error(
-                stream,
+            make_json_parser_error(
+                x, stream,
                 "Ill-formed expression: "
                 "Control characters are not allowed in strings");
             return stream;
@@ -603,9 +619,8 @@ struct json_stream json_parse_string(struct json * x, struct json_stream stream)
         else if (*(stream.s) == '\\') {
             int len = json_escape_sequence_len(stream.s);
             if (len < 0) {
-                x->type = invalid_t;
-                x->string = json_parser_error(
-                    stream, "Ill-formed expression: Invalid escape sequence");
+                make_json_parser_error(
+                    x, stream, "Ill-formed expression: Invalid escape sequence");
                 return stream;
             }
             stream = json_stream_advance(stream, len, true);
@@ -618,8 +633,7 @@ struct json_stream json_parse_string(struct json * x, struct json_stream stream)
     size_t len = (stream.s-1) - (start.s+1);
     char * string = (char *) malloc(len + 1);
     if (!string) {
-        x->type = invalid_t;
-        x->string = json_parser_error(start, strerror(errno));
+        make_json_parser_error(x, start, strerror(errno));
         return stream;
     }
     strncpy(string, start.s+1, len);
@@ -632,9 +646,8 @@ struct json_stream json_parse_string(struct json * x, struct json_stream stream)
 struct json_stream json_parse_array(struct json * x, struct json_stream stream)
 {
     if (*(stream.s) != '[') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '['");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '['");
         return stream;
     }
     stream = json_stream_advance(stream, 1, false);
@@ -650,6 +663,7 @@ struct json_stream json_parse_array(struct json * x, struct json_stream stream)
     struct json * y = json_element();
     stream = json_parse_element(y, stream);
     if (json_is_invalid(y)) {
+        copy_json_parser_error(x, y);
         x->type = invalid_t;
         x->string = strdup(json_to_error(y));
         json_free(y);
@@ -661,15 +675,13 @@ struct json_stream json_parse_array(struct json * x, struct json_stream stream)
         stream = json_stream_advance(stream, 1, false);
         z->next = json_element();
         if (!z->next) {
-            x->type = invalid_t;
-            x->string = json_parser_error(stream,  strerror(errno));
+            make_json_parser_error(x, stream,  strerror(errno));
             return stream;
         }
 
         stream = json_parse_element(z->next, stream);
         if (json_is_invalid(z->next)) {
-            x->type = invalid_t;
-            x->string = strdup(json_to_error(z->next));
+            copy_json_parser_error(x, z->next);
             json_free(y);
             return stream;
         }
@@ -678,9 +690,8 @@ struct json_stream json_parse_array(struct json * x, struct json_stream stream)
         z = z->next;
     }
     if (*(stream.s) != ']') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected ']'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected ']'");
         json_free(y);
         return stream;
     }
@@ -698,23 +709,20 @@ struct json_stream json_parse_member(struct json * x, struct json_stream stream)
         return stream;
     stream = json_parse_whitespace(stream);
     if (*(stream.s) != ':') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected ':'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected ':'");
         return stream;
     }
     stream = json_stream_advance(stream, 1, false);
 
     struct json * y = json_element();
     if (!y) {
-        x->type = invalid_t;
-        x->string = json_parser_error(stream, strerror(errno));
+        make_json_parser_error(x, stream, strerror(errno));
         return stream;
     }
     stream = json_parse_element(y, stream);
     if (json_is_invalid(y)) {
-        x->type = invalid_t;
-        x->string = strdup(json_to_error(y));
+        copy_json_parser_error(x, y);
         json_free(y);
         return stream;
     }
@@ -727,9 +735,8 @@ struct json_stream json_parse_member(struct json * x, struct json_stream stream)
 struct json_stream json_parse_object(struct json * x, struct json_stream stream)
 {
     if (*(stream.s) != '{') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '{'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '{'");
         return stream;
     }
     stream = json_stream_advance(stream, 1, false);
@@ -744,15 +751,13 @@ struct json_stream json_parse_object(struct json * x, struct json_stream stream)
 
     struct json * y = json_element();
     if (!y) {
-        x->type = invalid_t;
-        x->string = json_parser_error(stream, strerror(errno));
+        make_json_parser_error(x, stream, strerror(errno));
         return stream;
     }
 
     stream = json_parse_member(y, stream);
     if (json_is_invalid(y)) {
-        x->type = invalid_t;
-        x->string = strdup(json_to_error(y));
+        copy_json_parser_error(x, y);
         json_free(y);
         return stream;
     }
@@ -762,15 +767,14 @@ struct json_stream json_parse_object(struct json * x, struct json_stream stream)
         stream = json_stream_advance(stream, 1, false);
         z->next = json_element();
         if (!z->next) {
-            x->type = invalid_t;
-            x->string = json_parser_error(stream, strerror(errno));
+            make_json_parser_error(x, stream, strerror(errno));
+            json_free(y);
             return stream;
         }
 
         stream = json_parse_member(z->next, stream);
         if (json_is_invalid(z->next)) {
-            x->type = invalid_t;
-            x->string = strdup(json_to_error(z->next));
+            copy_json_parser_error(x, z->next);
             json_free(y);
             return stream;
         }
@@ -780,9 +784,8 @@ struct json_stream json_parse_object(struct json * x, struct json_stream stream)
     }
 
     if (*(stream.s) != '}') {
-        x->type = invalid_t;
-        x->string = json_parser_error(
-            stream, "Ill-formed expression: Expected '}'");
+        make_json_parser_error(
+            x, stream, "Ill-formed expression: Expected '}'");
         json_free(y);
         return stream;
     }
@@ -818,9 +821,8 @@ struct json_stream json_parse_value(struct json * x, struct json_stream stream)
     else if (*(stream.s) == '{')
         return json_parse_object(x, stream);
 
-    x->type = invalid_t;
-    x->string = json_parser_error(
-        stream,
+    make_json_parser_error(
+        x, stream,
         "Ill-formed expression: Expected "
         "\"null\", \"true\", \"false\", or "
         "an expression beginning with "

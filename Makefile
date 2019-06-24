@@ -1,5 +1,5 @@
 # Configuration
-CXXFLAGS=-O2 -g -fopenmp -Wall
+CXXFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address
 INCLUDES=-Isrc
 LDFLAGS=-lz
 

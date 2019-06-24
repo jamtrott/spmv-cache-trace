@@ -21,10 +21,10 @@ SpMV::SpMV(std::string const & matrix_path,
                 matrix_path, o, verbose),
             matrix_format, o, verbose))
 {
-    // x = matrix::make_vector(
-    //     matrix_format, std::vector<double>(market_matrix.columns(), 1.0));
-    // y = matrix::make_vector(
-    //     matrix_format, std::vector<double>(market_matrix.rows(), 0.0));
+    x = matrix::make_vector(
+        matrix_format, std::vector<double>(A.columns(), 1.0));
+    y = matrix::make_vector(
+        matrix_format, std::vector<double>(A.rows(), 0.0));
 }
 
 SpMV::~SpMV()

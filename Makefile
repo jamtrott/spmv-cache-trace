@@ -18,10 +18,12 @@ util_c_headers = \
 util_c_objects := \
 	$(foreach source,$(util_c_sources),$(source:.c=.o))
 util_cxx_sources = \
+	src/util/json-ostreambuf.cpp \
 	src/util/tarstream.cpp \
 	src/util/zlibstream.cpp
 util_cxx_headers = \
 	src/util/circular-buffer.hpp \
+	src/util/json-ostreambuf.hpp \
 	src/util/tarstream.hpp \
 	src/util/zlibstream.hpp
 util_cxx_objects := \

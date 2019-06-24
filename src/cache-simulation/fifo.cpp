@@ -23,7 +23,9 @@ FIFO::~FIFO()
 {
 }
 
-cache_miss_type FIFO::allocate(memory_reference_type const & x)
+cache_miss_type FIFO::allocate(
+    memory_reference_type x,
+    numa_domain_type numa_domain)
 {
     auto it = memory_references.find(x);
     if (it != std::cend(memory_references) && x == *it)

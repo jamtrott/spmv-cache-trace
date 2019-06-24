@@ -94,12 +94,29 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
     return nonzeros;
 }
 
-std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
+int thread_of_column(
+    index_type column,
+    index_type num_columns,
+    int num_threads)
+{
+    index_type columns_per_thread = (num_columns + num_threads - 1) / num_threads;
+    for (int thread = 0 ; thread < num_threads; thread++) {
+        index_type start_columns = std::min(num_columns, thread * columns_per_thread);
+        index_type end_columns = std::min(num_columns, (thread + 1) * columns_per_thread);
+        if (column >= start_columns && column <= end_columns)
+            return thread;
+    }
+    return num_threads-1;
+}
+
+std::vector<std::pair<uintptr_t, int>>
+Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     int thread,
     int num_threads,
-    int cache_line_size) const
+    int cache_line_size,
+    int const * numa_domains) const
 {
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);
@@ -109,19 +126,32 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     size_type end_nonzero = row_ptr[end_row];
     size_type nonzeros = end_nonzero - start_nonzero;
 
+
     size_type num_references = 3 * nonzeros + 2 * rows + 1;
-    auto w = std::vector<uintptr_t>(num_references, 0ul);
+    auto w = std::vector<std::pair<uintptr_t, int>>(
+        num_references, std::make_pair(0,0));
     size_type l = 0;
-    w[l++] = uintptr_t(&row_ptr[start_row]) / cache_line_size;
+    w[l++] = std::make_pair(uintptr_t(&row_ptr[start_row]) / cache_line_size,
+                            numa_domains[thread]);
     for (index_type i = start_row; i < end_row; ++i) {
-        w[l++] = uintptr_t(&row_ptr[i+1]) / cache_line_size;
+        w[l++] = std::make_pair(
+            uintptr_t(&row_ptr[i+1]) / cache_line_size,
+            numa_domains[thread]);
         for (size_type k = row_ptr[i]; k < row_ptr[i+1]; ++k) {
             index_type j = column_index[k];
-            w[l++] = uintptr_t(&column_index[k]) / cache_line_size;
-            w[l++] = uintptr_t(&value[k]) / cache_line_size;
-            w[l++] = uintptr_t(&x[j]) / cache_line_size;
+            w[l++] = std::make_pair(
+                uintptr_t(&column_index[k]) / cache_line_size,
+                numa_domains[thread]);
+            w[l++] = std::make_pair(
+                uintptr_t(&value[k]) / cache_line_size,
+                numa_domains[thread]);
+            w[l++] = std::make_pair(
+                uintptr_t(&x[j]) / cache_line_size,
+                numa_domains[thread_of_column(j, columns, num_threads)]);
         }
-        w[l++] = uintptr_t(&y[i]) / cache_line_size;
+        w[l++] = std::make_pair(
+            uintptr_t(&y[i]) / cache_line_size,
+            numa_domains[thread]);
     }
     return w;
 }

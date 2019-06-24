@@ -6,6 +6,7 @@
 #include "matrix/matrix.hpp"
 #include "matrix/matrix-market.hpp"
 
+#include <algorithm>
 #include <ostream>
 #include <string>
 
@@ -52,8 +53,21 @@ replacement::MemoryReferenceString SpMV::memory_reference_string(
     int num_threads,
     int cache_line_size) const
 {
-    return A.spmv_memory_reference_reference_string(
-        x, y, thread, num_threads, cache_line_size);
+    auto const & thread_affinities = trace_config.thread_affinities();
+    auto const & numa_domains = trace_config.numa_domains();
+
+    std::vector<int> numa_domain_affinity(thread_affinities.size(), 0);
+    for (size_t i = 0; i < thread_affinities.size(); i++) {
+        auto numa_domain = thread_affinities[i].numa_domain;
+        auto numa_domain_it = std::find(
+            std::cbegin(numa_domains), std::cend(numa_domains), numa_domain);
+        auto index = std::distance(std::cbegin(numa_domains), numa_domain_it);
+        numa_domain_affinity[i] = index;
+    }
+
+    return A.spmv_memory_reference_string(
+        x, y, thread, num_threads, cache_line_size,
+        numa_domain_affinity.data());
 }
 
 std::ostream & SpMV::print(

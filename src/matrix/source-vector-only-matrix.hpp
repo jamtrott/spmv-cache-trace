@@ -48,7 +48,7 @@ public:
     std::size_t value_padding_size() const;
     std::size_t index_padding_size() const;
 
-    std::vector<uintptr_t> spmv_memory_reference_reference_string(
+    std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         value_array_type const & x,
         value_array_type const & y,
         unsigned int thread,

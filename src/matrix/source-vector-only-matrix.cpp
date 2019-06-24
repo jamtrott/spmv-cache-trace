@@ -89,19 +89,19 @@ std::size_t Matrix::index_padding_size() const
 }
 
 
-std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
+std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,
     unsigned int num_threads,
     unsigned int cache_line_size) const
 {
-    auto w = std::vector<uintptr_t>(2 * numEntries);
+    auto w = std::vector<std::pair<uintptr_t, int>>(2 * numEntries);
     size_type k, l;
     for (k = 0, l = 0; k < numEntries; ++k, l += 2) {
         auto j = column_index[k];
-        w[l] = uintptr_t(&column_index[k]) / cache_line_size;
-        w[l+1] = uintptr_t(&x[j]) / cache_line_size;
+        w[l] = std::make_pair(uintptr_t(&column_index[k]) / cache_line_size, 0);
+        w[l+1] = std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0);
     }
     return w;
 }

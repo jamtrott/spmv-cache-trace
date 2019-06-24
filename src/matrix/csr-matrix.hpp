@@ -48,12 +48,13 @@ public:
     index_type spmv_rows_per_thread(int thread, int num_threads) const;
     size_type spmv_nonzeros_per_thread(int thread, int num_threads) const;
 
-    std::vector<uintptr_t> spmv_memory_reference_reference_string(
+    std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         value_array_type const & x,
         value_array_type const & y,
         int thread,
         int num_threads,
-        int cache_line_size) const;
+        int cache_line_size,
+        int const * numa_domains) const;
 
 public:
     index_type const rows;

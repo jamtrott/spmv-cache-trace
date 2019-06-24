@@ -75,21 +75,21 @@ std::size_t Matrix::index_padding_size() const
     return sizeof(decltype(column_index)::value_type) * num_padding_entries();
 }
 
-std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
+std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,
     unsigned int num_threads,
     unsigned int cache_line_size) const
 {
-    auto w = std::vector<uintptr_t>{};
+    auto w = std::vector<std::pair<uintptr_t, int>>{};
     for (index_type i = 0u; i < rows; ++i) {
         for (index_type l = 0u; l < rowLength; ++l) {
             size_type k = i * rowLength + l;
             index_type j = column_index[k];
-            w.push_back(uintptr_t(&x[j]) / cache_line_size);
+            w.push_back(std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0));
         }
-        w.push_back(uintptr_t(&y[i]) / cache_line_size);
+        w.push_back(std::make_pair(uintptr_t(&y[i]) / cache_line_size, 0));
     }
     return w;
 }

@@ -24,7 +24,9 @@ LRU::~LRU()
 {
 }
 
-cache_miss_type LRU::allocate(memory_reference_type const & x)
+cache_miss_type LRU::allocate(
+    memory_reference_type x,
+    numa_domain_type numa_domain)
 {
     auto it = memory_references.find(x);
     if (it != std::end(memory_references) && x == *it) {

@@ -22,10 +22,12 @@ namespace replacement
 {
 
 using memory_reference_type = uintptr_t;
+using numa_domain_type = int;
 using cache_size_type = uint64_t;
 using cache_miss_type = uint64_t;
 
-using MemoryReferenceString = std::vector<memory_reference_type>;
+using MemoryReferenceString =
+    std::vector<std::pair<memory_reference_type, numa_domain_type>>;
 using MemoryReferenceSet = std::unordered_set<memory_reference_type>;
 
 /*
@@ -47,7 +49,9 @@ public:
     {
     }
 
-    virtual cache_miss_type allocate(memory_reference_type const & x) = 0;
+    virtual cache_miss_type allocate(
+        memory_reference_type x,
+        numa_domain_type numa_domain) = 0;
 
 protected:
     // The number of cache lines that fit in the cache
@@ -69,7 +73,9 @@ public:
         MemoryReferenceSet const & memory_references = MemoryReferenceSet());
     ~RAND();
 
-    cache_miss_type allocate(memory_reference_type const & x) override;
+    cache_miss_type allocate(
+        memory_reference_type x,
+        numa_domain_type numa_domain) override;
 };
 
 /*
@@ -84,7 +90,9 @@ public:
         std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~FIFO();
 
-    cache_miss_type allocate(memory_reference_type const & x) override;
+    cache_miss_type allocate(
+        memory_reference_type x,
+        numa_domain_type numa_domain) override;
 
 private:
     std::queue<memory_reference_type> q;
@@ -102,7 +110,9 @@ public:
         std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~LRU();
 
-    cache_miss_type allocate(memory_reference_type const & x) override;
+    cache_miss_type allocate(
+        memory_reference_type x,
+        numa_domain_type numa_domain) override;
 
 private:
     CircularBuffer<memory_reference_type> q;
@@ -112,9 +122,10 @@ private:
  * Compute the cost (number of replacements) of processing a memory
  * reference string with a given replacement algorithm and initial state.
  */
-cache_miss_type cost(
+std::vector<cache_miss_type> cost(
     ReplacementAlgorithm & A,
-    MemoryReferenceString const & w);
+    MemoryReferenceString const & w,
+    numa_domain_type num_numa_domains);
 
 /*
  * Compute the cost (number of replacements) of processing memory
@@ -125,9 +136,10 @@ cache_miss_type cost(
  * may be unfair and memory access latencies vary, causing some CPUs
  * to be delayed more than others.
  */
-std::vector<cache_miss_type> cost(
+std::vector<std::vector<cache_miss_type>> cost(
     ReplacementAlgorithm & A,
-    std::vector<MemoryReferenceString> const & ws);
+    std::vector<MemoryReferenceString> const & ws,
+    numa_domain_type num_numa_domains);
 
 std::ostream & operator<<(
     std::ostream & o,

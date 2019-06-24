@@ -207,16 +207,17 @@ void Matrix::synchronize()
 {
 }
 
-std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
+std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     Vector const & x,
     Vector const & y,
     unsigned int thread,
     unsigned int num_threads,
-    unsigned int cache_line_size) const
+    unsigned int cache_line_size,
+    int const * numa_domains) const
 {
     switch (_format) {
     case MatrixFormat::coo:
-        return _coo_matrix.spmv_memory_reference_reference_string(
+        return _coo_matrix.spmv_memory_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::csr:
     case MatrixFormat::csr_avx128:
@@ -229,13 +230,14 @@ std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
     case MatrixFormat::csr_unroll4_avx256:
     case MatrixFormat::csr_regular_traffic:
     case MatrixFormat::csr_irregular_traffic:
-        return _csr_matrix.spmv_memory_reference_reference_string(
-            x.vector(), y.vector(), thread, num_threads, cache_line_size);
+        return _csr_matrix.spmv_memory_reference_string(
+            x.vector(), y.vector(), thread, num_threads, cache_line_size,
+            numa_domains);
     case MatrixFormat::ellpack:
-        return _ellpack_matrix.spmv_memory_reference_reference_string(
+        return _ellpack_matrix.spmv_memory_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     case MatrixFormat::source_vector_only:
-        return _source_vector_only_matrix.spmv_memory_reference_reference_string(
+        return _source_vector_only_matrix.spmv_memory_reference_string(
             x.vector(), y.vector(), thread, num_threads, cache_line_size);
     default:
         throw matrix_error(""s + __FUNCTION__ + ": Not implemented"s);

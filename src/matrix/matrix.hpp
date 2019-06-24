@@ -65,12 +65,13 @@ public:
     std::size_t size() const;
     void synchronize();
 
-    std::vector<uintptr_t> spmv_memory_reference_reference_string(
+    std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         Vector const & x,
         Vector const & y,
         unsigned int thread,
         unsigned int num_threads,
-        unsigned int cache_line_size) const;
+        unsigned int cache_line_size,
+        int const * numa_domains) const;
 
 private:
     MatrixFormat _format;

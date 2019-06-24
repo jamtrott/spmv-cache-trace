@@ -88,22 +88,22 @@ std::size_t Matrix::index_padding_size() const
         + sizeof(decltype(row_index)::value_type) * num_padding_entries();
 }
 
-std::vector<uintptr_t> Matrix::spmv_memory_reference_reference_string(
+std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,
     unsigned int num_threads,
     unsigned int cache_line_size) const
 {
-    auto w = std::vector<uintptr_t>(5 * numEntries);
+    auto w = std::vector<std::pair<uintptr_t, int>>(5 * numEntries);
     for (size_type k = 0, l = 0; k < numEntries; ++k, l += 5) {
         index_type i = row_index[k];
         index_type j = column_index[k];
-        w[l] = uintptr_t(&row_index[k]) / cache_line_size;
-        w[l+1] = uintptr_t(&column_index[k]) / cache_line_size;
-        w[l+2] = uintptr_t(&value[k]) / cache_line_size;
-        w[l+3] = uintptr_t(&x[j]) / cache_line_size;
-        w[l+4] = uintptr_t(&y[i]) / cache_line_size;
+        w[l] = std::make_pair(uintptr_t(&row_index[k]) / cache_line_size, 0);
+        w[l+1] = std::make_pair(uintptr_t(&column_index[k]) / cache_line_size, 0);
+        w[l+2] = std::make_pair(uintptr_t(&value[k]) / cache_line_size, 0);
+        w[l+3] = std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0);
+        w[l+4] = std::make_pair(uintptr_t(&y[i]) / cache_line_size, 0);
     }
     return w;
 }

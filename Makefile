@@ -80,10 +80,16 @@ $(cache_simulation_a): $(cache_simulation_objects)
 
 # Main
 spmv_cache_trace_sources = \
-	src/spmv-cache-trace.cpp \
+	src/cache-trace.cpp \
+	src/kernel.cpp \
+	src/trace-config.cpp \
+	src/spmv-kernel.cpp \
 	src/main.cpp
 spmv_cache_trace_headers = \
-	src/spmv-cache-trace.hpp
+	src/cache-trace.hpp \
+	src/kernel.hpp \
+	src/trace-config.hpp \
+	src/spmv-kernel.hpp
 spmv_cache_trace_objects := \
 	$(foreach source,$(spmv_cache_trace_sources),$(source:.cpp=.o))
 

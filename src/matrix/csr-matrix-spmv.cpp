@@ -211,7 +211,6 @@ inline void csr_spmv_inner_loop_avx128(
     value_type const * x,
     value_type * y)
 {
-    __m64 j_;
     __m128d z_ = _mm_setzero_pd();
     __m128d a_;
     __m128d x_;

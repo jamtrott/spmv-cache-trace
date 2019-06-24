@@ -203,10 +203,12 @@ std::ostream & operator<<(
     std::ostream & o,
     CacheTrace const & cache_trace)
 {
-    return o << '"' << "trace-config" << '"' << ": "
+    return o << '{' << '\n'
+             << '"' << "trace-config" << '"' << ": "
              << cache_trace.trace_config() << ',' << '\n'
              << '"' << "kernel" << '"' << ": "
              << cache_trace.kernel() << ',' << '\n'
              << '"' << "cache-misses" << '"' << ": "
-             << cache_trace.cache_misses();
+             << cache_trace.cache_misses()
+             << '\n' << '}';
 }

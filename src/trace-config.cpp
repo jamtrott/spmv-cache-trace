@@ -127,14 +127,15 @@ std::map<std::string, Cache> parse_caches(
         struct json * line_size = json_object_get(cache_value, "line_size");
         if (!line_size || !json_is_number(line_size))
             throw trace_config_error("Expected \"line_size\": (number)");
+
         struct json * parent = json_object_get(cache_value, "parent");
         if (!parent || !json_is_array(parent))
-            throw trace_config_error("Expected \"parent\": (string or array)");
+            throw trace_config_error("Expected \"parent\": (array of strings)");
 
         std::vector<std::string> parents;
         for (struct json * p = json_array_begin(parent);
              p != json_array_end();
-             p = json_array_next(parent))
+             p = json_array_next(p))
         {
             if (!json_is_string(p)) {
                 throw trace_config_error(

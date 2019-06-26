@@ -5,14 +5,14 @@
 #include "cache-simulation/replacement.hpp"
 
 #include <iosfwd>
-#include <string>
 #include <stdexcept>
+#include <string>
 
 class kernel_error
     : public std::runtime_error
 {
 public:
-    kernel_error(std::string const & s) throw();
+    kernel_error(std::string const & message) throw();
 };
 
 class Kernel
@@ -23,6 +23,8 @@ public:
     virtual void init(
         std::ostream & o,
         bool verbose) = 0;
+
+    virtual void run() = 0;
 
     virtual replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,

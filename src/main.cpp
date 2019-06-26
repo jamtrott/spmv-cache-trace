@@ -1,6 +1,9 @@
 #include "cache-trace.hpp"
+#include "profile-kernel.hpp"
 #include "trace-config.hpp"
 #include "kernels.hpp"
+#include "profiling/libpfm-context.hpp"
+#include "profiling/perf-error.hpp"
 #include "util/json-ostreambuf.hpp"
 
 #include <argp.h>
@@ -9,14 +12,11 @@
 #include <cctype>
 #include <cstdlib>
 #include <cstring>
-#include <fstream>
 #include <iomanip>
 #include <iostream>
 #include <numeric>
-#include <sstream>
 #include <stdexcept>
 #include <string>
-#include <vector>
 
 using namespace std::literals::string_literals;
 
@@ -30,18 +30,21 @@ struct arguments
     arguments()
         : trace_config()
         , kernel()
+        , profile(0)
         , verbose(false)
     {
     }
 
     std::string trace_config;
     std::unique_ptr<Kernel> kernel;
+    int profile;
     bool verbose;
 };
 
 enum class short_options
 {
     trace_config = 'c',
+    profile = 'p',
     verbose = 'v',
 
     /* Sparse matrix-vector multplication kernels. */
@@ -58,6 +61,16 @@ error_t parse_option(int key, char * arg, argp_state * state)
     switch (key) {
     case int(short_options::trace_config):
         args.trace_config = arg;
+        break;
+
+    case int(short_options::profile):
+        try {
+            args.profile = std::stoul(arg);
+        } catch (std::out_of_range const & e) {
+            argp_error(state, "profile: %s", strerror(errno));
+        } catch (std::invalid_argument const & e) {
+            argp_error(state, "Expected 'profile' to be an integer");
+        }
         break;
 
     case int(short_options::verbose):
@@ -114,6 +127,8 @@ int main(int argc, char ** argv)
     argp_option options[] = {
         {"trace-config", int(short_options::trace_config), "PATH", 0,
          "Read cache parameters from a configuration file in JSON format."},
+        {"profile", int(short_options::profile), "N", 0,
+         "Measure cache misses using hardware performance counters", 0},
         {"verbose", int(short_options::verbose), nullptr, 0,
          "Produce verbose output"},
 
@@ -142,17 +157,38 @@ int main(int argc, char ** argv)
 
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
-        args.kernel->init(std::cout, args.verbose);
-        CacheTrace cache_trace = trace_cache_misses(
-            trace_config, *(args.kernel.get()));
-        auto o = json_ostreambuf(std::cout);
-        std::cout << cache_trace << '\n';
+
+        if (args.profile == 0) {
+            args.kernel->init(std::cout, args.verbose);
+            CacheTrace cache_trace = trace_cache_misses(
+                trace_config, *(args.kernel.get()));
+            auto o = json_ostreambuf(std::cout);
+            std::cout << cache_trace << '\n';
+        }
+        else {
+            perf::libpfm_context libpfm_context;
+            Profiling profiling = profile_kernel(
+                trace_config,
+                *(args.kernel.get()),
+                true,
+                args.profile,
+                libpfm_context,
+                std::cout,
+                args.verbose);
+            auto o = json_ostreambuf(std::cout);
+            std::cout << profiling << '\n';
+        }
+
     } catch (trace_config_error const & e) {
         std::cerr << args.trace_config << ": " << e.what() << '\n';
         return EXIT_FAILURE;
     } catch (kernel_error const & e) {
         std::cerr << args.kernel->name() << ": " << e.what() << '\n';
         return EXIT_FAILURE;
+    } catch (perf::perf_error const & e) {
+        std::cerr << e.what() << '\n';
+        return EXIT_FAILURE;
     }
+
     return EXIT_SUCCESS;
 }

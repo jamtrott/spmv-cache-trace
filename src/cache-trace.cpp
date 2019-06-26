@@ -47,12 +47,8 @@ bool cache_has_ancestor(
     auto const & caches = trace_config.caches();
     for (std::string const & parent : a.parents) {
         auto it = caches.find(parent);
-        if (it == caches.end()) {
-            std::stringstream s;
-            s << "Invalid parent \"" << parent << "\" "
-              << "for cache \"" << a.name << "\"";
-            throw trace_config_error(s.str());
-        }
+        if (it == caches.end())
+            return false;
 
         Cache const & parent_cache = (*it).second;
         if (cache_has_ancestor(trace_config, parent_cache, b))

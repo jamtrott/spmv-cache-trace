@@ -116,12 +116,14 @@ $(kernels_a): $(kernels_objects)
 # Main
 spmv_cache_trace_sources = \
 	src/cache-trace.cpp \
-	src/trace-config.cpp \
-	src/main.cpp
+	src/main.cpp \
+	src/profile-kernel.cpp \
+	src/trace-config.cpp
 spmv_cache_trace_headers = \
 	src/cache-trace.hpp \
-	src/trace-config.hpp \
-	src/kernels.hpp
+	src/kernels.hpp \
+	src/profile-kernel.hpp \
+	src/trace-config.hpp
 spmv_cache_trace_objects := \
 	$(foreach source,$(spmv_cache_trace_sources),$(source:.cpp=.o))
 

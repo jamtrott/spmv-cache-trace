@@ -32,6 +32,14 @@ void triad_kernel::init(
     }
 }
 
+void triad_kernel::run()
+{
+    triad::value_type d = 3.1;
+    #pragma omp for
+    for (int i = 0; i < num_entries; i++)
+        a[i] = b[i] + d * c[i];
+}
+
 replacement::MemoryReferenceString triad_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,

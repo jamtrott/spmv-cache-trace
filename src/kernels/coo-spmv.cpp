@@ -49,6 +49,11 @@ void coo_spmv_kernel::init(
     }
 }
 
+void coo_spmv_kernel::run()
+{
+    coo_matrix::spmv(A, x, y);
+}
+
 replacement::MemoryReferenceString coo_spmv_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,

@@ -2,7 +2,7 @@
 CFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
 CXXFLAGS=$(CFLAGS)
 INCLUDES=-Isrc
-LDFLAGS=-lz
+LDFLAGS=-lz -lpfm
 
 # Default
 .PHONY: all
@@ -36,6 +36,25 @@ $(util_cxx_objects): %.o: %.cpp $(util_cxx_headers)
 $(util_a): $(util_c_objects) $(util_cxx_objects)
 	$(AR) $(ARFLAGS) $@ $^
 
+# Profiling
+profiling_a = src/profiling/profiling.a
+profiling_sources = \
+	src/profiling/libpfm-context.cpp \
+	src/profiling/perf-error.cpp \
+	src/profiling/perf-events.cpp
+profiling_headers = \
+	src/profiling/libpfm-context.hpp \
+	src/profiling/perf.hpp \
+	src/profiling/perf-error.hpp \
+	src/profiling/perf-events.hpp
+profiling_objects := \
+	$(foreach source,$(profiling_sources),$(source:.cpp=.o))
+$(profiling_objects): %.o: %.cpp $(profiling_headers)
+	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@
+$(profiling_a): $(profiling_objects)
+	$(AR) $(ARFLAGS) $@ $^
+
+# Matrix
 matrix_a = src/matrix/matrix.a
 matrix_sources = \
 	src/matrix/coo-matrix.cpp \
@@ -108,7 +127,7 @@ spmv_cache_trace_objects := \
 
 $(spmv_cache_trace_objects): %.o: %.cpp $(spmv_cache_trace_headers)
 	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@
-spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a)
+spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(profiling_a) $(util_a)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
 
 
@@ -142,6 +161,7 @@ unittest_sources = \
 	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
+	test/test_profiling_perf.cpp \
 	test/test_replacement.cpp
 unittest_objects := \
 	$(foreach source,$(unittest_sources),$(source:.cpp=.o))
@@ -149,7 +169,7 @@ unittest_objects := \
 $(unittest_objects): %.o: %.cpp
 	$(CXX) $(CPPFLAGS) -c $(CXXFLAGS) $(INCLUDES) \
 		-isystem $(GTEST_ROOT)/include $^ -o $@
-unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a) gtest_main.a
+unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(profiling_a) $(util_a) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 
@@ -157,6 +177,7 @@ unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(u
 .PHONY: clean
 clean:
 	rm -f $(util_c_objects) $(util_cxx_objects) $(util_a)
+	rm -f $(profiling_objects) $(profiling_a)
 	rm -f $(matrix_objects) $(matrix_a)
 	rm -f $(cache_simulation_objects) $(cache_simulation_a)
 	rm -f $(kernels_objects) $(kernels_a)

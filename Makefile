@@ -2,7 +2,7 @@
 CFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
 CXXFLAGS=$(CFLAGS)
 INCLUDES=-Isrc
-LDFLAGS=-lz
+LDFLAGS=-lz -lpfm
 
 # Default
 .PHONY: all
@@ -19,11 +19,13 @@ util_c_objects := \
 	$(foreach source,$(util_c_sources),$(source:.c=.o))
 util_cxx_sources = \
 	src/util/json-ostreambuf.cpp \
+	src/util/perf-events.cpp \
 	src/util/tarstream.cpp \
 	src/util/zlibstream.cpp
 util_cxx_headers = \
 	src/util/circular-buffer.hpp \
 	src/util/json-ostreambuf.hpp \
+	src/util/perf-events.hpp \
 	src/util/tarstream.hpp \
 	src/util/zlibstream.hpp
 util_cxx_objects := \
@@ -36,6 +38,7 @@ $(util_cxx_objects): %.o: %.cpp $(util_cxx_headers)
 $(util_a): $(util_c_objects) $(util_cxx_objects)
 	$(AR) $(ARFLAGS) $@ $^
 
+# Matrix
 matrix_a = src/matrix/matrix.a
 matrix_sources = \
 	src/matrix/coo-matrix.cpp \
@@ -142,6 +145,7 @@ unittest_sources = \
 	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
+	test/test_perf-events.cpp \
 	test/test_replacement.cpp
 unittest_objects := \
 	$(foreach source,$(unittest_sources),$(source:.cpp=.o))

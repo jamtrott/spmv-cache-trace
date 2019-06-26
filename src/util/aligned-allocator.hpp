@@ -104,7 +104,7 @@ public:
 private:
     void touch(pointer p, size_type n)
     {
-        #pragma omp parallel for
+        #pragma omp for
         for (size_type i = 0; i < n; ++i)
             p[i] = value_type();
     }

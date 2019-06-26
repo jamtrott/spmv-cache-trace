@@ -56,13 +56,13 @@ public:
         unsigned int cache_line_size) const;
 
 public:
-    index_type const rows;
-    index_type const columns;
-    size_type const numEntries;
-    Order const order;
-    index_array_type const row_index;
-    index_array_type const column_index;
-    value_array_type const value;
+    index_type rows;
+    index_type columns;
+    size_type numEntries;
+    Order order;
+    index_array_type row_index;
+    index_array_type column_index;
+    value_array_type value;
 };
 
 bool operator==(Matrix const & a, Matrix const & b);

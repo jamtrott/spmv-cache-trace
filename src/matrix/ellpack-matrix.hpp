@@ -51,12 +51,12 @@ public:
         unsigned int cache_line_size) const;
 
 public:
-    index_type const rows;
-    index_type const columns;
-    size_type const numEntries;
-    index_type const rowLength;
-    index_array_type const column_index;
-    value_array_type const value;
+    index_type rows;
+    index_type columns;
+    size_type numEntries;
+    index_type rowLength;
+    index_array_type column_index;
+    value_array_type value;
     bool skip_padding;
 };
 

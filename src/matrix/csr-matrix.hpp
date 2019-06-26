@@ -57,13 +57,13 @@ public:
         int const * numa_domains) const;
 
 public:
-    index_type const rows;
-    index_type const columns;
-    size_type const numEntries;
+    index_type rows;
+    index_type columns;
+    size_type numEntries;
     index_type row_alignment;
-    size_array_type const row_ptr;
-    index_array_type const column_index;
-    value_array_type const value;
+    size_array_type row_ptr;
+    index_array_type column_index;
+    value_array_type value;
 };
 
 bool operator==(Matrix const & a, Matrix const & b);

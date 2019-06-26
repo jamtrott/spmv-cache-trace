@@ -58,6 +58,11 @@ public:
     Matrix(MatrixFormat, ellpack_matrix::Matrix &&);
     Matrix(MatrixFormat, source_vector_only_matrix::Matrix &&);
 
+    Matrix(Matrix const & m) = delete;
+    Matrix & operator=(Matrix const & m) = delete;
+    Matrix(Matrix && m) = default;
+    Matrix & operator=(Matrix && m) = default;
+
     MatrixFormat format() const;
     unsigned int rows() const;
     unsigned int columns() const;

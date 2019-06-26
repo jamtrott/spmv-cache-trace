@@ -146,7 +146,8 @@ unittest_sources = \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
 	test/test_perf-events.cpp \
-	test/test_replacement.cpp
+	test/test_replacement.cpp \
+	test/test_sample.cpp
 unittest_objects := \
 	$(foreach source,$(unittest_sources),$(source:.cpp=.o))
 

@@ -116,7 +116,7 @@ std::map<std::string, Cache> parse_caches(
         if (!json_is_member(cache)) {
             throw trace_config_error(
                 "Expected '\"cache\": "
-                "{\"size\": ..., \"line_size\": ..., \"parent\": ...}");
+                "{\"size\": ..., \"line_size\": ..., \"parents\": ...}");
         }
 
         std::string name(json_to_key(cache));
@@ -128,20 +128,20 @@ std::map<std::string, Cache> parse_caches(
         if (!line_size || !json_is_number(line_size))
             throw trace_config_error("Expected \"line_size\": (number)");
 
-        struct json * parent = json_object_get(cache_value, "parent");
-        if (!parent || !json_is_array(parent))
-            throw trace_config_error("Expected \"parent\": (array of strings)");
+        struct json * json_parents = json_object_get(cache_value, "parents");
+        if (!json_parents || !json_is_array(json_parents))
+            throw trace_config_error("Expected \"parents\": (array of strings)");
 
         std::vector<std::string> parents;
-        for (struct json * p = json_array_begin(parent);
-             p != json_array_end();
-             p = json_array_next(p))
+        for (struct json * parent = json_array_begin(json_parents);
+             parent != json_array_end();
+             parent = json_array_next(parent))
         {
-            if (!json_is_string(p)) {
+            if (!json_is_string(parent)) {
                 throw trace_config_error(
-                    "Expected \"parent\": (array of strings)");
+                    "Expected \"parents\": (array of strings)");
             }
-            parents.push_back(std::string(json_to_string(p)));
+            parents.push_back(std::string(json_to_string(parent)));
         }
 
         caches.emplace(

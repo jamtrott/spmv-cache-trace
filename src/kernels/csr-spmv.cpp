@@ -51,6 +51,11 @@ void csr_spmv_kernel::init(
     }
 }
 
+void csr_spmv_kernel::run()
+{
+    csr_matrix::spmv(A, x, y);
+}
+
 replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,

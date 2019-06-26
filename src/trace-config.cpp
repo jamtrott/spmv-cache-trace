@@ -21,11 +21,13 @@ trace_config_error::trace_config_error(std::string const & message)
 Cache::Cache(std::string const & name,
              cache_size_type size,
              cache_size_type line_size,
-             std::vector<std::string> parents)
+             std::vector<std::string> parents,
+             std::vector<std::string> events)
     : name(name)
     , size(size)
     , line_size(line_size)
     , parents(parents)
+    , events(events)
 {
     if (size % line_size != 0) {
         std::stringstream s;
@@ -38,11 +40,15 @@ Cache::Cache(std::string const & name,
 
 ThreadAffinity::ThreadAffinity(
     int thread,
+    int cpu,
     std::string const & cache,
-    std::string const & numa_domain)
+    std::string const & numa_domain,
+    std::vector<std::vector<std::string>> const & event_groups)
     : thread(thread)
+    , cpu(cpu)
     , cache(cache)
     , numa_domain(numa_domain)
+    , event_groups(event_groups)
 {
 }
 
@@ -165,12 +171,30 @@ std::map<std::string, Cache> parse_caches(
             parents.push_back(std::string(json_to_string(parent)));
         }
 
+        struct json * json_events = json_object_get(cache_value, "events");
+        if (json_events && !json_is_array(json_events))
+            throw trace_config_error(
+                name + std::string(": Expected \"events\": (array of strings)"));
+
+        std::vector<std::string> events;
+        for (struct json * json_event = json_events ? json_array_begin(json_events) : NULL;
+             json_event != json_array_end();
+             json_event = json_array_next(json_event))
+        {
+            if (!json_is_string(json_event)) {
+                throw trace_config_error(
+                    "Expected \"event\": (string)");
+            }
+            events.push_back(std::string(json_to_string(json_event)));
+        }
+
         caches.emplace(
             name,
             Cache(name,
                   json_to_int(size),
                   json_to_int(line_size),
-                  parents));
+                  parents,
+                  events));
     }
 
     return caches;
@@ -219,6 +243,9 @@ std::vector<ThreadAffinity> parse_thread_affinities(
                 "{\"cache\": ..., \"numa_domain\": ...}");
         }
 
+        struct json * cpu = json_object_get(thread_affinity, "cpu");
+        if (!cpu || !json_is_number(cpu))
+            throw trace_config_error("Expected \"cpu\": (number)");
         struct json * cache = json_object_get(thread_affinity, "cache");
         if (!cache || !json_is_string(cache))
             throw trace_config_error("Expected \"cache\": (string)");
@@ -226,10 +253,42 @@ std::vector<ThreadAffinity> parse_thread_affinities(
         if (!numa_domain || !json_is_string(numa_domain))
             throw trace_config_error("Expected \"numa_domain\": (string)");
 
+        struct json * json_event_groups = json_object_get(
+            thread_affinity, "event_groups");
+        if (json_event_groups && !json_is_array(json_event_groups))
+            throw trace_config_error("Expected \"event_groups\": (array)");
+
+        std::vector<std::vector<std::string>> event_groups;
+        for (struct json * json_event_group =
+                 json_event_groups ? json_array_begin(json_event_groups) : NULL;
+             json_event_group != json_array_end();
+             json_event_group = json_array_next(json_event_group))
+        {
+            if (!json_is_array(json_event_group)) {
+                throw trace_config_error(
+                    "Expected \"event_group\": (array)");
+            }
+
+            std::vector<std::string> events;
+            for (struct json * json_event = json_array_begin(json_event_group);
+                 json_event != json_array_end();
+                 json_event = json_array_next(json_event))
+            {
+                if (!json_is_string(json_event)) {
+                    throw trace_config_error(
+                        "Expected \"event\": (string)");
+                }
+                events.push_back(std::string(json_to_string(json_event)));
+            }
+            event_groups.push_back(events);
+        }
+
         thread_affinities.push_back(
             ThreadAffinity(thread,
+                           json_to_int(cpu),
                            json_to_string(cache),
-                           json_to_string(numa_domain)));
+                           json_to_string(numa_domain),
+                           event_groups));
         thread++;
     }
 
@@ -284,12 +343,28 @@ std::ostream & operator<<(
 
 std::ostream & operator<<(
     std::ostream & o,
+    std::vector<std::vector<std::string>> const & xs)
+{
+    if (xs.empty())
+        return o << "[]";
+
+    o << '[';
+    auto it = std::cbegin(xs);
+    auto end = --std::cend(xs);
+    for (; it != end; ++it)
+        o << *it << ',' << ' ';
+    return o << *it << ']';
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
     Cache const & cache)
 {
     return o << '{'
              << '"' << "size" << '"' << ": " << cache.size << ',' << ' '
              << '"' << "line_size" << '"' << ": " << cache.line_size << ',' << ' '
-             << '"' << "parents" << '"' << ": " << cache.parents
+             << '"' << "parents" << '"' << ": " << cache.parents << ',' << ' '
+             << '"' << "events" << '"' << ": " << cache.events
              << '}';
 }
 
@@ -303,8 +378,7 @@ std::ostream & operator<<(
     o << '{' << '\n';
     auto it = std::cbegin(caches);
     auto end = --std::cend(caches);
-    for (; it != end; ++it)
-    {
+    for (; it != end; ++it) {
         auto const & cache = *it;
         o << '"' << cache.first << '"' << ": "
           << cache.second << ",\n";
@@ -320,10 +394,14 @@ std::ostream & operator<<(
     ThreadAffinity const & thread_affinity)
 {
     return o << '{'
+             << '"' << "cpu" << '"' << ": "
+             << thread_affinity.cpu << ',' << ' '
              << '"' << "cache" << '"' << ": "
              << '"' << thread_affinity.cache << '"' << ',' << ' '
              << '"' << "numa_domain" << '"' << ": "
-             << '"' << thread_affinity.numa_domain << '"'
+             << '"' << thread_affinity.numa_domain << '"' << ',' << ' '
+             << '"' << "event_groups" << '"' << ": "
+             << thread_affinity.event_groups
              << '}';
 }
 
@@ -377,10 +455,10 @@ std::ostream & operator<<(
     TraceConfig const & trace_config)
 {
     return o << '{' << '\n'
-             << '"' << "caches" << '"' << ": "
-             << trace_config.caches() << ',' << '\n'
              << '"' << "numa_domains" << '"' << ": "
              << trace_config.numa_domains() << ',' << '\n'
+             << '"' << "caches" << '"' << ": "
+             << trace_config.caches() << ',' << '\n'
              << '"' << "thread_affinities" << '"' << ": "
              << trace_config.thread_affinities()
              << '\n' << '}';

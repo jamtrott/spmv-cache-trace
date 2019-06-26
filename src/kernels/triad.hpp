@@ -26,6 +26,7 @@ public:
 
     void init(std::ostream & o,
               bool verbose) override;
+    void run() override;
 
     replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,

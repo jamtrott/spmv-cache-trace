@@ -23,12 +23,14 @@ public:
     Cache(std::string const & name,
           cache_size_type size,
           cache_size_type line_size,
-          std::vector<std::string> parents);
+          std::vector<std::string> parents,
+          std::vector<std::string> events);
 
     std::string name;
     cache_size_type size;
     cache_size_type line_size;
     std::vector<std::string> parents;
+    std::vector<std::string> events;
 };
 
 std::ostream & operator<<(
@@ -40,12 +42,16 @@ class ThreadAffinity
 public:
     ThreadAffinity(
         int thread,
+        int cpu,
         std::string const & cache,
-        std::string const & numa_domain);
+        std::string const & numa_domain,
+        std::vector<std::vector<std::string>> const & event_groups);
 
     int thread;
+    int cpu;
     std::string cache;
     std::string numa_domain;
+    std::vector<std::vector<std::string>> event_groups;
 };
 
 class TraceConfig

@@ -106,7 +106,7 @@ check: unittest
 
 # Build the unit testing framework
 gtest_headers = $(GTEST_ROOT)/include/gtest/*.h \
-                $(GTEST_ROOT)/include/gtest/internal/*.h
+		$(GTEST_ROOT)/include/gtest/internal/*.h
 gtest_sources = $(GTEST_ROOT)/src/*.cc \
 		$(GTEST_ROOT)/src/*.h \
 		$(gtest_headers)

@@ -4,32 +4,52 @@
 
 #include "cache-simulation/replacement.hpp"
 #include "matrix/matrix.hpp"
+#include "matrix/matrix-error.hpp"
 #include "matrix/matrix-market.hpp"
 
 #include <algorithm>
 #include <ostream>
+#include <sstream>
 #include <string>
 
 SpMV::SpMV(std::string const & matrix_path,
-           matrix::MatrixFormat const matrix_format,
-           std::ostream & o,
-           bool verbose)
+           matrix::MatrixFormat const matrix_format)
     : Kernel()
     , matrix_path_(matrix_path)
     , matrix_format_(matrix_format)
-    , A(from_matrix_market(
-            matrix_market::load_matrix(
-                matrix_path, o, verbose),
-            matrix_format, o, verbose))
 {
-    x = matrix::make_vector(
-        matrix_format, std::vector<double>(A.columns(), 1.0));
-    y = matrix::make_vector(
-        matrix_format, std::vector<double>(A.rows(), 0.0));
 }
 
 SpMV::~SpMV()
 {
+}
+
+void SpMV::init(
+    std::ostream & o,
+    bool verbose)
+{
+    try {
+        matrix_market::Matrix mm =
+            matrix_market::load_matrix(matrix_path_, o, verbose);
+        A = from_matrix_market(mm, matrix_format_, o, verbose);
+        x = matrix::make_vector(matrix_format_, std::vector<double>(A.columns(), 1.0));
+        y = matrix::make_vector(matrix_format_, std::vector<double>(A.rows(), 0.0));
+    }
+    catch (matrix_market::matrix_market_error & e) {
+        std::stringstream s;
+        s << matrix_path_ << ": " << e.what() << '\n';
+        throw kernel_error(s.str());
+    } catch (matrix::matrix_error & e) {
+        std::stringstream s;
+        s << matrix_path_ << ": "
+          << e.what() << '\n';
+        throw kernel_error(s.str());
+    } catch (std::system_error & e) {
+        std::stringstream s;
+        s << matrix_path_ << ": "
+          << e.what() << '\n';
+        throw kernel_error(s.str());
+    }
 }
 
 std::string const & SpMV::matrix_path() const
@@ -68,6 +88,11 @@ replacement::MemoryReferenceString SpMV::memory_reference_string(
     return A.spmv_memory_reference_string(
         x, y, thread, num_threads, cache_line_size,
         numa_domain_affinity.data());
+}
+
+std::string const & SpMV::name() const
+{
+    return matrix::matrix_format_name(matrix_format_);
 }
 
 std::ostream & SpMV::print(

@@ -1,11 +1,8 @@
 #include "cache-trace.hpp"
 #include "trace-config.hpp"
-#include "spmv-kernel.hpp"
-
-#include "matrix/matrix.hpp"
-#include "matrix/matrix-error.hpp"
-#include "matrix/matrix-market.hpp"
 #include "util/json-ostreambuf.hpp"
+
+#include "spmv-kernel.hpp"
 
 #include <argp.h>
 
@@ -33,27 +30,25 @@ struct arguments
 {
     arguments()
         : trace_config()
-        , matrix_format(matrix::MatrixFormat::csr)
-        , list_matrix_formats(false)
-        , matrix_path()
+        , kernel()
         , verbose(false)
     {
     }
 
     std::string trace_config;
-    matrix::MatrixFormat matrix_format;
-    bool list_matrix_formats;
-    std::string matrix_path;
+    std::unique_ptr<Kernel> kernel;
     bool verbose;
 };
 
 enum class short_options
 {
     trace_config = 'c',
-    matrix_format = 'f',
-    list_matrix_formats = 'l',
-    matrix = 'm',
     verbose = 'v',
+
+    /* Sparse matrix-vector multplication kernels. */
+    non_printable_characters = 128,
+    coo,
+    csr,
 };
 
 error_t parse_option(int key, char * arg, argp_state * state)
@@ -65,39 +60,31 @@ error_t parse_option(int key, char * arg, argp_state * state)
         args.trace_config = arg;
         break;
 
-    case int(short_options::matrix_format):
-        {
-            auto format = std::string(arg);
-            std::transform(
-                std::begin(format), std::end(format),
-                std::begin(format),
-                [] (unsigned char c) { return std::tolower(c); });
-            args.matrix_format = matrix::find_matrix_format(format);
-            if (args.matrix_format == matrix::MatrixFormat::none)
-                argp_error(state, "Unknown sparse matrix format: %s", arg);
-        }
-        break;
-
-    case int(short_options::list_matrix_formats):
-        args.list_matrix_formats = true;
-        break;
-
-    case int(short_options::matrix):
-        args.matrix_path = arg;
-        break;
-
     case int(short_options::verbose):
         args.verbose = true;
         break;
 
+        /* Sparse matrix-vector multplication kernels. */
+    case int(short_options::coo):
+        {
+            std::string matrix_path = arg;
+            args.kernel = std::make_unique<SpMV>(
+                matrix_path, matrix::MatrixFormat::coo);
+            break;
+        }
+    case int(short_options::csr):
+        {
+            std::string matrix_path = arg;
+            args.kernel = std::make_unique<SpMV>(
+                matrix_path, matrix::MatrixFormat::csr);
+            break;
+        }
+
     case ARGP_KEY_END:
-        if (args.list_matrix_formats)
-            break;
-        if (!args.matrix_path.empty())
-            break;
-        if (!args.trace_config.empty())
-            break;
-        argp_usage(state);
+        if (args.trace_config.empty())
+            argp_error(state, "Please specify --trace-config");
+        if (!args.kernel)
+            argp_error(state, "Please specify a kernel");
         break;
 
     default:
@@ -111,15 +98,12 @@ int main(int argc, char ** argv)
     argp_option options[] = {
         {"trace-config", int(short_options::trace_config), "PATH", 0,
          "Read cache parameters from a configuration file in JSON format."},
-        {"matrix", int(short_options::matrix), "PATH", 0,
-         "Load a matrix from a file in matrix market format "
-         "or from a compressed tarball containing such a file.", 0},
-        {"matrix-format", int(short_options::matrix_format),
-         "FORMAT", 0, "Sparse matrix format (default: CSR)", 0},
-        {"list-matrix-formats", int(short_options::list_matrix_formats),
-         nullptr, 0, "List available sparse matrix formats", 0},
         {"verbose", int(short_options::verbose), nullptr, 0,
          "Produce verbose output"},
+
+        {0, 0, 0, 0, "Sparse matrix-vector multplication kernels:" },
+        {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},
+        {"csr", int(short_options::csr), "PATH", 0, "Compressed sparse row", 0},
         {nullptr}};
 
     auto arginfo = argp{
@@ -136,45 +120,19 @@ int main(int argc, char ** argv)
         return err;
     }
 
-    if (args.list_matrix_formats) {
-        matrix::list_matrix_formats(std::cout);
-        return EXIT_SUCCESS;
-    }
-
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
-
-        std::unique_ptr<Kernel> kernel;
-        try {
-            kernel = std::make_unique<SpMV>(
-                args.matrix_path,
-                args.matrix_format,
-                std::cout,
-                args.verbose);
-        } catch (matrix_market::matrix_market_error & e) {
-            std::cerr << args.matrix_path << ": " << e.what() << '\n';
-            return EXIT_FAILURE;
-        } catch (matrix::matrix_error & e) {
-            std::cerr << args.matrix_path << ": "
-                      << args.matrix_format << ": "
-                      << e.what() << '\n';
-            return EXIT_FAILURE;
-        } catch (std::system_error & e) {
-            std::cerr << args.matrix_path << ": "
-                      << args.matrix_format << ": "
-                      << e.what() << '\n';
-            return EXIT_FAILURE;
-        }
-
+        args.kernel->init(std::cout, args.verbose);
         CacheTrace cache_trace = trace_cache_misses(
-            trace_config, *(kernel.get()));
+            trace_config, *(args.kernel.get()));
         auto o = json_ostreambuf(std::cout);
         std::cout << cache_trace << '\n';
-
-    } catch (trace_config_error & e) {
+    } catch (trace_config_error const & e) {
         std::cerr << args.trace_config << ": " << e.what() << '\n';
         return EXIT_FAILURE;
+    } catch (kernel_error const & e) {
+        std::cerr << args.kernel->name() << ": " << e.what() << '\n';
+        return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
 }

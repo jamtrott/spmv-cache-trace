@@ -1,7 +1,7 @@
 #ifndef MATRIX_HPP
 #define MATRIX_HPP
 
-#include "coordinate-matrix.hpp"
+#include "coo-matrix.hpp"
 #include "csr-matrix.hpp"
 #include "ellpack-matrix.hpp"
 #include "source-vector-only-matrix.hpp"

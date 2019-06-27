@@ -1,6 +1,6 @@
 #include "poisson2D.hpp"
 
-#include "matrix/coordinate-matrix.hpp"
+#include "matrix/coo-matrix.hpp"
 #include "matrix/matrix-market.hpp"
 #include "vector.hpp"
 
@@ -29,7 +29,7 @@ coo_matrix::Matrix testMatrix()
 
 }
 
-TEST(coordinate_matrix, create)
+TEST(coo_matrix, create)
 {
     auto m = testMatrix();
     ASSERT_EQ(m.rows, 4);
@@ -44,7 +44,7 @@ TEST(coordinate_matrix, create)
     ASSERT_EQ(m.value, value);
 }
 
-TEST(coordinate_matrix, from_matrix_market)
+TEST(coo_matrix, from_matrix_market)
 {
     auto s = std::string{
         "%%MatrixMarket matrix coordinate real general\n"
@@ -63,7 +63,7 @@ TEST(coordinate_matrix, from_matrix_market)
     ASSERT_EQ(m, testMatrix());
 }
 
-TEST(coordinate_matrix, matrix_vector_multiplication)
+TEST(coo_matrix, matrix_vector_multiplication)
 {
     auto A = testMatrix();
     auto x = coo_matrix::value_array_type{{5.0, 2.0, 3.0, 3.0, 1.0}};
@@ -96,7 +96,7 @@ coo_matrix::Matrix testMatrixColumnMajor()
 
 }
 
-TEST(coordinate_matrix, matrix_vector_multiplication_column_major)
+TEST(coo_matrix, matrix_vector_multiplication_column_major)
 {
     auto A = testMatrixColumnMajor();
     auto x = coo_matrix::value_array_type{{5.0, 2.0, 3.0, 3.0, 1.0}};
@@ -107,7 +107,7 @@ TEST(coordinate_matrix, matrix_vector_multiplication_column_major)
         << "y = " << y << ",\n" << "z = " << z;
 }
 
-TEST(coordinate_matrix, poisson2D)
+TEST(coo_matrix, poisson2D)
 {
     std::istringstream stream{poisson2D};
     auto mm = matrix_market::fromStream(stream);

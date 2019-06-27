@@ -38,7 +38,7 @@ $(util_a): $(util_c_objects) $(util_cxx_objects)
 
 matrix_a = src/matrix/matrix.a
 matrix_sources = \
-	src/matrix/coordinate-matrix.cpp \
+	src/matrix/coo-matrix.cpp \
 	src/matrix/csr-matrix.cpp \
 	src/matrix/csr-matrix-spmv.cpp \
 	src/matrix/ellpack-matrix.cpp \
@@ -47,7 +47,7 @@ matrix_sources = \
 	src/matrix/matrix-error.cpp \
 	src/matrix/matrix-market.cpp
 matrix_headers = \
-	src/matrix/coordinate-matrix.hpp \
+	src/matrix/coo-matrix.hpp \
 	src/matrix/csr-matrix.hpp \
 	src/matrix/ellpack-matrix.hpp \
 	src/matrix/source-vector-only-matrix.hpp \
@@ -126,7 +126,7 @@ unittest_sources = \
 	test/test_circular-buffer.cpp \
 	test/test_json.cpp \
 	test/test_matrix-market.cpp \
-	test/test_coordinate-matrix.cpp \
+	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
 	test/test_replacement.cpp

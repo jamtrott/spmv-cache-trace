@@ -1,4 +1,4 @@
-#include "coordinate-matrix.hpp"
+#include "coo-matrix.hpp"
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 

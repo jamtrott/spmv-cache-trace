@@ -38,7 +38,7 @@ The sparse matrix-vector multiplication kernels require a matrix stored in the *
 ## Example
 Assuming that `trace-config.json` contains the trace configuration given above, and a matrix is given by `suitesparse/HB/1138_bus.tar.gz` (see https://sparse.tamu.edu/HB/1138_bus), then the command
 ```sh
-$ ./spmv-cache-trace --trace-config trace-config.json -m suitesparse/HB/1138_bus.tar.gz
+$ ./spmv-cache-trace --trace-config dual-core.json --csr 1138_bus.tar.gz
 ```
 will produce the following output:
 ```json
@@ -49,7 +49,7 @@ will produce the following output:
       "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"]},
       "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"]},
       "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"]},
-      "L3": {"size": 20971520, "line_size": 64, "parents": []}
+      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"]}
     },
     "numa_domains": ["DRAM-0", "DRAM-1"],
     "thread_affinities": [
@@ -59,7 +59,7 @@ will produce the following output:
   },
   "kernel": {
     "name": "spmv",
-    "matrix_path": "/work/data/suitesparse/HB/1138_bus.tar.gz",
+    "matrix_path": "1138_bus.tar.gz",
     "matrix_format": "csr",
     "rows": 1138,
     "columns": 1138,

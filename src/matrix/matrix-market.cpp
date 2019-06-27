@@ -42,7 +42,7 @@ size_type Matrix::num_entries() const
 /*
  * Compute the length of the longest row
  */
-index_type Matrix::maxRowLength() const
+index_type Matrix::max_row_length() const
 {
     auto const & v = row_lengths();
     return *std::max_element(std::cbegin(v), std::cend(v));

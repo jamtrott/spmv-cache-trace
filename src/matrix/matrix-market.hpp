@@ -66,7 +66,7 @@ public:
     index_type rows() const;
     index_type columns() const;
     size_type num_entries() const;
-    index_type maxRowLength() const;
+    index_type max_row_length() const;
 
     std::vector<index_type> row_lengths() const;
 

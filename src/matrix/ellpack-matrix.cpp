@@ -147,7 +147,7 @@ Matrix from_matrix_market(
 
     // Compute the row length and number of entries (including padding)
     auto rows = size.rows;
-    auto row_length = m.maxRowLength();
+    auto row_length = m.max_row_length();
     auto num_entries = rows * row_length;
     auto entries = m.sortedCoordinateEntries(
         matrix_market::Matrix::Order::row_major);

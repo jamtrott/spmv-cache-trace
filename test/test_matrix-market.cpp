@@ -83,10 +83,10 @@ Matrix test_matrix()
     return m;
 }
 
-TEST(matrix_market, maxRowLength)
+TEST(matrix_market, max_row_length)
 {
     auto m = test_matrix();
-    ASSERT_EQ(3, m.maxRowLength());
+    ASSERT_EQ(3, m.max_row_length());
 }
 
 TEST(matrix_market, sort_entries_row_major)

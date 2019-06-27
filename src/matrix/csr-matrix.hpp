@@ -53,7 +53,6 @@ public:
         value_array_type const & y,
         int thread,
         int num_threads,
-        int cache_line_size,
         int const * numa_domains) const;
 
 public:

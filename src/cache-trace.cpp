@@ -106,11 +106,11 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     for (int n = 0; n < num_active_threads; n++) {
         memory_reference_strings[n] =
             kernel.memory_reference_string(
-                trace_config, threads[n], num_threads, cache.line_size);
+                trace_config, threads[n], num_threads);
     }
 
     int num_cache_lines = (cache.size + (cache.line_size-1)) / cache.line_size;
-    replacement::LRU replacement_algorithm(num_cache_lines);
+    replacement::LRU replacement_algorithm(num_cache_lines, cache.line_size);
     std::vector<std::vector<cache_miss_type>> active_threads_cache_misses =
         replacement::trace_cache_misses(
             replacement_algorithm,

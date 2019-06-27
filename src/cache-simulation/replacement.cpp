@@ -17,7 +17,8 @@ std::vector<cache_miss_type> trace_cache_misses(
     for (auto const & x : w) {
         memory_reference_type const & memory_reference = x.first;
         numa_domain_type const & numa_domain = x.second;
-        cache_misses[numa_domain] += A.allocate(memory_reference, numa_domain);
+        cache_misses[numa_domain] +=
+            A.allocate(memory_reference, numa_domain);
     }
     return cache_misses;
 }
@@ -49,7 +50,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses(
             if (t < T[p]) {
                 memory_reference_type const & memory_reference = ws[p][t].first;
                 numa_domain_type const & numa_domain = ws[p][t].second;
-                cache_misses[p][numa_domain] += A.allocate(memory_reference, numa_domain);
+                cache_misses[p][numa_domain] +=
+                    A.allocate(memory_reference, numa_domain);
             }
         }
     }

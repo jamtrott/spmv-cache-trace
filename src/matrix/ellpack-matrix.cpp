@@ -79,17 +79,16 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,
-    unsigned int num_threads,
-    unsigned int cache_line_size) const
+    unsigned int num_threads) const
 {
     auto w = std::vector<std::pair<uintptr_t, int>>{};
     for (index_type i = 0u; i < rows; ++i) {
         for (index_type l = 0u; l < row_length; ++l) {
             size_type k = i * row_length + l;
             index_type j = column_index[k];
-            w.push_back(std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0));
+            w.push_back(std::make_pair(uintptr_t(&x[j]), 0));
         }
-        w.push_back(std::make_pair(uintptr_t(&y[i]) / cache_line_size, 0));
+        w.push_back(std::make_pair(uintptr_t(&y[i]), 0));
     }
     return w;
 }

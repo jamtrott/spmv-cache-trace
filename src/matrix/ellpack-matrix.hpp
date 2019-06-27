@@ -47,8 +47,7 @@ public:
         value_array_type const & x,
         value_array_type const & y,
         unsigned int thread,
-        unsigned int num_threads,
-        unsigned int cache_line_size) const;
+        unsigned int num_threads) const;
 
 public:
     index_type rows;

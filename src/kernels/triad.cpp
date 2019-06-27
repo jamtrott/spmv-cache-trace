@@ -35,8 +35,7 @@ void triad_kernel::init(
 replacement::MemoryReferenceString triad_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,
-    int num_threads,
-    int cache_line_size) const
+    int num_threads) const
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     auto const & numa_domains = trace_config.numa_domains();
@@ -53,13 +52,13 @@ replacement::MemoryReferenceString triad_kernel::memory_reference_string(
     auto w = std::vector<std::pair<uintptr_t, int>>(3 * num_entries);
     for (triad::size_type k = 0, l = 0; k < num_entries; ++k, l += 3) {
         w[l] = std::make_pair(
-            uintptr_t(&b[k]) / cache_line_size,
+            uintptr_t(&b[k]),
             numa_domain_affinity[thread]);
         w[l+1] = std::make_pair(
-            uintptr_t(&c[k]) / cache_line_size,
+            uintptr_t(&c[k]),
             numa_domain_affinity[thread]);
         w[l+2] = std::make_pair(
-            uintptr_t(&a[k]) / cache_line_size,
+            uintptr_t(&a[k]),
             numa_domain_affinity[thread]);
     }
     return w;

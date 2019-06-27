@@ -108,7 +108,6 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & y,
     unsigned int thread,
     unsigned int num_threads,
-    unsigned int cache_line_size,
     int const * numa_domains) const
 {
     auto w = std::vector<std::pair<uintptr_t, int>>(5 * num_entries);
@@ -116,19 +115,19 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
         index_type i = row_index[k];
         index_type j = column_index[k];
         w[l] = std::make_pair(
-            uintptr_t(&row_index[k]) / cache_line_size,
+            uintptr_t(&row_index[k]),
             numa_domains[thread]);
         w[l+1] = std::make_pair(
-            uintptr_t(&column_index[k]) / cache_line_size,
+            uintptr_t(&column_index[k]),
             numa_domains[thread]);
         w[l+2] = std::make_pair(
-            uintptr_t(&value[k]) / cache_line_size,
+            uintptr_t(&value[k]),
             numa_domains[thread]);
         w[l+3] = std::make_pair(
-            uintptr_t(&x[j]) / cache_line_size,
+            uintptr_t(&x[j]),
             numa_domains[thread_of_index(j, columns, num_threads)]);
         w[l+4] = std::make_pair(
-            uintptr_t(&y[i]) / cache_line_size,
+            uintptr_t(&y[i]),
             numa_domains[thread_of_index(i, rows, num_threads)]);
     }
     return w;

@@ -38,8 +38,10 @@ class ReplacementAlgorithm
 public:
     ReplacementAlgorithm(
         cache_size_type cache_lines,
+        cache_size_type cache_line_size,
         MemoryReferenceSet const & _memory_references)
         : cache_lines(cache_lines)
+        , cache_line_size(cache_line_size)
         , memory_references(_memory_references)
     {
         memory_references.reserve(cache_lines);
@@ -57,6 +59,9 @@ protected:
     // The number of cache lines that fit in the cache
     cache_size_type cache_lines;
 
+    // The size of each cache line (in bytes)
+    cache_size_type cache_line_size;
+
     // The subset cache lines residing in the cache
     MemoryReferenceSet memory_references;
 };
@@ -70,6 +75,7 @@ class RAND
 public:
     RAND(
         cache_size_type cache_lines,
+        cache_size_type cache_line_size,
         MemoryReferenceSet const & memory_references = MemoryReferenceSet());
     ~RAND();
 
@@ -87,6 +93,7 @@ class FIFO
 public:
     FIFO(
         cache_size_type cache_lines,
+        cache_size_type cache_line_size,
         std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~FIFO();
 
@@ -107,6 +114,7 @@ class LRU
 public:
     LRU(
         cache_size_type cache_lines,
+        cache_size_type cache_line_size,
         std::vector<memory_reference_type> const & memory_references = std::vector<memory_reference_type>());
     ~LRU();
 

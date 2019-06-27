@@ -54,8 +54,7 @@ void csr_spmv_kernel::init(
 replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,
-    int num_threads,
-    int cache_line_size) const
+    int num_threads) const
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     auto const & numa_domains = trace_config.numa_domains();
@@ -70,7 +69,7 @@ replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
     }
 
     return A.spmv_memory_reference_string(
-        x, y, thread, num_threads, cache_line_size,
+        x, y, thread, num_threads,
         numa_domain_affinity.data());
 }
 

@@ -27,8 +27,7 @@ public:
     virtual replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,
         int thread,
-        int num_threads,
-        int cache_line_size) const = 0;
+        int num_threads) const = 0;
 
     virtual std::string name() const = 0;
 

@@ -30,8 +30,7 @@ public:
     replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,
         int thread,
-        int num_threads,
-        int cache_line_size) const override;
+        int num_threads) const override;
 
     std::string name() const override;
     std::ostream & print(

@@ -8,7 +8,7 @@
 TEST(replacement, rand_empty)
 {
     auto m = 4u;
-    auto A = replacement::RAND(m);
+    auto A = replacement::RAND(m, 1);
     auto w = replacement::MemoryReferenceString{};
     replacement::numa_domain_type num_numa_domains = 1;
     std::vector<replacement::cache_miss_type> cache_misses =
@@ -19,7 +19,7 @@ TEST(replacement, rand_empty)
 TEST(replacement, rand_single_memory_reference_single_reference)
 {
     auto m = 4u;
-    auto A = replacement::RAND(m);
+    auto A = replacement::RAND(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0, 0)};
     replacement::numa_domain_type num_numa_domains = 1;
@@ -31,7 +31,7 @@ TEST(replacement, rand_single_memory_reference_single_reference)
 TEST(replacement, rand_single_memory_reference_multiple_references)
 {
     auto m = 4u;
-    auto A = replacement::RAND(m);
+    auto A = replacement::RAND(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(0,0),
@@ -46,7 +46,7 @@ TEST(replacement, rand_single_memory_reference_multiple_references)
 TEST(replacement, rand_replacement)
 {
     auto m = 4u;
-    auto A = replacement::RAND(m);
+    auto A = replacement::RAND(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(1,0),
@@ -71,7 +71,7 @@ TEST(replacement, rand_replacement)
 TEST(replacement, fifo_empty)
 {
     auto m = 4u;
-    auto A = replacement::FIFO(m);
+    auto A = replacement::FIFO(m, 1);
     auto w = replacement::MemoryReferenceString{};
     replacement::numa_domain_type num_numa_domains = 1;
     std::vector<replacement::cache_miss_type> cache_misses =
@@ -82,7 +82,7 @@ TEST(replacement, fifo_empty)
 TEST(replacement, fifo_single_memory_reference_single_reference)
 {
     auto m = 4u;
-    auto A = replacement::FIFO(m);
+    auto A = replacement::FIFO(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0)};
     replacement::numa_domain_type num_numa_domains = 1;
@@ -94,7 +94,7 @@ TEST(replacement, fifo_single_memory_reference_single_reference)
 TEST(replacement, fifo_single_memory_reference_multiple_references)
 {
     auto m = 4u;
-    auto A = replacement::FIFO(m);
+    auto A = replacement::FIFO(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(0,0),
@@ -109,7 +109,7 @@ TEST(replacement, fifo_single_memory_reference_multiple_references)
 TEST(replacement, fifo_replacement)
 {
     auto m = 4u;
-    auto A = replacement::FIFO(m);
+    auto A = replacement::FIFO(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(1,0),
@@ -130,7 +130,7 @@ TEST(replacement, fifo_replacement_with_initial_state)
 {
     auto m = 4u;
     auto A = replacement::FIFO(
-        m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+        m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(1,0),
@@ -153,7 +153,7 @@ TEST(replacement, fifo_replacement_with_initial_state)
 TEST(replacement, lru_empty)
 {
     auto m = 4u;
-    auto A = replacement::LRU(m);
+    auto A = replacement::LRU(m, 1);
     auto w = replacement::MemoryReferenceString{};
     replacement::numa_domain_type num_numa_domains = 1;
     std::vector<replacement::cache_miss_type> cache_misses =
@@ -164,7 +164,7 @@ TEST(replacement, lru_empty)
 TEST(replacement, lru_single_memory_reference_single_reference)
 {
     auto m = 4u;
-    auto A = replacement::LRU(m);
+    auto A = replacement::LRU(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0)};
     replacement::numa_domain_type num_numa_domains = 1;
@@ -176,7 +176,7 @@ TEST(replacement, lru_single_memory_reference_single_reference)
 TEST(replacement, lru_single_memory_reference_multiple_references)
 {
     auto m = 4u;
-    auto A = replacement::LRU(m);
+    auto A = replacement::LRU(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(0,0),
@@ -191,7 +191,7 @@ TEST(replacement, lru_single_memory_reference_multiple_references)
 TEST(replacement, lru_replacement)
 {
     auto m = 4u;
-    auto A = replacement::LRU(m);
+    auto A = replacement::LRU(m, 1);
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(1,0),
@@ -208,11 +208,52 @@ TEST(replacement, lru_replacement)
     ASSERT_EQ(5u, cache_misses[0]);
 }
 
+TEST(replacement, lru_replacement_cache_line_size)
+{
+    {
+        auto m = 4u;
+        auto A = replacement::LRU(m, 64);
+        auto w = replacement::MemoryReferenceString{
+            std::make_pair(0,0),
+            std::make_pair(1,0),
+            std::make_pair(0,0),
+            std::make_pair(2,0),
+            std::make_pair(0,0),
+            std::make_pair(3,0),
+            std::make_pair(0,0),
+            std::make_pair(4,0),
+            std::make_pair(0,0)};
+        replacement::numa_domain_type num_numa_domains = 1;
+        std::vector<replacement::cache_miss_type> cache_misses =
+            replacement::trace_cache_misses(A, w, num_numa_domains);
+        ASSERT_EQ(1, cache_misses[0]);
+    }
+
+    {
+        auto m = 4u;
+        auto A = replacement::LRU(m, 64);
+        auto w = replacement::MemoryReferenceString{
+            std::make_pair(  0, 0),
+            std::make_pair( 64, 0),
+            std::make_pair(  0, 0),
+            std::make_pair(128, 0),
+            std::make_pair(  0, 0),
+            std::make_pair(192, 0),
+            std::make_pair(  0, 0),
+            std::make_pair(256, 0),
+            std::make_pair(  0, 0)};
+        replacement::numa_domain_type num_numa_domains = 1;
+        std::vector<replacement::cache_miss_type> cache_misses =
+            replacement::trace_cache_misses(A, w, num_numa_domains);
+        ASSERT_EQ(5, cache_misses[0]);
+    }
+}
+
 TEST(replacement, lru_replacement_with_initial_state)
 {
     auto m = 4u;
     auto A = replacement::LRU(
-        m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+        m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
     auto w = replacement::MemoryReferenceString{
         std::make_pair(0,0),
         std::make_pair(1,0),
@@ -237,7 +278,7 @@ TEST(replacement, lru_replacement_two_threads_shared_cache)
     {
         auto m = 4u;
         auto A = replacement::LRU(
-            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+            m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {std::make_pair(0,0),
              std::make_pair(1,0),
@@ -258,7 +299,7 @@ TEST(replacement, lru_replacement_two_threads_shared_cache)
     {
         auto m = 4u;
         auto A = replacement::LRU(
-            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+            m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {std::make_pair(0,0),
              std::make_pair(1,0),
@@ -282,7 +323,7 @@ TEST(replacement, lru_replacement_two_threads_shared_cache)
     {
         auto m = 4u;
         auto A = replacement::LRU(
-            m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+            m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
         auto ws = std::vector<replacement::MemoryReferenceString>{
             {std::make_pair(0,0),
              std::make_pair(1,0),
@@ -315,7 +356,7 @@ TEST(replacement, lru_replacement_numa_domains)
 {
     auto m = 4u;
     auto A = replacement::LRU(
-        m, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
+        m, 1, std::vector<replacement::memory_reference_type>{0u, 1u, 2u});
     auto ws = std::vector<replacement::MemoryReferenceString>{
         {std::make_pair(0,0),
          std::make_pair(1,0),

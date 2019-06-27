@@ -1,9 +1,35 @@
-# spmv-cache-trace
+spmv-cache-trace
+================
 The code in this repository is used to perform trace-based simulations of cache misses for parallel computations with irregular memory access patterns. Primarily, we consider a few different **Sparse Matrix-Vector Multiplication (SpMV)** kernels for different sparse matrix storage formats. These formats include *coordinate (COO)*, *compressed sparse row (CSR)*, and *ELLPACK*.
 
 Based on a few, reasonable assumptions, we estimate the number of cache misses incurred by each thread in a parallel computation with irregular memory access patterns. This is achieved by simulating the behaviour of a memory hierarchy which may consist of both private and shared caches.
 
-## Trace configuration
+Table of contents
+=================
+
+
+<!--ts-->
+   * [Installation](#installation)
+   * [Usage](#usage)
+      * [Sparse matrix-vector multiplication](#sparse-matrix-vector-multiplication)
+      * [Trace configuration](#trace-configuration)
+      * [Cache tracing](#cache-tracing)
+<!--te-->
+
+Installation
+============
+To build, simply run `make`. To run the unit tests, run `make check`.
+
+
+Usage
+=====
+
+Sparse matrix-vector multiplication
+-----------------------------------
+The sparse matrix-vector multiplication kernels require a matrix stored in the *matrix market* format. Alternatively, a gzip-compressed tarball may be provided that contains a directory and a matrix within that directory that have the same name as the tarball. For example, `test.tar.gz` should contain the matrix `test/test.mtx`. This is the format provided by the *SuiteSparse Matrix Collection* (https://sparse.tamu.edu/).
+
+Trace configuration
+-------------------
 The `spmv-cache-trace` program uses a *trace configuration* to describe the memory hierarchy and the set of threads to use for a given simulation. The configuration is given by a file in JSON format, as shown below.
 
 The trace configuration consists of three parts:
@@ -32,10 +58,8 @@ The following example is a trace configuration for a simulation that might corre
 }
 ```
 
-## Sparse matrix-vector multiplication
-The sparse matrix-vector multiplication kernels require a matrix stored in the *matrix market* format. Alternatively, a gzip-compressed tarball may be provided that contains a directory and a matrix within that directory that have the same name as the tarball. For example, `test.tar.gz` should contain the matrix `test/test.mtx`. This is the format provided by the *SuiteSparse Matrix Collection* (https://sparse.tamu.edu/).
-
-## Example
+Cache tracing
+-------------
 Assuming that `trace-config.json` contains the trace configuration given above, and a matrix is given by `suitesparse/HB/1138_bus.tar.gz` (see https://sparse.tamu.edu/HB/1138_bus), then the command
 ```sh
 $ ./spmv-cache-trace --trace-config dual-core.json --csr 1138_bus.tar.gz

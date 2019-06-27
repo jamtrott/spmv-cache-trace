@@ -30,7 +30,7 @@ public:
         std::ostream & o) const override;
 
 private:
-    std::string matrix_path_;
+    std::string matrix_path;
     csr_matrix::Matrix A;
     csr_matrix::value_array_type x;
     csr_matrix::value_array_type y;

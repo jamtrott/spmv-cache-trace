@@ -15,7 +15,7 @@
 csr_spmv_kernel::csr_spmv_kernel(
     std::string const & matrix_path)
     : Kernel()
-    , matrix_path_(matrix_path)
+    , matrix_path(matrix_path)
 {
 }
 
@@ -29,23 +29,23 @@ void csr_spmv_kernel::init(
 {
     try {
         matrix_market::Matrix mm =
-            matrix_market::load_matrix(matrix_path_, o, verbose);
+            matrix_market::load_matrix(matrix_path, o, verbose);
         A = csr_matrix::from_matrix_market(mm);
         x = csr_matrix::value_array_type(A.columns, 1.0);
         y = csr_matrix::value_array_type(A.rows, 0.0);
     }
     catch (matrix_market::matrix_market_error & e) {
         std::stringstream s;
-        s << matrix_path_ << ": " << e.what() << '\n';
+        s << matrix_path << ": " << e.what();
         throw kernel_error(s.str());
     } catch (matrix::matrix_error & e) {
         std::stringstream s;
-        s << matrix_path_ << ": "
+        s << matrix_path << ": "
           << e.what() << '\n';
         throw kernel_error(s.str());
     } catch (std::system_error & e) {
         std::stringstream s;
-        s << matrix_path_ << ": "
+        s << matrix_path << ": "
           << e.what() << '\n';
         throw kernel_error(s.str());
     }
@@ -85,7 +85,7 @@ std::ostream & csr_spmv_kernel::print(
     return o
         << "{\n"
         << '"' << "name" << '"' << ": " << '"' << "spmv" << '"' << ',' << '\n'
-        << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path_ << '"' << ',' << '\n'
+        << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path << '"' << ',' << '\n'
         << '"' << "matrix_format" << '"' << ": " << '"' << "csr" << '"' << ',' << '\n'
         << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
         << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'

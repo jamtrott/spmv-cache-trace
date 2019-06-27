@@ -25,12 +25,11 @@ public:
         int cache_line_size) const override;
 
     std::string name() const override;
-
     std::ostream & print(
         std::ostream & o) const override;
 
 private:
-    std::string matrix_path_;
+    std::string matrix_path;
     coo_matrix::Matrix A;
     coo_matrix::value_array_type x;
     coo_matrix::value_array_type y;

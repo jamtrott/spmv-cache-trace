@@ -5,7 +5,7 @@ The code in this repository is used to perform trace-based simulations of cache 
 Based on a few, reasonable assumptions, we estimate the number of cache misses incurred by each thread in a parallel computation with irregular memory access patterns. This is achieved by simulating the behaviour of a memory hierarchy which may consist of both private and shared caches.
 
 Table of contents
-=================
+-----------------
 
 
 <!--ts-->

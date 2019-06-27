@@ -80,10 +80,12 @@ $(cache_simulation_a): $(cache_simulation_objects)
 kernels_a = src/cache-simulation/kernels.a
 kernels_sources = \
 	src/kernels/coo-spmv.cpp \
-	src/kernels/csr-spmv.cpp
+	src/kernels/csr-spmv.cpp \
+	src/kernels/kernel.cpp
 kernels_headers = \
 	src/kernels/coo-spmv.hpp \
-	src/kernels/csr-spmv.hpp
+	src/kernels/csr-spmv.hpp \
+	src/kernels/kernel.hpp
 kernels_objects := \
 	$(foreach source,$(kernels_sources),$(source:.cpp=.o))
 
@@ -95,13 +97,12 @@ $(kernels_a): $(kernels_objects)
 # Main
 spmv_cache_trace_sources = \
 	src/cache-trace.cpp \
-	src/kernel.cpp \
 	src/trace-config.cpp \
 	src/main.cpp
 spmv_cache_trace_headers = \
 	src/cache-trace.hpp \
-	src/kernel.hpp \
-	src/trace-config.hpp
+	src/trace-config.hpp \
+	src/kernels.hpp
 spmv_cache_trace_objects := \
 	$(foreach source,$(spmv_cache_trace_sources),$(source:.cpp=.o))
 

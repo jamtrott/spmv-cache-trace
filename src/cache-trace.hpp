@@ -1,9 +1,9 @@
 #ifndef CACHE_TRACE_HPP
 #define CACHE_TRACE_HPP
 
-#include "kernel.hpp"
 #include "trace-config.hpp"
 #include "cache-simulation/replacement.hpp"
+#include "kernels/kernel.hpp"
 
 #include <iosfwd>
 #include <map>

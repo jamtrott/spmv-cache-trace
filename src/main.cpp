@@ -1,7 +1,7 @@
 #include "cache-trace.hpp"
 #include "trace-config.hpp"
+#include "kernels.hpp"
 #include "util/json-ostreambuf.hpp"
-#include "kernels/kernels.hpp"
 
 #include <argp.h>
 

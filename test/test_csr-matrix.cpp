@@ -46,7 +46,7 @@ TEST(csr_matrix, create)
     auto m = testMatrix();
     ASSERT_EQ(m.rows, 4);
     ASSERT_EQ(m.columns, 5);
-    ASSERT_EQ(m.numEntries, 7);
+    ASSERT_EQ(m.num_entries, 7);
     csr_matrix::index_array_type row_ptr{{0, 2, 3, 4, 7}};
     ASSERT_EQ(m.row_ptr, row_ptr);
     csr_matrix::index_array_type column_index = {{0,1, 1, 2, 0, 3, 4}};

@@ -34,7 +34,7 @@ class Size
 public:
     index_type const rows;
     index_type const columns;
-    size_type const numEntries;
+    size_type const num_entries;
 };
 
 struct CoordinateEntry
@@ -65,7 +65,7 @@ class Matrix
 public:
     index_type rows() const;
     index_type columns() const;
-    size_type numEntries() const;
+    size_type num_entries() const;
     index_type maxRowLength() const;
 
     std::vector<index_type> rowLengths() const;

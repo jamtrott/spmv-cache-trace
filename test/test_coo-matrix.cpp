@@ -34,7 +34,7 @@ TEST(coo_matrix, create)
     auto m = testMatrix();
     ASSERT_EQ(m.rows, 4);
     ASSERT_EQ(m.columns, 5);
-    ASSERT_EQ(m.numEntries, 6);
+    ASSERT_EQ(m.num_entries, 6);
     ASSERT_EQ(m.order, coo_matrix::Order::general);
     coo_matrix::index_array_type row_index{{0, 0, 1, 2, 3, 3}};
     ASSERT_EQ(m.row_index, row_index);

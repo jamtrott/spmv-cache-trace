@@ -17,7 +17,7 @@ namespace csr_matrix
 Matrix::Matrix()
     : rows(0)
     , columns(0)
-    , numEntries(0)
+    , num_entries(0)
     , row_alignment(1)
     , row_ptr()
     , column_index()
@@ -28,14 +28,14 @@ Matrix::Matrix()
 Matrix::Matrix(
     index_type rows,
     index_type columns,
-    size_type numEntries,
+    size_type num_entries,
     index_type row_alignment,
     size_array_type const row_ptr,
     index_array_type const column_index,
     value_array_type const value)
     : rows(rows)
     , columns(columns)
-    , numEntries(numEntries)
+    , num_entries(num_entries)
     , row_alignment(row_alignment)
     , row_ptr(row_ptr)
     , column_index(column_index)
@@ -160,7 +160,7 @@ bool operator==(Matrix const & a, Matrix const & b)
 {
     return a.rows == b.rows &&
         a.columns == b.columns &&
-        a.numEntries == b.numEntries &&
+        a.num_entries == b.num_entries &&
         std::equal(
             std::begin(a.row_ptr),
             std::end(a.row_ptr),
@@ -192,7 +192,7 @@ std::ostream & operator<<(
 std::ostream & operator<<(std::ostream & o, Matrix const & x)
 {
     return o << x.rows << ' ' << x.columns << ' '
-             << x.numEntries << ' '
+             << x.num_entries << ' '
              << x.row_ptr << ' '
              << x.column_index << ' '
              << x.value;
@@ -248,7 +248,7 @@ Matrix from_matrix_market_row_aligned(
     }
 
     return Matrix(
-        size.rows, size.columns, size.numEntries,
+        size.rows, size.columns, size.num_entries,
         row_alignment, row_ptr, columns, values);
 }
 

@@ -89,7 +89,7 @@ std::ostream & coo_spmv_kernel::print(
         << '"' << "matrix_format" << '"' << ": " << '"' << "coo" << '"' << ',' << '\n'
         << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
         << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
-        << '"' << "nonzeros" << '"' << ": "  << A.numEntries  << ',' << '\n'
+        << '"' << "nonzeros" << '"' << ": "  << A.num_entries  << ',' << '\n'
         << '"' << "matrix_size" << '"' << ": "  << A.size()
         << "\n}";
 }

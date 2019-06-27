@@ -30,7 +30,7 @@ public:
     Matrix(
         index_type rows,
         index_type columns,
-        size_type numEntries,
+        size_type num_entries,
         Order order,
         index_array_type const & row_index,
         index_array_type const & column_index,
@@ -58,7 +58,7 @@ public:
 public:
     index_type rows;
     index_type columns;
-    size_type numEntries;
+    size_type num_entries;
     Order order;
     index_array_type row_index;
     index_array_type column_index;

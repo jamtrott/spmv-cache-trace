@@ -34,9 +34,9 @@ index_type Matrix::columns() const
     return size.columns;
 }
 
-size_type Matrix::numEntries() const
+size_type Matrix::num_entries() const
 {
-    return size.numEntries;
+    return size.num_entries;
 }
 
 /*
@@ -162,9 +162,9 @@ Size readSize(std::istream & i, Format format)
     std::stringstream s{line};
     if (format == Format::coordinate) {
         index_type rows, columns;
-        size_type numEntries;
-        s >> rows >> columns >> numEntries;
-        return Size{rows, columns, numEntries};
+        size_type num_entries;
+        s >> rows >> columns >> num_entries;
+        return Size{rows, columns, num_entries};
     } else {
         index_type rows, columns;
         s >> rows >> columns;
@@ -177,16 +177,16 @@ std::vector<CoordinateEntry> readEntries(
     Size const & size)
 {
     std::vector<CoordinateEntry> entries;
-    entries.reserve(size.numEntries);
+    entries.reserve(size.num_entries);
     std::copy_n(
         std::istream_iterator<CoordinateEntry>(i),
-        size.numEntries,
+        size.num_entries,
         std::back_inserter(entries));
 
-    if (size.numEntries != (size_type) entries.size()) {
+    if (size.num_entries != (size_type) entries.size()) {
         std::stringstream s;
         s << "Failed to parse entries: "
-          << "Expected " << size.numEntries << " entries, "
+          << "Expected " << size.num_entries << " entries, "
           << "got " << entries.size() << " entries.";
         throw matrix_market_error{s.str()};
     }
@@ -241,7 +241,7 @@ bool operator==(
 {
     return A.rows == B.rows &&
         A.columns == B.columns &&
-        A.numEntries == B.numEntries;
+        A.num_entries == B.num_entries;
 }
 
 bool operator==(Matrix const & A, Matrix const & B)
@@ -276,7 +276,7 @@ std::ostream & operator<<(
     std::ostream & o,
     Size const & s)
 {
-    return o << s.rows << ' ' << s.columns << ' ' << s.numEntries;
+    return o << s.rows << ' ' << s.columns << ' ' << s.num_entries;
 }
 
 std::ostream & operator<<(

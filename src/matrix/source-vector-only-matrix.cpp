@@ -30,7 +30,7 @@ std::string to_string(Order o)
 Matrix::Matrix()
     : rows(0u)
     , columns(0u)
-    , numEntries(0u)
+    , num_entries(0u)
     , order(Order::general)
     , row_index()
     , column_index()
@@ -41,14 +41,14 @@ Matrix::Matrix()
 Matrix::Matrix(
     index_type rows,
     index_type columns,
-    size_type numEntries,
+    size_type num_entries,
     Order order,
     index_array_type const & row_index,
     index_array_type const & column_index,
     value_array_type const & value)
     : rows(rows)
     , columns(columns)
-    , numEntries(numEntries)
+    , num_entries(num_entries)
     , order(order)
     , row_index(row_index)
     , column_index(column_index)
@@ -96,9 +96,9 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     unsigned int num_threads,
     unsigned int cache_line_size) const
 {
-    auto w = std::vector<std::pair<uintptr_t, int>>(2 * numEntries);
+    auto w = std::vector<std::pair<uintptr_t, int>>(2 * num_entries);
     size_type k, l;
-    for (k = 0, l = 0; k < numEntries; ++k, l += 2) {
+    for (k = 0, l = 0; k < num_entries; ++k, l += 2) {
         auto j = column_index[k];
         w[l] = std::make_pair(uintptr_t(&column_index[k]) / cache_line_size, 0);
         w[l+1] = std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0);
@@ -110,7 +110,7 @@ bool operator==(Matrix const & a, Matrix const & b)
 {
     return a.rows == b.rows &&
         a.columns == b.columns &&
-        a.numEntries == b.numEntries &&
+        a.num_entries == b.num_entries &&
         a.order == b.order &&
         a.row_index == b.row_index &&
         a.column_index == b.column_index &&
@@ -145,7 +145,7 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
 {
     return o << x.rows << ' '
              << x.columns << ' '
-             << x.numEntries << ' '
+             << x.num_entries << ' '
              << x.order << ' '
              << x.row_index << ' '
              << x.column_index << ' '
@@ -189,7 +189,7 @@ Matrix from_matrix_market(
     }
 
     return Matrix{
-        size.rows, size.columns, size.numEntries,
+        size.rows, size.columns, size.num_entries,
         o, rows, columns, values};
 }
 
@@ -197,7 +197,7 @@ namespace
 {
 
 void source_vector_only_spmv(
-    size_type const numEntries,
+    size_type const num_entries,
     index_type const * row_index,
     index_type const * column_index,
     value_type const * value,
@@ -207,7 +207,7 @@ void source_vector_only_spmv(
     index_type j;
     size_type k;
     value_type z = 0.0;
-    for (k = 0u; k < numEntries; ++k) {
+    for (k = 0u; k < num_entries; ++k) {
         j = column_index[k];
         z += 1.1 * x[j];
     }
@@ -221,7 +221,7 @@ void spmv(
     source_vector_only_matrix::value_array_type const & x,
     source_vector_only_matrix::value_array_type & y)
 {
-    source_vector_only_spmv(A.numEntries, A.row_index.data(), A.column_index.data(),
+    source_vector_only_spmv(A.num_entries, A.row_index.data(), A.column_index.data(),
              A.value.data(), x.data(), y.data());
 }
 
@@ -239,7 +239,7 @@ source_vector_only_matrix::value_array_type operator*(
 
     source_vector_only_matrix::value_array_type y(A.rows, 0.0);
     source_vector_only_spmv(
-        A.numEntries, A.row_index.data(), A.column_index.data(),
+        A.num_entries, A.row_index.data(), A.column_index.data(),
         A.value.data(), x.data(), y.data());
     return y;
 }

@@ -29,7 +29,7 @@ TEST(matrix_market, from_stream)
     ASSERT_EQ("% Test matrix", m.comments[0]);
     ASSERT_EQ(1, m.size.rows);
     ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.size.num_entries);
     ASSERT_EQ(1, m.entries[0].i);
     ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
@@ -58,7 +58,7 @@ TEST(matrix_market, from_stream_gz)
     ASSERT_EQ("% Test matrix", m.comments[0]);
     ASSERT_EQ(1, m.size.rows);
     ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.size.num_entries);
     ASSERT_EQ(1, m.entries[0].i);
     ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
@@ -95,7 +95,7 @@ TEST(matrix_market, sort_entries_row_major)
     auto entries = m.sortedCoordinateEntries(
         Matrix::Order::row_major);
     auto size = m.size;
-    ASSERT_EQ(size.numEntries, entries.size());
+    ASSERT_EQ(size.num_entries, entries.size());
     std::vector<CoordinateEntry> expected({
             CoordinateEntry{1, 1, 1.0},
             CoordinateEntry{1, 2, 2.0},
@@ -117,7 +117,7 @@ TEST(matrix_market, sort_entries_column_major)
     auto entries = m.sortedCoordinateEntries(
         Matrix::Order::column_major);
     auto size = m.size;
-    ASSERT_EQ(size.numEntries, entries.size());
+    ASSERT_EQ(size.num_entries, entries.size());
     std::vector<CoordinateEntry> expected({
             CoordinateEntry{1, 1, 1.0},
             CoordinateEntry{2, 1, 4.0},
@@ -1004,7 +1004,7 @@ TEST(matrix_market, from_stream_tar)
     ASSERT_EQ("% Test matrix", m.comments[0]);
     ASSERT_EQ(1, m.size.rows);
     ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.size.num_entries);
     ASSERT_EQ(1, m.entries[0].i);
     ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);
@@ -1044,7 +1044,7 @@ TEST(matrix_market, from_stream_tar_gz)
     ASSERT_EQ("% Test matrix", m.comments[0]);
     ASSERT_EQ(1, m.size.rows);
     ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.numEntries);
+    ASSERT_EQ(1, m.size.num_entries);
     ASSERT_EQ(1, m.entries[0].i);
     ASSERT_EQ(1, m.entries[0].j);
     ASSERT_EQ(0.5, m.entries[0].a);

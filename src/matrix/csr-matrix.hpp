@@ -27,7 +27,7 @@ public:
     Matrix();
     Matrix(index_type rows,
            index_type columns,
-           size_type numEntries,
+           size_type num_entries,
            index_type row_alignment,
            size_array_type const row_ptr,
            index_array_type const column_index,
@@ -59,7 +59,7 @@ public:
 public:
     index_type rows;
     index_type columns;
-    size_type numEntries;
+    size_type num_entries;
     index_type row_alignment;
     size_array_type row_ptr;
     index_array_type column_index;

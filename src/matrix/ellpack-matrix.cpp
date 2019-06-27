@@ -19,7 +19,7 @@ namespace ellpack_matrix
 Matrix::Matrix()
     : rows(0u)
     , columns(0u)
-    , numEntries(0u)
+    , num_entries(0u)
     , rowLength(0u)
     , column_index()
     , value()
@@ -30,14 +30,14 @@ Matrix::Matrix()
 Matrix::Matrix(
     index_type rows,
     index_type columns,
-    size_type numEntries,
+    size_type num_entries,
     index_type rowLength,
     index_array_type const & column_index,
     value_array_type const & value,
     bool skip_padding)
     : rows(rows)
     , columns(columns)
-    , numEntries(numEntries)
+    , num_entries(num_entries)
     , rowLength(rowLength)
     , column_index(column_index)
     , value(value)
@@ -62,7 +62,7 @@ std::size_t Matrix::index_size() const
 
 size_type Matrix::num_padding_entries() const
 {
-    return value.size() - numEntries;
+    return value.size() - num_entries;
 }
 
 std::size_t Matrix::value_padding_size() const
@@ -98,7 +98,7 @@ bool operator==(Matrix const & a, Matrix const & b)
 {
     return a.rows == b.rows &&
         a.columns == b.columns &&
-        a.numEntries == b.numEntries &&
+        a.num_entries == b.num_entries &&
         a.rowLength == b.rowLength &&
         std::equal(
             std::begin(a.column_index),
@@ -125,7 +125,7 @@ std::ostream & operator<<(std::ostream & o, std::vector<T, allocator> const & v)
 std::ostream & operator<<(std::ostream & o, Matrix const & x)
 {
     return o << x.rows << ' ' << x.columns << ' '
-             << x.numEntries << ' '
+             << x.num_entries << ' '
              << x.rowLength << ' '
              << x.column_index << ' '
              << x.value;
@@ -148,13 +148,13 @@ Matrix from_matrix_market(
     // Compute the row length and number of entries (including padding)
     auto rows = size.rows;
     auto row_length = m.maxRowLength();
-    auto numEntries = rows * row_length;
+    auto num_entries = rows * row_length;
     auto entries = m.sortedCoordinateEntries(
         matrix_market::Matrix::Order::row_major);
 
     // Insert the values and column indices with the required padding
-    index_array_type columns(numEntries, 0u);
-    value_array_type values(numEntries, 0.0);
+    index_array_type columns(num_entries, 0u);
+    value_array_type values(num_entries, 0.0);
     size_type k = 0;
     size_type l = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
@@ -174,7 +174,7 @@ Matrix from_matrix_market(
     }
 
     return Matrix(
-        size.rows, size.columns, size.numEntries,
+        size.rows, size.columns, size.num_entries,
         row_length, columns, values, skip_padding);
 }
 

@@ -43,7 +43,6 @@ matrix_sources = \
 	src/matrix/csr-matrix-spmv.cpp \
 	src/matrix/ellpack-matrix.cpp \
 	src/matrix/source-vector-only-matrix.cpp \
-	src/matrix/matrix.cpp \
 	src/matrix/matrix-error.cpp \
 	src/matrix/matrix-market.cpp
 matrix_headers = \
@@ -51,7 +50,6 @@ matrix_headers = \
 	src/matrix/csr-matrix.hpp \
 	src/matrix/ellpack-matrix.hpp \
 	src/matrix/source-vector-only-matrix.hpp \
-	src/matrix/matrix.hpp \
 	src/matrix/matrix-error.hpp \
 	src/matrix/matrix-market.hpp
 matrix_objects := \

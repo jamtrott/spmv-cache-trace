@@ -218,7 +218,8 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     switch (_format) {
     case MatrixFormat::coo:
         return _coo_matrix.spmv_memory_reference_string(
-            x.vector(), y.vector(), thread, num_threads, cache_line_size);
+            x.vector(), y.vector(), thread, num_threads, cache_line_size,
+            numa_domains);
     case MatrixFormat::csr:
     case MatrixFormat::csr_avx128:
     case MatrixFormat::csr_avx256:

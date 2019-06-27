@@ -88,22 +88,48 @@ std::size_t Matrix::index_padding_size() const
         + sizeof(decltype(row_index)::value_type) * num_padding_entries();
 }
 
+int thread_of_index(
+    index_type index,
+    index_type num_indices,
+    int num_threads)
+{
+    index_type indices_per_thread = (num_indices + num_threads - 1) / num_threads;
+    for (int thread = 0 ; thread < num_threads; thread++) {
+        index_type start_indices = std::min(num_indices, thread * indices_per_thread);
+        index_type end_indices = std::min(num_indices, (thread + 1) * indices_per_thread);
+        if (index >= start_indices && index <= end_indices)
+            return thread;
+    }
+    return num_threads-1;
+}
+
 std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
     unsigned int thread,
     unsigned int num_threads,
-    unsigned int cache_line_size) const
+    unsigned int cache_line_size,
+    int const * numa_domains) const
 {
     auto w = std::vector<std::pair<uintptr_t, int>>(5 * numEntries);
     for (size_type k = 0, l = 0; k < numEntries; ++k, l += 5) {
         index_type i = row_index[k];
         index_type j = column_index[k];
-        w[l] = std::make_pair(uintptr_t(&row_index[k]) / cache_line_size, 0);
-        w[l+1] = std::make_pair(uintptr_t(&column_index[k]) / cache_line_size, 0);
-        w[l+2] = std::make_pair(uintptr_t(&value[k]) / cache_line_size, 0);
-        w[l+3] = std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0);
-        w[l+4] = std::make_pair(uintptr_t(&y[i]) / cache_line_size, 0);
+        w[l] = std::make_pair(
+            uintptr_t(&row_index[k]) / cache_line_size,
+            numa_domains[thread]);
+        w[l+1] = std::make_pair(
+            uintptr_t(&column_index[k]) / cache_line_size,
+            numa_domains[thread]);
+        w[l+2] = std::make_pair(
+            uintptr_t(&value[k]) / cache_line_size,
+            numa_domains[thread]);
+        w[l+3] = std::make_pair(
+            uintptr_t(&x[j]) / cache_line_size,
+            numa_domains[thread_of_index(j, columns, num_threads)]);
+        w[l+4] = std::make_pair(
+            uintptr_t(&y[i]) / cache_line_size,
+            numa_domains[thread_of_index(i, rows, num_threads)]);
     }
     return w;
 }

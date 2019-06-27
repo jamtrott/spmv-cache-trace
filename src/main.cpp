@@ -97,10 +97,10 @@ error_t parse_option(int key, char * arg, argp_state * state)
         }
 
     case ARGP_KEY_END:
-        if (args.trace_config.empty())
-            argp_error(state, "Please specify --trace-config");
         if (!args.kernel)
             argp_error(state, "Please specify a kernel");
+        if (args.trace_config.empty())
+            argp_error(state, "Please specify --trace-config");
         break;
 
     default:

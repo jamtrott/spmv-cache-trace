@@ -61,11 +61,32 @@ TraceConfig::TraceConfig(
     , numa_domains_(numa_domains)
     , thread_affinities_(thread_affinities)
 {
+    // Check that the cache hierarchy is sensible
+    for (auto it = std::cbegin(caches); it != std::cend(caches); ++it) {
+        std::string const & name = (*it).first;
+        Cache const & cache = (*it).second;
+        for (std::string const & parent : cache.parents) {
+            if (caches.find(parent) != caches.end())
+                break;
+            if (std::find(std::cbegin(numa_domains), std::cend(numa_domains), parent)
+                != std::cend(numa_domains))
+                break;
+
+            std::stringstream s;
+            s << name << ": \"parents\": "
+              << "Expected a cache or numa domain, "
+              << "got \"" << parent << "\"";
+            throw trace_config_error(s.str());
+        }
+    }
+
+    // Check that the thread affinities are sensible
     for (size_t i = 0; i < thread_affinities.size(); i++) {
         if (caches.find(thread_affinities[i].cache) == caches.end()) {
             std::stringstream s;
-            s << "Invalid thread affinity for thread " << i << ": "
-              << "\"" << thread_affinities[i].cache << "\" is not a known cache";
+            s << "\"thread_affinities\": " << i << ": "
+              << "Expected a first-level cache, "
+              << "got \"" << thread_affinities[i].cache << "\"";
             throw trace_config_error(s.str());
         }
 
@@ -74,9 +95,9 @@ TraceConfig::TraceConfig(
             thread_affinities[i].numa_domain);
         if (numa_domain_it == numa_domains.end()) {
             std::stringstream s;
-            s << "Invalid thread affinity for thread " << i << ": "
-              << '"' << thread_affinities[i].numa_domain << '"' << ' '
-              << "is not a known NUMA domain";
+            s << "\"thread_affinities\": " << i << ": "
+              << "Expected a NUMA domain, "
+              << "got \"" << thread_affinities[i].numa_domain << "\"";
             throw trace_config_error(s.str());
         }
     }

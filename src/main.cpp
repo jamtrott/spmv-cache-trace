@@ -1,8 +1,7 @@
 #include "cache-trace.hpp"
 #include "trace-config.hpp"
 #include "util/json-ostreambuf.hpp"
-
-#include "spmv-kernel.hpp"
+#include "kernels/kernels.hpp"
 
 #include <argp.h>
 
@@ -68,15 +67,15 @@ error_t parse_option(int key, char * arg, argp_state * state)
     case int(short_options::coo):
         {
             std::string matrix_path = arg;
-            args.kernel = std::make_unique<SpMV>(
-                matrix_path, matrix::MatrixFormat::coo);
+            args.kernel = std::make_unique<coo_spmv_kernel>(
+                matrix_path);
             break;
         }
     case int(short_options::csr):
         {
             std::string matrix_path = arg;
-            args.kernel = std::make_unique<SpMV>(
-                matrix_path, matrix::MatrixFormat::csr);
+            args.kernel = std::make_unique<csr_spmv_kernel>(
+                matrix_path);
             break;
         }
 

@@ -78,24 +78,38 @@ $(cache_simulation_objects): %.o: %.cpp $(cache_simulation_headers)
 $(cache_simulation_a): $(cache_simulation_objects)
 	$(AR) $(ARFLAGS) $@ $^
 
+# Kernels
+kernels_a = src/cache-simulation/kernels.a
+kernels_sources = \
+	src/kernels/coo-spmv.cpp \
+	src/kernels/csr-spmv.cpp
+kernels_headers = \
+	src/kernels/coo-spmv.hpp \
+	src/kernels/csr-spmv.hpp
+kernels_objects := \
+	$(foreach source,$(kernels_sources),$(source:.cpp=.o))
+
+$(kernels_objects): %.o: %.cpp $(kernels_headers)
+	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@
+$(kernels_a): $(kernels_objects)
+	$(AR) $(ARFLAGS) $@ $^
+
 # Main
 spmv_cache_trace_sources = \
 	src/cache-trace.cpp \
 	src/kernel.cpp \
 	src/trace-config.cpp \
-	src/spmv-kernel.cpp \
 	src/main.cpp
 spmv_cache_trace_headers = \
 	src/cache-trace.hpp \
 	src/kernel.hpp \
-	src/trace-config.hpp \
-	src/spmv-kernel.hpp
+	src/trace-config.hpp
 spmv_cache_trace_objects := \
 	$(foreach source,$(spmv_cache_trace_sources),$(source:.cpp=.o))
 
 $(spmv_cache_trace_objects): %.o: %.cpp $(spmv_cache_trace_headers)
 	$(CXX) -c $(CXXFLAGS) $(INCLUDES) $< -o $@
-spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(matrix_a) $(util_a)
+spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a)
 	$(CXX) $(CXXFLAGS) $(INCLUDES) $^ $(LDFLAGS) -o $@
 
 
@@ -136,7 +150,7 @@ unittest_objects := \
 $(unittest_objects): %.o: %.cpp
 	$(CXX) $(CPPFLAGS) -c $(CXXFLAGS) $(INCLUDES) \
 		-isystem $(GTEST_ROOT)/include $^ -o $@
-unittest: $(unittest_objects) $(cache_simulation_a) $(matrix_a) $(util_a) gtest_main.a 
+unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a) gtest_main.a
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
 
 
@@ -146,6 +160,7 @@ clean:
 	rm -f $(util_c_objects) $(util_cxx_objects) $(util_a)
 	rm -f $(matrix_objects) $(matrix_a)
 	rm -f $(cache_simulation_objects) $(cache_simulation_a)
+	rm -f $(kernels_objects) $(kernels_a)
 	rm -f $(spmv_cache_trace_objects)
 	rm -f spmv-cache-trace
 	rm -f gtest_main.o gtest_main.a gtest-all.o

@@ -1,9 +1,9 @@
-#include "spmv-kernel.hpp"
+#include "csr-spmv.hpp"
 #include "kernel.hpp"
 #include "trace-config.hpp"
 
 #include "cache-simulation/replacement.hpp"
-#include "matrix/matrix.hpp"
+#include "matrix/csr-matrix.hpp"
 #include "matrix/matrix-error.hpp"
 #include "matrix/matrix-market.hpp"
 
@@ -12,28 +12,27 @@
 #include <sstream>
 #include <string>
 
-SpMV::SpMV(std::string const & matrix_path,
-           matrix::MatrixFormat const matrix_format)
+csr_spmv_kernel::csr_spmv_kernel(
+    std::string const & matrix_path)
     : Kernel()
     , matrix_path_(matrix_path)
-    , matrix_format_(matrix_format)
 {
 }
 
-SpMV::~SpMV()
+csr_spmv_kernel::~csr_spmv_kernel()
 {
 }
 
-void SpMV::init(
+void csr_spmv_kernel::init(
     std::ostream & o,
     bool verbose)
 {
     try {
         matrix_market::Matrix mm =
             matrix_market::load_matrix(matrix_path_, o, verbose);
-        A = from_matrix_market(mm, matrix_format_, o, verbose);
-        x = matrix::make_vector(matrix_format_, std::vector<double>(A.columns(), 1.0));
-        y = matrix::make_vector(matrix_format_, std::vector<double>(A.rows(), 0.0));
+        A = csr_matrix::from_matrix_market(mm);
+        x = csr_matrix::value_array_type(A.columns, 1.0);
+        y = csr_matrix::value_array_type(A.rows, 0.0);
     }
     catch (matrix_market::matrix_market_error & e) {
         std::stringstream s;
@@ -52,22 +51,7 @@ void SpMV::init(
     }
 }
 
-std::string const & SpMV::matrix_path() const
-{
-    return matrix_path_;
-}
-
-matrix::MatrixFormat const & SpMV::matrix_format() const
-{
-    return matrix_format_;
-}
-
-matrix::Matrix const & SpMV::matrix() const
-{
-    return A;
-}
-
-replacement::MemoryReferenceString SpMV::memory_reference_string(
+replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,
     int num_threads,
@@ -90,22 +74,22 @@ replacement::MemoryReferenceString SpMV::memory_reference_string(
         numa_domain_affinity.data());
 }
 
-std::string const & SpMV::name() const
+std::string csr_spmv_kernel::name() const
 {
-    return matrix::matrix_format_name(matrix_format_);
+    return "csr-spmv";
 }
 
-std::ostream & SpMV::print(
+std::ostream & csr_spmv_kernel::print(
     std::ostream & o) const
 {
     return o
         << "{\n"
         << '"' << "name" << '"' << ": " << '"' << "spmv" << '"' << ',' << '\n'
         << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path_ << '"' << ',' << '\n'
-        << '"' << "matrix_format" << '"' << ": " << '"' << matrix_format_ << '"' << ',' << '\n'
-        << '"' << "rows" << '"' << ": "  << A.rows()  << ',' << '\n'
-        << '"' << "columns" << '"' << ": "  << A.columns()  << ',' << '\n'
-        << '"' << "nonzeros" << '"' << ": "  << A.nonzeros()  << ',' << '\n'
+        << '"' << "matrix_format" << '"' << ": " << '"' << "csr" << '"' << ',' << '\n'
+        << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
+        << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
+        << '"' << "nonzeros" << '"' << ": "  << A.numEntries  << ',' << '\n'
         << '"' << "matrix_size" << '"' << ": "  << A.size()
         << "\n}";
 }

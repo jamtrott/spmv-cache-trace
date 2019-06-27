@@ -3,5 +3,6 @@
 
 #include "kernels/csr-spmv.hpp"
 #include "kernels/coo-spmv.hpp"
+#include "kernels/triad.hpp"
 
 #endif

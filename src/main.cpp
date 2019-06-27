@@ -46,6 +46,7 @@ enum class short_options
 
     /* Sparse matrix-vector multplication kernels. */
     non_printable_characters = 128,
+    triad,
     coo,
     csr,
 };
@@ -62,6 +63,22 @@ error_t parse_option(int key, char * arg, argp_state * state)
     case int(short_options::verbose):
         args.verbose = true;
         break;
+
+        /* STREAM-like kernels. */
+    case int(short_options::triad):
+        {
+            triad::size_type num_entries;
+            try {
+                num_entries = std::stoul(arg);
+            } catch (std::out_of_range const & e) {
+                argp_error(state, "triad: %s", strerror(errno));
+            } catch (std::invalid_argument const & e) {
+                argp_error(state, "triad: expected integer");
+            }
+            args.kernel = std::make_unique<triad_kernel>(
+                num_entries);
+            break;
+        }
 
         /* Sparse matrix-vector multplication kernels. */
     case int(short_options::coo):
@@ -99,6 +116,10 @@ int main(int argc, char ** argv)
          "Read cache parameters from a configuration file in JSON format."},
         {"verbose", int(short_options::verbose), nullptr, 0,
          "Produce verbose output"},
+
+        {0, 0, 0, 0, "STREAM-like kernels:" },
+        {"triad", int(short_options::triad), "N", 0,
+         "Triad: a(i)=b(i)+q*c(i), 24 bytes and 2 flops per iteration", 0},
 
         {0, 0, 0, 0, "Sparse matrix-vector multplication kernels:" },
         {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},

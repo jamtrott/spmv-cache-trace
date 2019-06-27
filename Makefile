@@ -79,10 +79,12 @@ kernels_a = src/cache-simulation/kernels.a
 kernels_sources = \
 	src/kernels/coo-spmv.cpp \
 	src/kernels/csr-spmv.cpp \
+	src/kernels/triad.cpp \
 	src/kernels/kernel.cpp
 kernels_headers = \
 	src/kernels/coo-spmv.hpp \
 	src/kernels/csr-spmv.hpp \
+	src/kernels/triad.hpp \
 	src/kernels/kernel.hpp
 kernels_objects := \
 	$(foreach source,$(kernels_sources),$(source:.cpp=.o))

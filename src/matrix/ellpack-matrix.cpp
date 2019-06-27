@@ -20,7 +20,7 @@ Matrix::Matrix()
     : rows(0u)
     , columns(0u)
     , num_entries(0u)
-    , rowLength(0u)
+    , row_length(0u)
     , column_index()
     , value()
     , skip_padding(false)
@@ -31,14 +31,14 @@ Matrix::Matrix(
     index_type rows,
     index_type columns,
     size_type num_entries,
-    index_type rowLength,
+    index_type row_length,
     index_array_type const & column_index,
     value_array_type const & value,
     bool skip_padding)
     : rows(rows)
     , columns(columns)
     , num_entries(num_entries)
-    , rowLength(rowLength)
+    , row_length(row_length)
     , column_index(column_index)
     , value(value)
     , skip_padding(skip_padding)
@@ -84,8 +84,8 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
 {
     auto w = std::vector<std::pair<uintptr_t, int>>{};
     for (index_type i = 0u; i < rows; ++i) {
-        for (index_type l = 0u; l < rowLength; ++l) {
-            size_type k = i * rowLength + l;
+        for (index_type l = 0u; l < row_length; ++l) {
+            size_type k = i * row_length + l;
             index_type j = column_index[k];
             w.push_back(std::make_pair(uintptr_t(&x[j]) / cache_line_size, 0));
         }
@@ -99,7 +99,7 @@ bool operator==(Matrix const & a, Matrix const & b)
     return a.rows == b.rows &&
         a.columns == b.columns &&
         a.num_entries == b.num_entries &&
-        a.rowLength == b.rowLength &&
+        a.row_length == b.row_length &&
         std::equal(
             std::begin(a.column_index),
             std::end(a.column_index),
@@ -126,7 +126,7 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
 {
     return o << x.rows << ' ' << x.columns << ' '
              << x.num_entries << ' '
-             << x.rowLength << ' '
+             << x.row_length << ' '
              << x.column_index << ' '
              << x.value;
 }
@@ -183,7 +183,7 @@ namespace
 
 void __attribute__ ((noinline)) ellpack_spmv(
     index_type const rows,
-    index_type const rowLength,
+    index_type const row_length,
     index_type const * column_index,
     value_type const * value,
     value_type const * x,
@@ -192,8 +192,8 @@ void __attribute__ ((noinline)) ellpack_spmv(
     index_type i, l;
     size_type k;
     for (i = 0; i < rows; ++i) {
-        for (l = 0; l < rowLength; ++l) {
-            k = i * rowLength + l;
+        for (l = 0; l < row_length; ++l) {
+            k = i * row_length + l;
             y[i] += value[k] * x[column_index[k]];
         }
     }
@@ -201,7 +201,7 @@ void __attribute__ ((noinline)) ellpack_spmv(
 
 void ellpack_spmv_skip_padding(
     index_type const rows,
-    index_type const rowLength,
+    index_type const row_length,
     index_type const * column_index,
     value_type const * value,
     value_type const * x,
@@ -212,8 +212,8 @@ void ellpack_spmv_skip_padding(
     value_type z;
     for (i = 0u; i < rows; ++i) {
         z = 0.0;
-        for (j = 0u; j < rowLength; ++j) {
-            l = i * rowLength + j;
+        for (j = 0u; j < row_length; ++j) {
+            l = i * row_length + j;
             k = column_index[l];
             if (k == std::numeric_limits<index_type>::max())
                 break;
@@ -230,7 +230,7 @@ void spmv(
     ellpack_matrix::value_array_type const & x,
     ellpack_matrix::value_array_type & y)
 {
-    ellpack_spmv(A.rows, A.rowLength, A.column_index.data(),
+    ellpack_spmv(A.rows, A.row_length, A.column_index.data(),
                  A.value.data(), x.data(), y.data());
 }
 
@@ -249,11 +249,11 @@ ellpack_matrix::value_array_type operator*(
     ellpack_matrix::value_array_type y(A.rows, 0.0);
     if (!A.skip_padding) {
         ellpack_spmv(
-            A.rows, A.rowLength, A.column_index.data(),
+            A.rows, A.row_length, A.column_index.data(),
             A.value.data(), x.data(), y.data());
     } else {
         ellpack_spmv_skip_padding(
-            A.rows, A.rowLength, A.column_index.data(),
+            A.rows, A.row_length, A.column_index.data(),
             A.value.data(), x.data(), y.data());
     }
     return y;

@@ -40,7 +40,7 @@ TEST(ellpack_matrix, create)
     ASSERT_EQ(m.rows, 4u);
     ASSERT_EQ(m.columns, 5u);
     ASSERT_EQ(m.num_entries, 8u);
-    ASSERT_EQ(m.rowLength, 3u);
+    ASSERT_EQ(m.row_length, 3u);
     ellpack_matrix::index_array_type column_index{
         {0u, 1u, 3u, 0u, 1u, 1u, 2u, 2u, 2u, 3u, 4u, 4u}};
     ASSERT_EQ(m.column_index, column_index);

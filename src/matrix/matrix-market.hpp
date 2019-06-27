@@ -68,7 +68,7 @@ public:
     size_type num_entries() const;
     index_type maxRowLength() const;
 
-    std::vector<index_type> rowLengths() const;
+    std::vector<index_type> row_lengths() const;
 
     enum class Order { column_major, row_major };
     std::vector<CoordinateEntry> sortedCoordinateEntries(Order o) const;

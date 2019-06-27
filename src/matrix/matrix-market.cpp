@@ -44,21 +44,20 @@ size_type Matrix::num_entries() const
  */
 index_type Matrix::maxRowLength() const
 {
-    auto row_lengths = rowLengths();
-    return *std::max_element(
-        std::cbegin(row_lengths), std::cend(row_lengths));
+    auto const & v = row_lengths();
+    return *std::max_element(std::cbegin(v), std::cend(v));
 }
 
 /*
  * Compute the length of each row
  */
-std::vector<index_type> Matrix::rowLengths() const
+std::vector<index_type> Matrix::row_lengths() const
 {
-    std::vector<index_type> row_lengths(size.rows, 0u);
+    std::vector<index_type> row_lengths_(size.rows, 0u);
     std::for_each(
         std::cbegin(entries), std::cend(entries),
-        [&row_lengths] (auto const & a) { ++row_lengths[a.i-1u]; });
-    return row_lengths;
+        [&row_lengths_] (auto const & a) { ++row_lengths_[a.i-1u]; });
+    return row_lengths_;
 }
 
 /*

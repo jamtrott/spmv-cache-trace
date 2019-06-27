@@ -2,11 +2,8 @@
 
 #include <omp.h>
 
-#ifdef __AVX__
-#include <emmintrin.h>
-#endif
-#ifdef __AVX2__
-#include <immintrin.h>
+#if defined(__AVX__) || defined(__AVX2__)
+#include <x86intrin.h>
 #endif
 
 #include <cassert>

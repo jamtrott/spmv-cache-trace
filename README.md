@@ -90,7 +90,7 @@ will produce the following output:
     "nonzeros": 2596,
     "matrix_size": 35708
   },
-  "cache-misses": {
+  "cache_misses": {
     "L1-0": [[423, 0], [0, 0]],
     "L1-1": [[0, 0], [35, 427]],
     "L2-0": [[423, 0], [0, 0]],

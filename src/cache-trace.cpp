@@ -204,7 +204,7 @@ std::ostream & operator<<(
              << cache_trace.trace_config() << ',' << '\n'
              << '"' << "kernel" << '"' << ": "
              << cache_trace.kernel() << ',' << '\n'
-             << '"' << "cache-misses" << '"' << ": "
+             << '"' << "cache_misses" << '"' << ": "
              << cache_trace.cache_misses()
              << '\n' << '}';
 }

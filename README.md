@@ -17,6 +17,8 @@ Installation
 ============
 To build, simply run `make`. To run the unit tests, run `make check`.
 
+For the unit tests, it may be necessary to set the environment variable `GTEST_ROOT` to point to the Google Test directory.
+
 #### Dependencies
   * zlib (https://zlib.net/)
   * libpfm4 (http://perfmon2.sourceforge.net/)

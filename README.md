@@ -11,6 +11,7 @@ Table of contents
       * [Sparse matrix-vector multiplication](#sparse-matrix-vector-multiplication)
       * [Trace configuration](#trace-configuration)
       * [Cache tracing](#cache-tracing)
+      * [Profiling](#profiling)
 
 
 Installation
@@ -70,7 +71,7 @@ The command
 ```sh
 $ ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz
 ```
-will perform a cache trace for a sparse matrix-vector multiplication in the compressed sparse row format with the matrix stored in `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
+will perform a cache trace for a sparse matrix-vector multiplication in the compressed sparse row format using the matrix `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
 ```json
 {
   "trace-config": {
@@ -106,3 +107,59 @@ will perform a cache trace for a sparse matrix-vector multiplication in the comp
 }
 ```
 For each cache, the cache misses are given for each combination of thread and NUMA domain. Thus, for the third-level cache, the first thread incurred 396 cache misses that would have to be fetched from the first NUMA domain, and none for the second NUMA domain. The second thread incurred 23 cache misses for the first NUMA domain, and 427 for the second NUMA domain.
+
+Profiling
+-------------
+The command
+```sh
+$ ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz --profile=10
+```
+will profile ten runs of the sparse matrix-vector multiplication kernel for the compressed sparse row format using the matrix `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
+```json
+{
+  "trace_config": {
+    "numa_domains": ["DRAM-0", "DRAM-1"],
+    "caches": {
+      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"], "events": []},
+      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"], "events": []},
+      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
+      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
+      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"], "events": []}
+    },
+    "thread_affinities": [
+      {"cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0", "event_groups": []},
+      {"cpu": 1, "cache": "L1-1", "numa_domain": "DRAM-1", "event_groups": []}
+    ]
+  },
+  "kernel": {
+    "name": "spmv",
+    "matrix_path": "1138_bus.tar.gz",
+    "matrix_format": "csr",
+    "rows": 1138,
+    "columns": 1138,
+    "nonzeros": 2596,
+    "matrix_size": 35708
+  },
+  "execution_time": {
+    "samples": 10,
+    "min": 14155,
+    "max": 21658,
+    "mean": 15283.7,
+    "median": 14252,
+    "variance": 5.56577e+06,
+    "standard_deviation": 2359.19,
+    "skewness": 1.91989,
+    "kurtosis": 6.62483,
+    "unit": "ns"
+  },
+  "profiling_events": [],
+  "cache_misses": {
+    "L1-0": [],
+    "L1-1": [],
+    "L2-0": [],
+    "L2-1": [],
+    "L3": []
+  }
+}
+```
+The data shown under `"execution_time"` are statistics based on the execution times of the kernel runs. For instance, the mean execution time is 15284 ns, or about 15 microseconds.

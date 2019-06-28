@@ -162,4 +162,26 @@ will profile ten runs of the sparse matrix-vector multiplication kernel for the 
   }
 }
 ```
-The data shown under `"execution_time"` are statistics based on the execution times of the kernel runs. For instance, the mean execution time is 15284 ns, or about 15 microseconds.
+The data shown under `"execution_time"` are statistics based on the execution times of the kernel runs. For instance, the mean execution time is 15 284 ns, or about 15 microseconds.
+
+### Hardware performance monitoring
+In addition, it is possible to obtain more profiling information by using hardware performance monitoring events. To do so, each thread in the trace configuration may provide an array called `"event_groups"`. Each event group is an array of strings, where each string names a hardware performance event according to the conventions used by the library *libpfm4*.
+
+The following example shows a single thread configured with two event groups:
+```json
+{
+  "numa_domains": ["DRAM"],
+  "caches": {
+    "L1": {"size":    32768, "line_size": 64, "parents": ["L2"]},
+    "L2": {"size":   262144, "line_size": 64, "parents": ["L3"]},
+    "L3":   {"size": 20971520, "line_size": 64, "parents": ["DRAM"]}
+  },
+  "thread_affinities": [
+    {"thread": 0, "cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0",
+     "event_groups": [["l1-dcache-loads", "l1-dcache-load-misses"], ["llc-load-misses"]]}
+  ]
+}
+```
+In the above example, the first event group will measure the events `"l1-dcache-loads"` and `"l1-dcache-load-misses"`, which, roughly speaking, correspond to the number of loads that access the L1 cache and the number of loads that miss the L1 cache, respectively. The second event group measures the event `"llc-load-misses"`, which should correspond to the number of loads that miss the last-level cache.
+
+To see a list of available events, use `./spmv-cache-trace --list-perf-events`.

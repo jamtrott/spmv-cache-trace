@@ -17,6 +17,13 @@ Installation
 ============
 To build, simply run `make`. To run the unit tests, run `make check`.
 
+#### Dependencies
+  * zlib (https://zlib.net/)
+  * libpfm4 (http://perfmon2.sourceforge.net/)
+  * Google Test (https://github.com/google/googletest) for unit tests.
+
+Tested on Ubuntu 18.04.2 LTS (GNU/Linux 4.18.0-20-generic x86_64).
+
 
 Usage
 =====

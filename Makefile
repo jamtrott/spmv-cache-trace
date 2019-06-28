@@ -1,8 +1,22 @@
 # Configuration
 CFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
 CXXFLAGS=$(CFLAGS)
-INCLUDES=-Isrc
-LDFLAGS=-lz -lpfm
+
+
+MKL_INCLUDES = -isystem ${MKLROOT}/include
+MKL_LIBS = \
+	-L${MKLROOT}/lib/intel64 \
+	-Wl,--no-as-needed \
+	-lmkl_intel_lp64 \
+	-lmkl_gnu_thread \
+	-lmkl_core \
+	-lgomp \
+	-lpthread \
+	-lm \
+	-ldl
+
+INCLUDES=-Isrc $(MKL_INCLUDES)
+LDFLAGS=-lz -lpfm $(MKL_LIBS)
 
 # Default
 .PHONY: all
@@ -82,11 +96,13 @@ kernels_a = src/cache-simulation/kernels.a
 kernels_sources = \
 	src/kernels/coo-spmv.cpp \
 	src/kernels/csr-spmv.cpp \
+	src/kernels/mkl-csr-spmv.cpp \
 	src/kernels/triad.cpp \
 	src/kernels/kernel.cpp
 kernels_headers = \
 	src/kernels/coo-spmv.hpp \
 	src/kernels/csr-spmv.hpp \
+	src/kernels/mkl-csr-spmv.hpp \
 	src/kernels/triad.hpp \
 	src/kernels/kernel.hpp
 kernels_objects := \

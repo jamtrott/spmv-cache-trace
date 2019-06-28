@@ -54,6 +54,7 @@ enum class short_options
     triad,
     coo,
     csr,
+    mkl_csr,
 };
 
 error_t parse_option(int key, char * arg, argp_state * state)
@@ -115,6 +116,14 @@ error_t parse_option(int key, char * arg, argp_state * state)
             break;
         }
 
+    case int(short_options::mkl_csr):
+        {
+            std::string matrix_path = arg;
+            args.kernel = std::make_unique<mkl_csr_spmv_kernel>(
+                matrix_path);
+            break;
+        }
+
     case ARGP_KEY_END:
         if (args.list_perf_events)
             break;
@@ -149,6 +158,7 @@ int main(int argc, char ** argv)
         {0, 0, 0, 0, "Sparse matrix-vector multplication kernels:" },
         {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},
         {"csr", int(short_options::csr), "PATH", 0, "Compressed sparse row", 0},
+        {"mkl-csr", int(short_options::mkl_csr), "PATH", 0, "Compressed sparse row using Intel MKL", 0},
         {nullptr}};
 
     auto arginfo = argp{

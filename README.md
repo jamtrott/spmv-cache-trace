@@ -6,15 +6,12 @@ Based on a few, reasonable assumptions, we estimate the number of cache misses i
 
 Table of contents
 -----------------
-
-
-<!--ts-->
    * [Installation](#installation)
    * [Usage](#usage)
       * [Sparse matrix-vector multiplication](#sparse-matrix-vector-multiplication)
       * [Trace configuration](#trace-configuration)
       * [Cache tracing](#cache-tracing)
-<!--te-->
+
 
 Installation
 ============

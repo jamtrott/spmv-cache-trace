@@ -60,11 +60,11 @@ The following example is a trace configuration for a simulation that might corre
 
 Cache tracing
 -------------
-Assuming that `trace-config.json` contains the trace configuration given above, and a matrix is given by `suitesparse/HB/1138_bus.tar.gz` (see https://sparse.tamu.edu/HB/1138_bus), then the command
+The command
 ```sh
-$ ./spmv-cache-trace --trace-config dual-core.json --csr 1138_bus.tar.gz
+$ ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz
 ```
-will produce the following output:
+will perform a cache trace for a sparse matrix-vector multiplication in the compressed sparse row format with the matrix stored in `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
 ```json
 {
   "trace-config": {

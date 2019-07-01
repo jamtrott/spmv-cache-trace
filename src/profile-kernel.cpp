@@ -97,20 +97,6 @@ Profiling::Profiling(
             }
         }
     }
-
-    auto const & caches = trace_config.caches();
-    for (auto it = std::cbegin(caches); it != std::cend(caches); ++it) {
-        std::string const & name = (*it).first;
-        Cache const & cache = (*it).second;
-        std::vector<ProfilingEvent> profiling_events;
-        if (!cache.events.empty()) {
-            for (int thread = 0; thread < num_threads; thread++) {
-                profiling_events.push_back(
-                    make_profiling_event(cache.events[0], thread, profiling_runs));
-            }
-        }
-        cache_misses_.emplace(name, profiling_events);
-    }
 }
 
 Profiling::~Profiling()
@@ -140,11 +126,6 @@ std::vector<duration_type> const & Profiling::execution_time() const
 std::vector<ProfilingEvent> const & Profiling::profiling_events() const
 {
     return profiling_events_;
-}
-
-std::map<std::string, std::vector<ProfilingEvent>> const & Profiling::cache_misses() const
-{
-    return cache_misses_;
 }
 
 /*
@@ -300,7 +281,6 @@ Profiling profile_kernel(
     std::ostream & o,
     bool verbose)
 {
-    auto const & caches = trace_config.caches();
     auto const & thread_affinities = trace_config.thread_affinities();
     int num_threads = thread_affinities.size();
 
@@ -354,27 +334,6 @@ std::ostream & operator<<(
 
 std::ostream & operator<<(
     std::ostream & o,
-    std::map<std::string, std::vector<ProfilingEvent>> const & cache_misses)
-{
-    if (cache_misses.empty())
-        return o << "{}";
-
-    o << '{' << '\n';
-    auto it = std::cbegin(cache_misses);
-    auto end = --std::cend(cache_misses);
-    for (; it != end; ++it) {
-        auto const & cache_miss = *it;
-        o << '"' << cache_miss.first << '"' << ": "
-          << cache_miss.second << ',' << '\n';
-    }
-    auto const & cache_miss = *it;
-    o << '"' << cache_miss.first << '"' << ": "
-      << cache_miss.second << '\n';
-    return o << '}';
-}
-
-std::ostream & operator<<(
-    std::ostream & o,
     Profiling const & profiling)
 {
     return o
@@ -387,7 +346,5 @@ std::ostream & operator<<(
         << profiling.execution_time() << ',' << '\n'
         << '"' << "profiling_events" << '"' << ": "
         << profiling.profiling_events() << ',' << '\n'
-        << '"' << "cache_misses" << '"' << ": "
-        << profiling.cache_misses()
         << '\n' << '}';
 }

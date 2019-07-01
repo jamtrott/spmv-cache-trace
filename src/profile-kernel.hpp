@@ -69,7 +69,6 @@ public:
     std::vector<ProfilingRun> const & profiling_runs() const;
     std::vector<duration_type> const & execution_time() const;
     std::vector<ProfilingEvent> const & profiling_events() const;
-    std::map<std::string, std::vector<ProfilingEvent>> const & cache_misses() const;
 
 private:
     TraceConfig const & trace_config_;
@@ -77,7 +76,6 @@ private:
     std::vector<ProfilingRun> profiling_runs_;
     std::vector<duration_type> execution_time_;
     std::vector<ProfilingEvent> profiling_events_;
-    std::map<std::string, std::vector<ProfilingEvent>> cache_misses_;
 };
 
 Profiling profile_kernel(

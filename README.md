@@ -28,6 +28,9 @@ For the unit tests, it may be necessary to set the environment variable `GTEST_R
 Tested on Ubuntu 18.04.2 LTS (GNU/Linux 4.18.0-20-generic x86_64).
 
 
+### Intel C compiler and Math Kernel Library
+To build with the Intel C compiler and Intel MKL, run `CC=icc CXX=icpc USE_INTEL_MKL=1 make`.
+
 Usage
 =====
 

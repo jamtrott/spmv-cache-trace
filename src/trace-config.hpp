@@ -59,16 +59,22 @@ class TraceConfig
 public:
     TraceConfig();
     TraceConfig(
+        std::string const & name,
+        std::string const & description,
         std::map<std::string, Cache> const & caches,
         std::vector<std::string> const & numa_domains,
         std::vector<ThreadAffinity> const & thread_affinities);
     ~TraceConfig();
 
+    std::string const & name() const;
+    std::string const & description() const;
     std::map<std::string, Cache> const & caches() const;
     std::vector<std::string> const & numa_domains() const;
     std::vector<ThreadAffinity> const & thread_affinities() const;
 
 private:
+    std::string name_;
+    std::string description_;
     std::map<std::string, Cache> caches_;
     std::vector<std::string> numa_domains_;
     std::vector<ThreadAffinity> thread_affinities_;

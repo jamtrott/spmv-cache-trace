@@ -53,17 +53,23 @@ ThreadAffinity::ThreadAffinity(
 }
 
 TraceConfig::TraceConfig()
-    : caches_()
+    : name_()
+    , description_()
+    , caches_()
     , numa_domains_()
     , thread_affinities_()
 {
 }
 
 TraceConfig::TraceConfig(
+    std::string const & name,
+    std::string const & description,
     std::map<std::string, Cache> const & caches,
     std::vector<std::string> const & numa_domains,
     std::vector<ThreadAffinity> const & thread_affinities)
-    : caches_(caches)
+    : name_(name)
+    , description_(description)
+    , caches_(caches)
     , numa_domains_(numa_domains)
     , thread_affinities_(thread_affinities)
 {
@@ -111,6 +117,16 @@ TraceConfig::TraceConfig(
 
 TraceConfig::~TraceConfig()
 {
+}
+
+std::string const & TraceConfig::name() const
+{
+    return name_;
+}
+
+std::string const & TraceConfig::description() const
+{
+    return description_;
 }
 
 std::map<std::string, Cache> const & TraceConfig::caches() const
@@ -297,13 +313,29 @@ std::vector<ThreadAffinity> parse_thread_affinities(
 
 TraceConfig parse_trace_config(const struct json * root)
 {
+    std::string name;
+    struct json * json_name = json_object_get(
+        root, "name");
+    if (json_name && json_is_string(json_name))
+        name = json_to_string(json_name);
+
+    std::string description;
+    struct json * json_description = json_object_get(
+        root, "description");
+    if (json_description && json_is_string(json_description))
+        description = json_to_string(json_description);
+
     std::map<std::string, Cache> caches =
         parse_caches(root);
     std::vector<std::string> numa_domains =
         parse_numa_domains(root);
     std::vector<ThreadAffinity> thread_affinities =
         parse_thread_affinities(root);
-    return TraceConfig(caches, numa_domains, thread_affinities);
+
+    return TraceConfig(
+        name, description,
+        caches, numa_domains,
+        thread_affinities);
 }
 
 TraceConfig read_trace_config(std::string const & path)
@@ -455,6 +487,10 @@ std::ostream & operator<<(
     TraceConfig const & trace_config)
 {
     return o << '{' << '\n'
+             << '"' << "name" << '"' << ": "
+             << '"' << trace_config.name() << '"' << ',' << '\n'
+             << '"' << "description" << '"' << ": "
+             << '"' << trace_config.description() << '"' << ',' << '\n'
              << '"' << "numa_domains" << '"' << ": "
              << trace_config.numa_domains() << ',' << '\n'
              << '"' << "caches" << '"' << ": "

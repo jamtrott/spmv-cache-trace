@@ -71,24 +71,24 @@ The following example is a trace configuration for a simulation that might corre
 Cache tracing
 -------------
 The command
-```sh
-$ ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz
+```bash
+./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz
 ```
 will perform a cache trace for a sparse matrix-vector multiplication in the compressed sparse row format using the matrix `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
 ```json
 {
   "trace-config": {
-    "caches": {
-      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"]},
-      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"]},
-      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"]},
-      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"]},
-      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"]}
-    },
     "numa_domains": ["DRAM-0", "DRAM-1"],
+    "caches": {
+      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"], "events": []},
+      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"], "events": []},
+      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
+      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
+      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"], "events": []}
+    },
     "thread_affinities": [
-      {"cache": "L1-0", "numa_domain": "DRAM-0"},
-      {"cache": "L1-1", "numa_domain": "DRAM-1"}
+      {"cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0", "event_groups": []},
+      {"cpu": 1, "cache": "L1-1", "numa_domain": "DRAM-1", "event_groups": []}
     ]
   },
   "kernel": {

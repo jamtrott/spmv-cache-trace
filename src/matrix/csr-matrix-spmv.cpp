@@ -1,9 +1,14 @@
 #include "csr-matrix.hpp"
+#include "matrix-error.hpp"
 
 #include <omp.h>
 
 #if defined(__AVX__) || defined(__AVX2__)
 #include <x86intrin.h>
+#endif
+
+#ifdef USE_INTEL_MKL
+#include <mkl.h>
 #endif
 
 #include <cassert>
@@ -483,3 +488,19 @@ void csr_matrix::spmv_unroll4_avx256(
         x.data(), y.data());
 }
 #endif
+
+void csr_matrix::spmv_mkl(
+    Matrix const & A,
+    value_array_type const & x,
+    value_array_type & y)
+{
+#ifdef INTEL_MKL_VERSION
+    mkl_cspblas_dcsrgemv(
+        "n", &A.rows, A.value.data(),
+        A.row_ptr.data(), A.column_index.data(),
+        x.data(), y.data());
+#else
+    throw matrix::matrix_error(
+        "Please re-build with Intel MKL support");
+#endif
+}

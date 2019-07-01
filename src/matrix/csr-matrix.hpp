@@ -125,6 +125,11 @@ void spmv_unroll4_avx256(
     value_array_type const & x,
     value_array_type & y);
 
+void spmv_mkl(
+    Matrix const & A,
+    value_array_type const & x,
+    value_array_type & y);
+
 void spmv_regular_traffic(
     Matrix const & A,
     value_array_type const & x,

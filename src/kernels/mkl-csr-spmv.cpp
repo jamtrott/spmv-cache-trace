@@ -7,9 +7,6 @@
 #include "matrix/matrix-error.hpp"
 #include "matrix/matrix-market.hpp"
 
-#include <mkl.h>
-
-#include <algorithm>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -55,14 +52,14 @@ void mkl_csr_spmv_kernel::init(
 
 void mkl_csr_spmv_kernel::run()
 {
-#ifdef INTEL_MKL_VERSION
-    mkl_cspblas_dcsrgemv(
-        "n", &A.rows, A.value.data(),
-        A.row_ptr.data(), A.column_index.data(),
-        x.data(), y.data());
-#else
-    throw kernel_error("mkl_csr_spmv_kernel::run(): Missing Intel MKL");
-#endif
+    try {
+        csr_matrix::spmv_mkl(A, x, y);
+    } catch (matrix::matrix_error & e) {
+        std::stringstream s;
+        s << matrix_path << ": "
+          << e.what() << '\n';
+        throw kernel_error(s.str());
+    }
 }
 
 replacement::MemoryReferenceString mkl_csr_spmv_kernel::memory_reference_string(
@@ -70,7 +67,8 @@ replacement::MemoryReferenceString mkl_csr_spmv_kernel::memory_reference_string(
     int thread,
     int num_threads) const
 {
-    throw kernel_error("mkl_csr_spmv_kernel::memory_reference_string(): Not implemented");
+    throw kernel_error(
+        "mkl_csr_spmv_kernel::memory_reference_string(): Not implemented");
 }
 
 std::string mkl_csr_spmv_kernel::name() const

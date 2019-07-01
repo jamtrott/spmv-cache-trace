@@ -263,3 +263,19 @@ TEST(csr_matrix, poisson2D_unroll4_avx256)
     ASSERT_NEAR(l2norm(y - z), 0.0, std::numeric_limits<double>::epsilon());
 }
 #endif
+
+#ifdef USE_INTEL_MKL
+TEST(csr_matrix, poisson2D_spmv_mkl)
+{
+    std::istringstream stream{poisson2D};
+    auto mm = matrix_market::fromStream(stream);
+    auto A = csr_matrix::from_matrix_market(mm);
+    auto x = csr_matrix::value_array_type{
+        std::cbegin(poisson2D_b), std::cend(poisson2D_b)};
+    auto y = csr_matrix::value_array_type(A.rows, 0.0);
+    csr_matrix::spmv_mkl(A, x, y);
+    auto z = csr_matrix::value_array_type{
+        std::cbegin(poisson2D_result), std::cend(poisson2D_result)};
+    ASSERT_NEAR(l2norm(y - z), 0.0, std::numeric_limits<double>::epsilon());
+}
+#endif

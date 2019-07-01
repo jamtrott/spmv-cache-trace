@@ -50,6 +50,15 @@ void mkl_csr_spmv_kernel::init(
     }
 }
 
+void mkl_csr_spmv_kernel::prepare()
+{
+    distribute_pages(A.row_ptr.data(), A.row_ptr.size());
+    distribute_pages(A.column_index.data(), A.column_index.size());
+    distribute_pages(A.value.data(), A.value.size());
+    distribute_pages(x.data(), x.size());
+    distribute_pages(y.data(), y.size());
+}
+
 void mkl_csr_spmv_kernel::run()
 {
     try {

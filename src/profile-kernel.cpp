@@ -223,7 +223,8 @@ Profiling profile_kernel(
             }
 
             // Initialise the kernel and perform a warm-up run
-            kernel.init(o, verbose);
+            kernel.prepare();
+
             if (warmup)
                 kernel.run();
             for (int run = 0; run < runs; run++) {

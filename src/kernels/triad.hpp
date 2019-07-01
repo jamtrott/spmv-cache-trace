@@ -26,6 +26,7 @@ public:
 
     void init(std::ostream & o,
               bool verbose) override;
+    void prepare() override;
     void run() override;
 
     replacement::MemoryReferenceString memory_reference_string(

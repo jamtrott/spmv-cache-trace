@@ -32,6 +32,13 @@ void triad_kernel::init(
     }
 }
 
+void triad_kernel::prepare()
+{
+    distribute_pages(a.data(), num_entries);
+    distribute_pages(b.data(), num_entries);
+    distribute_pages(c.data(), num_entries);
+}
+
 void triad_kernel::run()
 {
     triad::value_type d = 3.1;

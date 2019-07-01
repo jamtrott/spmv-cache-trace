@@ -183,8 +183,9 @@ int main(int argc, char ** argv)
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
 
+        args.kernel->init(std::cout, args.verbose);
+
         if (args.profile == 0) {
-            args.kernel->init(std::cout, args.verbose);
             CacheTrace cache_trace = trace_cache_misses(
                 trace_config, *(args.kernel.get()));
             auto o = json_ostreambuf(std::cout);

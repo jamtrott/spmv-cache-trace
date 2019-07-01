@@ -49,6 +49,15 @@ void coo_spmv_kernel::init(
     }
 }
 
+void coo_spmv_kernel::prepare()
+{
+    distribute_pages(A.row_index.data(), A.row_index.size());
+    distribute_pages(A.column_index.data(), A.column_index.size());
+    distribute_pages(A.value.data(), A.value.size());
+    distribute_pages(x.data(), x.size());
+    distribute_pages(y.data(), y.size());
+}
+
 void coo_spmv_kernel::run()
 {
     coo_matrix::spmv(A, x, y);

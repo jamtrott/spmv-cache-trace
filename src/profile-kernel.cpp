@@ -345,6 +345,6 @@ std::ostream & operator<<(
         << '"' << "execution_time" << '"' << ": "
         << profiling.execution_time() << ',' << '\n'
         << '"' << "profiling_events" << '"' << ": "
-        << profiling.profiling_events() << ',' << '\n'
+        << profiling.profiling_events()
         << '\n' << '}';
 }

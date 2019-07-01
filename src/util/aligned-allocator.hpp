@@ -1,6 +1,10 @@
 #ifndef ALIGNED_ALLOCATOR_HPP
 #define ALIGNED_ALLOCATOR_HPP
 
+#include <omp.h>
+#include <numa.h>
+#include <numaif.h>
+
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
@@ -124,6 +128,45 @@ bool operator!=(
     aligned_allocator<U, N, first_touch> const &)
 {
     return false;
+}
+
+template <typename T>
+void distribute_pages(
+    T * p,
+    size_t n)
+{
+    int num_cpus = omp_get_num_threads();
+    int page_size = numa_pagesize();
+    int elements_per_page = page_size / sizeof(T);
+    int num_pages = (sizeof(T) * n + (page_size - 1)) / page_size;
+    int pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
+
+    void ** pages = (void **) malloc(
+        num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
+    int * nodes = (int *)(pages + num_pages);
+    int * status = (int *)(nodes + num_pages);
+    if (!pages)
+        throw std::system_error(errno, std::generic_category());
+
+    for (int cpu = 0; cpu < num_cpus; cpu++) {
+        int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
+        int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
+        int node = numa_node_of_cpu(cpu);
+        for (int page = cpu_start_page; page < cpu_end_page; page++) {
+            pages[page] = p + page * elements_per_page;
+            nodes[page] = node;
+            status[page] = 0;
+        }
+    }
+
+    int err = numa_move_pages(
+        0, num_pages, pages, nodes, status, MPOL_MF_MOVE);
+    if (err < 0) {
+        free(pages);
+        throw std::system_error(errno, std::generic_category());
+    }
+
+    free(pages);
 }
 
 #endif

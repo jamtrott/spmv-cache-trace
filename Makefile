@@ -2,7 +2,7 @@
 CFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
 CXXFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
-LDFLAGS = -lz -lpfm
+LDFLAGS = -lz -lpfm -lnuma
 
 ifdef DEBUG
 CFLAGS += -O2 -g -fsanitize=address

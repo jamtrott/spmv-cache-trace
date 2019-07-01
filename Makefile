@@ -1,8 +1,22 @@
 # Configuration
-CFLAGS=-O2 -g -fopenmp -Wall -fsanitize=address -DUSE_POSIX_MEMALIGN
-CXXFLAGS=$(CFLAGS)
+CFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
+CXXFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
+INCLUDES = -Isrc
+LDFLAGS = -lz -lpfm
 
+ifdef DEBUG
+CFLAGS += -O2 -g -fsanitize=address
+CXXFLAGS += -O2 -g -fsanitize=address
+else
+CFLAGS += -O3 -march=native
+CXXFLAGS += -O3 -march=native
+endif
 
+ifeq ($(CXX),icpc)
+CXXFLAGS += -std=c++14 -Iinclude -D__PURE_INTEL_C99_HEADERS__
+endif
+
+ifdef USE_INTEL_MKL
 MKL_INCLUDES = -isystem ${MKLROOT}/include
 MKL_LIBS = \
 	-L${MKLROOT}/lib/intel64 \
@@ -10,13 +24,15 @@ MKL_LIBS = \
 	-lmkl_intel_lp64 \
 	-lmkl_gnu_thread \
 	-lmkl_core \
-	-lgomp \
+	-liomp5 \
 	-lpthread \
 	-lm \
 	-ldl
-
-INCLUDES=-Isrc $(MKL_INCLUDES)
-LDFLAGS=-lz -lpfm $(MKL_LIBS)
+CFLAGS += -DUSE_INTEL_MKL
+CXXFLAGS += -DUSE_INTEL_MKL
+INCLUDES += $(MKL_INCLUDES)
+LDFLAGS += $(MKL_LIBS)
+endif
 
 # Default
 .PHONY: all

@@ -114,8 +114,8 @@ For each cache, the cache misses are given for each combination of thread and NU
 Profiling
 -------------
 The command
-```sh
-$ ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz --profile=10
+```bash
+./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz --profile=10
 ```
 will profile ten runs of the sparse matrix-vector multiplication kernel for the compressed sparse row format using the matrix `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
 ```json

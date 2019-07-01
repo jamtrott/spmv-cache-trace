@@ -29,7 +29,7 @@ Tested on Ubuntu 18.04.2 LTS (GNU/Linux 4.18.0-20-generic x86_64).
 
 
 ### Intel C compiler and Math Kernel Library
-To build with the Intel C compiler and Intel MKL, run `CC=icc CXX=icpc USE_INTEL_MKL=1 make`.
+To build with the Intel C compiler, run `CC=icc CXX=icpc make`. Additionally, to use the Intel Math Kernel Library (MKL), set `MKLROOT` to point to the MKL directory, and set `USE_INTEL_MKL=1`.
 
 Usage
 =====

@@ -127,7 +127,7 @@ CacheTrace trace_cache_misses(
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> cache_misses;
 
     auto const & caches = trace_config.caches();
-    for (auto it = std::cbegin(caches); it != std::cend(caches); ++it) {
+    for (auto it = caches.cbegin(); it != caches.cend(); ++it) {
         std::string name = (*it).first;
         Cache const & cache = (*it).second;
 
@@ -151,8 +151,8 @@ std::ostream & operator<<(
         return o << "[]";
 
     o << '[';
-    auto it = std::cbegin(cache_misses);
-    auto end = --std::cend(cache_misses);
+    auto it = cache_misses.cbegin();
+    auto end = --cache_misses.cend();
     for (; it != end; ++it)
         o << *it << ',' << ' ';
     return o << *it << ']';
@@ -166,8 +166,8 @@ std::ostream & operator<<(
         return o << "[]";
 
     o << '[';
-    auto it = std::cbegin(cache_misses);
-    auto end = --std::cend(cache_misses);
+    auto it = cache_misses.cbegin();
+    auto end = --cache_misses.cend();
     for (; it != end; ++it)
         o << *it << ',' << ' ';
     return o << *it << ']';
@@ -181,8 +181,8 @@ std::ostream & operator<<(
         return o << "{}";
 
     o << '{' << '\n';
-    auto it = std::cbegin(cache_misses);
-    auto end = --std::cend(cache_misses);
+    auto it = cache_misses.cbegin();
+    auto end = --cache_misses.cend();
     for (; it != end; ++it)
     {
         auto const & cache_miss = *it;

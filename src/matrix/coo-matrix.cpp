@@ -106,12 +106,17 @@ int thread_of_index(
 std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     value_array_type const & x,
     value_array_type const & y,
-    unsigned int thread,
-    unsigned int num_threads,
+    int thread,
+    int num_threads,
     int const * numa_domains) const
 {
-    auto w = std::vector<std::pair<uintptr_t, int>>(5 * num_entries);
-    for (size_type k = 0, l = 0; k < num_entries; ++k, l += 5) {
+    index_type entries_per_thread = (num_entries + num_threads - 1) / num_threads;
+    index_type thread_start_entry = std::min(num_entries, thread * entries_per_thread);
+    index_type thread_end_entry = std::min(num_entries, (thread + 1) * entries_per_thread);
+    index_type thread_num_entries = thread_end_entry - thread_start_entry;
+
+    auto w = std::vector<std::pair<uintptr_t, int>>(5 * thread_num_entries);
+    for (size_type k = thread_start_entry, l = 0; k < thread_end_entry; ++k, l += 5) {
         index_type i = row_index[k];
         index_type j = column_index[k];
         w[l] = std::make_pair(

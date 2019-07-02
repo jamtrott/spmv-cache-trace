@@ -51,8 +51,8 @@ public:
     std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         value_array_type const & x,
         value_array_type const & y,
-        unsigned int thread,
-        unsigned int num_threads,
+        int thread,
+        int num_threads,
         int const * numa_domains) const;
 
 public:

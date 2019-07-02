@@ -17,20 +17,30 @@ public:
 typedef int64_t cache_size_type;
 typedef int numa_domain_type;
 
+class CacheParent
+{
+public:
+    CacheParent(std::string const & name,
+                std::string const & cache_miss_event,
+                double bandwidth);
+
+    std::string name;
+    std::string cache_miss_event;
+    double bandwidth;
+};
+
 class Cache
 {
 public:
     Cache(std::string const & name,
           cache_size_type size,
           cache_size_type line_size,
-          std::vector<std::string> parents,
-          std::vector<std::string> events);
+          std::vector<CacheParent> parents);
 
     std::string name;
     cache_size_type size;
     cache_size_type line_size;
-    std::vector<std::string> parents;
-    std::vector<std::string> events;
+    std::vector<CacheParent> parents;
 };
 
 std::ostream & operator<<(

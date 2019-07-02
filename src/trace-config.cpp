@@ -18,16 +18,25 @@ trace_config_error::trace_config_error(std::string const & message)
 {
 }
 
-Cache::Cache(std::string const & name,
-             cache_size_type size,
-             cache_size_type line_size,
-             std::vector<std::string> parents,
-             std::vector<std::string> events)
+CacheParent::CacheParent(
+    std::string const & name,
+    std::string const & cache_miss_event,
+    double bandwidth)
+    : name(name)
+    , cache_miss_event(cache_miss_event)
+    , bandwidth(bandwidth)
+{
+}
+
+Cache::Cache(
+    std::string const & name,
+    cache_size_type size,
+    cache_size_type line_size,
+    std::vector<CacheParent> parents)
     : name(name)
     , size(size)
     , line_size(line_size)
     , parents(parents)
-    , events(events)
 {
     if (size % line_size != 0) {
         std::stringstream s;
@@ -77,17 +86,18 @@ TraceConfig::TraceConfig(
     for (auto it = std::cbegin(caches); it != std::cend(caches); ++it) {
         std::string const & name = (*it).first;
         Cache const & cache = (*it).second;
-        for (std::string const & parent : cache.parents) {
-            if (caches.find(parent) != caches.end())
+        for (CacheParent const & parent : cache.parents) {
+            std::string const & parent_name = parent.name;
+            if (caches.find(parent_name) != caches.end())
                 break;
-            if (std::find(std::cbegin(numa_domains), std::cend(numa_domains), parent)
+            if (std::find(std::cbegin(numa_domains), std::cend(numa_domains), parent_name)
                 != std::cend(numa_domains))
                 break;
 
             std::stringstream s;
             s << name << ": \"parents\": "
               << "Expected a cache or numa domain, "
-              << "got \"" << parent << "\"";
+              << "got \"" << parent_name << "\"";
             throw trace_config_error(s.str());
         }
     }
@@ -144,6 +154,46 @@ std::vector<ThreadAffinity> const & TraceConfig::thread_affinities() const
     return thread_affinities_;
 }
 
+std::vector<CacheParent> parse_parents(
+    const struct json * json_cache)
+{
+    struct json * json_parents = json_object_get(
+        json_cache, "parents");
+    if (!json_parents || !json_is_array(json_parents))
+        throw trace_config_error("Expected \"parents\" array");
+
+    std::vector<CacheParent> parents;
+    for (struct json * parent = json_array_begin(json_parents);
+         parent != json_array_end();
+         parent = json_array_next(parent))
+    {
+        if (!json_is_object(parent)) {
+            throw trace_config_error(
+                "Expected '\"parents\": "
+                "[{\"name\": ..., \"cache_miss_event\": ..., \"bandwidth\": ...}, ...]");
+        }
+
+        struct json * name = json_object_get(parent, "name");
+        if (!name || !json_is_string(name))
+            throw trace_config_error("Expected \"name\": (string)");
+        std::string cache_miss_event;
+        struct json * json_cache_miss_event = json_object_get(parent, "cache_miss_event");
+        if (json_cache_miss_event && json_is_string(json_cache_miss_event))
+            cache_miss_event = json_to_string(json_cache_miss_event);
+        double bandwidth = 0.0;
+        struct json * json_bandwidth = json_object_get(parent, "bandwidth");
+        if (json_bandwidth && json_is_number(json_bandwidth))
+            bandwidth = json_to_double(json_bandwidth);
+
+        parents.push_back(
+            CacheParent(json_to_string(name),
+                        cache_miss_event,
+                        bandwidth));
+    }
+
+    return parents;
+}
+
 std::map<std::string, Cache> parse_caches(
     const struct json * root)
 {
@@ -170,47 +220,14 @@ std::map<std::string, Cache> parse_caches(
         struct json * line_size = json_object_get(cache_value, "line_size");
         if (!line_size || !json_is_number(line_size))
             throw trace_config_error("Expected \"line_size\": (number)");
-
-        struct json * json_parents = json_object_get(cache_value, "parents");
-        if (!json_parents || !json_is_array(json_parents))
-            throw trace_config_error("Expected \"parents\": (array of strings)");
-
-        std::vector<std::string> parents;
-        for (struct json * parent = json_array_begin(json_parents);
-             parent != json_array_end();
-             parent = json_array_next(parent))
-        {
-            if (!json_is_string(parent)) {
-                throw trace_config_error(
-                    "Expected \"parents\": (array of strings)");
-            }
-            parents.push_back(std::string(json_to_string(parent)));
-        }
-
-        struct json * json_events = json_object_get(cache_value, "events");
-        if (json_events && !json_is_array(json_events))
-            throw trace_config_error(
-                name + std::string(": Expected \"events\": (array of strings)"));
-
-        std::vector<std::string> events;
-        for (struct json * json_event = json_events ? json_array_begin(json_events) : NULL;
-             json_event != json_array_end();
-             json_event = json_array_next(json_event))
-        {
-            if (!json_is_string(json_event)) {
-                throw trace_config_error(
-                    "Expected \"event\": (string)");
-            }
-            events.push_back(std::string(json_to_string(json_event)));
-        }
+        std::vector<CacheParent> parents = parse_parents(cache_value);
 
         caches.emplace(
             name,
             Cache(name,
                   json_to_int(size),
                   json_to_int(line_size),
-                  parents,
-                  events));
+                  parents));
     }
 
     return caches;
@@ -390,13 +407,43 @@ std::ostream & operator<<(
 
 std::ostream & operator<<(
     std::ostream & o,
+    CacheParent const & parent)
+{
+    std::string cache_miss_event =
+        parent.cache_miss_event.empty()
+        ? std::string("null")
+        : (std::string("\"") + parent.cache_miss_event + std::string("\""));
+    return o
+        << '{'
+        << '"' << "name" << '"' << ": " << '"' << parent.name << '"' << ',' << ' '
+        << '"' << "cache_miss_event" << '"' << ": " << cache_miss_event << ',' << ' '
+        << '"' << "bandwidth" << '"' << ": " << parent.bandwidth
+        << '}';
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    std::vector<CacheParent> const & parents)
+{
+    if (parents.empty())
+        return o << "[]";
+
+    o << '[';
+    auto it = std::cbegin(parents);
+    auto end = --std::cend(parents);
+    for (; it != end; ++it)
+        o << *it << ',' << ' ';
+    return o << *it << ']';
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
     Cache const & cache)
 {
     return o << '{'
              << '"' << "size" << '"' << ": " << cache.size << ',' << ' '
              << '"' << "line_size" << '"' << ": " << cache.line_size << ',' << ' '
-             << '"' << "parents" << '"' << ": " << cache.parents << ',' << ' '
-             << '"' << "events" << '"' << ": " << cache.events
+             << '"' << "parents" << '"' << ": " << cache.parents
              << '}';
 }
 

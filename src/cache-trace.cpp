@@ -45,8 +45,9 @@ bool cache_has_ancestor(
         return true;
 
     auto const & caches = trace_config.caches();
-    for (std::string const & parent : a.parents) {
-        auto it = caches.find(parent);
+    for (CacheParent const & parent : a.parents) {
+        std::string const & parent_name = parent.name;
+        auto it = caches.find(parent_name);
         if (it == caches.end())
             return false;
 

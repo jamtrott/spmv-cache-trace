@@ -200,7 +200,7 @@ std::ostream & operator<<(
     CacheTrace const & cache_trace)
 {
     return o << '{' << '\n'
-             << '"' << "trace-config" << '"' << ": "
+             << '"' << "trace_config" << '"' << ": "
              << cache_trace.trace_config() << ',' << '\n'
              << '"' << "kernel" << '"' << ": "
              << cache_trace.kernel() << ',' << '\n'

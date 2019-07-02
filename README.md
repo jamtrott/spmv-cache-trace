@@ -77,7 +77,7 @@ The command
 will perform a cache trace for a sparse matrix-vector multiplication in the compressed sparse row format using the matrix `1138_bus.tar.gz`. If the trace configuration provided by `trace-config.json` is the same as the one shown above, then the following output is produced:
 ```json
 {
-  "trace-config": {
+  "trace_config": {
     "numa_domains": ["DRAM-0", "DRAM-1"],
     "caches": {
       "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"], "events": []},

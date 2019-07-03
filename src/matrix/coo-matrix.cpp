@@ -238,9 +238,11 @@ void coo_spmv(
 {
     index_type i, j;
     size_type k;
+    #pragma omp parallel for
     for (k = 0; k < num_entries; ++k) {
         i = row_index[k];
         j = column_index[k];
+        #pragma omp atomic
         y[i] += value[k] * x[j];
     }
 }

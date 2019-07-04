@@ -64,17 +64,15 @@ replacement::MemoryReferenceString triad_kernel::memory_reference_string(
         numa_domain_affinity[i] = index;
     }
 
-    auto w = std::vector<std::pair<uintptr_t, int>>(3 * num_entries);
-    for (triad::size_type k = 0, l = 0; k < num_entries; ++k, l += 3) {
-        w[l] = std::make_pair(
-            uintptr_t(&b[k]),
-            numa_domain_affinity[thread]);
-        w[l+1] = std::make_pair(
-            uintptr_t(&c[k]),
-            numa_domain_affinity[thread]);
-        w[l+2] = std::make_pair(
-            uintptr_t(&a[k]),
-            numa_domain_affinity[thread]);
+    triad::size_type entries_per_thread = (num_entries + num_threads - 1) / num_threads;
+    triad::size_type thread_start_entry = std::min(num_entries, thread * entries_per_thread);
+    triad::size_type thread_end_entry = std::min(num_entries, (thread + 1) * entries_per_thread);
+    triad::size_type thread_num_entries = thread_end_entry - thread_start_entry;
+    auto w = std::vector<std::pair<uintptr_t, int>>(3 * thread_num_entries);
+    for (triad::size_type k = thread_start_entry, l = 0; k < thread_end_entry; ++k, l += 3) {
+        w[l+0] = std::make_pair(uintptr_t(&b[k]), numa_domain_affinity[thread]);
+        w[l+1] = std::make_pair(uintptr_t(&c[k]), numa_domain_affinity[thread]);
+        w[l+2] = std::make_pair(uintptr_t(&a[k]), numa_domain_affinity[thread]);
     }
     return w;
 }

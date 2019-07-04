@@ -78,7 +78,8 @@ Matrix from_matrix_market(
 void spmv(
     Matrix const & A,
     value_array_type const & x,
-    value_array_type & y);
+    value_array_type & y,
+    index_type chunk_size = 0);
 
 value_array_type operator*(
     Matrix const & A,

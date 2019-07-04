@@ -234,16 +234,13 @@ void coo_spmv(
     index_type const * column_index,
     value_type const * value,
     value_type const * x,
-    value_type * y)
+    value_type * y,
+    index_type chunk_size)
 {
-    index_type i, j;
-    size_type k;
-    #pragma omp parallel for
-    for (k = 0; k < num_entries; ++k) {
-        i = row_index[k];
-        j = column_index[k];
+    #pragma omp for nowait schedule(static, chunk_size)
+    for (size_type k = 0; k < num_entries; ++k) {
         #pragma omp atomic
-        y[i] += value[k] * x[j];
+        y[row_index[k]] += value[k] * x[column_index[k]];
     }
 }
 
@@ -252,10 +249,19 @@ void coo_spmv(
 void spmv(
     coo_matrix::Matrix const & A,
     coo_matrix::value_array_type const & x,
-    coo_matrix::value_array_type & y)
+    coo_matrix::value_array_type & y,
+    coo_matrix::index_type chunk_size)
 {
-    coo_spmv(A.num_entries, A.row_index.data(), A.column_index.data(),
-             A.value.data(), x.data(), y.data());
+    if (chunk_size <= 0) {
+        int num_threads = omp_get_num_threads();
+        chunk_size = (A.num_entries + num_threads - 1) / num_threads;
+    }
+
+    coo_spmv(A.num_entries,
+             A.row_index.data(), A.column_index.data(),
+             A.value.data(),
+             x.data(), y.data(),
+             chunk_size);
 }
 
 coo_matrix::value_array_type operator*(
@@ -271,9 +277,7 @@ coo_matrix::value_array_type operator*(
     }
 
     coo_matrix::value_array_type y(A.rows, 0.0);
-    coo_spmv(
-        A.num_entries, A.row_index.data(), A.column_index.data(),
-        A.value.data(), x.data(), y.data());
+    spmv(A, x, y);
     return y;
 }
 

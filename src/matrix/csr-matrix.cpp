@@ -30,9 +30,9 @@ Matrix::Matrix(
     index_type columns,
     size_type num_entries,
     index_type row_alignment,
-    size_array_type const row_ptr,
-    index_array_type const column_index,
-    value_array_type const value)
+    size_array_type const & row_ptr,
+    index_array_type const & column_index,
+    value_array_type const & value)
     : rows(rows)
     , columns(columns)
     , num_entries(num_entries)
@@ -103,7 +103,7 @@ int thread_of_column(
     for (int thread = 0 ; thread < num_threads; thread++) {
         index_type start_columns = std::min(num_columns, thread * columns_per_thread);
         index_type end_columns = std::min(num_columns, (thread + 1) * columns_per_thread);
-        if (column >= start_columns && column <= end_columns)
+        if (column >= start_columns && column < end_columns)
             return thread;
     }
     return num_threads-1;
@@ -124,7 +124,6 @@ Matrix::spmv_memory_reference_string(
     size_type start_nonzero = row_ptr[start_row];
     size_type end_nonzero = row_ptr[end_row];
     size_type nonzeros = end_nonzero - start_nonzero;
-
 
     size_type num_references = 3 * nonzeros + 2 * rows + 1;
     auto w = std::vector<std::pair<uintptr_t, int>>(

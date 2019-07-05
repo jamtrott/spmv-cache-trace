@@ -29,9 +29,9 @@ public:
            index_type columns,
            size_type num_entries,
            index_type row_alignment,
-           size_array_type const row_ptr,
-           index_array_type const column_index,
-           value_array_type const value);
+           size_array_type const & row_ptr,
+           index_array_type const & column_index,
+           value_array_type const & value);
 
     Matrix(Matrix const & m) = delete;
     Matrix & operator=(Matrix const & m) = delete;

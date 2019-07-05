@@ -95,9 +95,9 @@ int thread_of_index(
 {
     index_type indices_per_thread = (num_indices + num_threads - 1) / num_threads;
     for (int thread = 0 ; thread < num_threads; thread++) {
-        index_type start_indices = std::min(num_indices, thread * indices_per_thread);
-        index_type end_indices = std::min(num_indices, (thread + 1) * indices_per_thread);
-        if (index >= start_indices && index <= end_indices)
+        index_type start_index = std::min(num_indices, thread * indices_per_thread);
+        index_type end_index = std::min(num_indices, (thread + 1) * indices_per_thread);
+        if (index >= start_index && index < end_index)
             return thread;
     }
     return num_threads-1;
@@ -110,16 +110,17 @@ std::vector<std::pair<uintptr_t, int>> Matrix::spmv_memory_reference_string(
     int num_threads,
     int const * numa_domains) const
 {
-    index_type entries_per_thread = (num_entries + num_threads - 1) / num_threads;
-    index_type thread_start_entry = std::min(num_entries, thread * entries_per_thread);
-    index_type thread_end_entry = std::min(num_entries, (thread + 1) * entries_per_thread);
+    index_type num_entries_per_thread = (num_entries + num_threads - 1) / num_threads;
+    index_type thread_start_entry = std::min(num_entries, thread * num_entries_per_thread);
+    index_type thread_end_entry = std::min(num_entries, (thread + 1) * num_entries_per_thread);
     index_type thread_num_entries = thread_end_entry - thread_start_entry;
 
-    auto w = std::vector<std::pair<uintptr_t, int>>(5 * thread_num_entries);
+    std::vector<std::pair<uintptr_t, int>> w(
+        5 * thread_num_entries, std::make_pair(0,0));
     for (size_type k = thread_start_entry, l = 0; k < thread_end_entry; ++k, l += 5) {
         index_type i = row_index[k];
         index_type j = column_index[k];
-        w[l] = std::make_pair(
+        w[l+0] = std::make_pair(
             uintptr_t(&row_index[k]),
             numa_domains[thread]);
         w[l+1] = std::make_pair(

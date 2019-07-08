@@ -12,6 +12,8 @@
 #include <system_error>
 #include <errno.h>
 
+#include <iostream>
+
 /*
  * An allocator for memory with specific alignment requirements.  This
  * can be used together with standard library containers, such as
@@ -135,38 +137,79 @@ void distribute_pages(
     T * p,
     size_t n)
 {
+    #pragma omp master
+    {
+        int num_cpus = omp_get_num_threads();
+        int page_size = numa_pagesize();
+        int elements_per_page = page_size / sizeof(T);
+        int num_pages = (sizeof(T) * n + (page_size - 1)) / page_size;
+        int pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
+
+        void ** pages = (void **) malloc(
+            num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
+        int * nodes = (int *)(pages + num_pages);
+        int * status = (int *)(nodes + num_pages);
+        if (!pages)
+            throw std::system_error(errno, std::generic_category());
+
+        for (int cpu = 0; cpu < num_cpus; cpu++) {
+            int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
+            int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
+            int node = numa_node_of_cpu(cpu);
+            for (int page = cpu_start_page; page < cpu_end_page; page++) {
+                pages[page] = p + page * elements_per_page;
+                nodes[page] = node;
+                status[page] = 0;
+            }
+        }
+
+        int err = numa_move_pages(
+            0, num_pages, pages, nodes, status, MPOL_MF_MOVE);
+        if (err < 0) {
+            free(pages);
+            throw std::system_error(errno, std::generic_category());
+        }
+
+        for (int cpu = 0; cpu < num_cpus; cpu++) {
+            int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
+            int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
+            int node = numa_node_of_cpu(cpu);
+            for (int page = cpu_start_page; page < cpu_end_page; page++) {
+                if (status[page] != node) {
+                    std::cerr << "distribute_pages: "
+                              << "cpu " << cpu << ", "
+                              << "page " << page << ", "
+                              << "numa node " << node << ", "
+                              << "status " << status << ": "
+                              << strerror(-status[page])
+                              << '\n';
+                }
+            }
+        }
+
+        free(pages);
+    }
+}
+
+template <typename T>
+int numa_domain_of_index(
+    int index,
+    int num_indices)
+{
     int num_cpus = omp_get_num_threads();
     int page_size = numa_pagesize();
-    int elements_per_page = page_size / sizeof(T);
-    int num_pages = (sizeof(T) * n + (page_size - 1)) / page_size;
-    int pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
-
-    void ** pages = (void **) malloc(
-        num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
-    int * nodes = (int *)(pages + num_pages);
-    int * status = (int *)(nodes + num_pages);
-    if (!pages)
-        throw std::system_error(errno, std::generic_category());
-
-    for (int cpu = 0; cpu < num_cpus; cpu++) {
-        int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
-        int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
-        int node = numa_node_of_cpu(cpu);
-        for (int page = cpu_start_page; page < cpu_end_page; page++) {
-            pages[page] = p + page * elements_per_page;
-            nodes[page] = node;
-            status[page] = 0;
-        }
+    int num_indices_per_page = page_size / sizeof(T);
+    int num_pages = (sizeof(T) * num_indices + (page_size - 1)) / page_size;
+    int num_pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
+    for (int cpu = 0 ; cpu < num_cpus; cpu++) {
+        int cpu_page_start = std::min(num_pages, cpu * num_pages_per_cpu);
+        int cpu_page_end = std::min(num_pages, (cpu + 1) * num_pages_per_cpu);
+        int cpu_index_start = cpu_page_start * num_indices_per_page;
+        int cpu_index_end = cpu_page_end * num_indices_per_page;
+        if (index >= cpu_index_start && index < cpu_index_end)
+            return cpu;
     }
-
-    int err = numa_move_pages(
-        0, num_pages, pages, nodes, status, MPOL_MF_MOVE);
-    if (err < 0) {
-        free(pages);
-        throw std::system_error(errno, std::generic_category());
-    }
-
-    free(pages);
+    return num_cpus - 1;
 }
 
 #endif

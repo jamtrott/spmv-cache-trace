@@ -81,6 +81,7 @@ public:
     std::map<std::string, Cache> const & caches() const;
     std::vector<std::string> const & numa_domains() const;
     std::vector<ThreadAffinity> const & thread_affinities() const;
+    cache_size_type max_cache_size() const;
 
 private:
     std::string name_;

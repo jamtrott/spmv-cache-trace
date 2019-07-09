@@ -154,6 +154,17 @@ std::vector<ThreadAffinity> const & TraceConfig::thread_affinities() const
     return thread_affinities_;
 }
 
+cache_size_type TraceConfig::max_cache_size() const
+{
+    cache_size_type cache_size = 0;
+    for (auto it = std::cbegin(caches_); it != std::cend(caches_); ++it) {
+        Cache const & cache = (*it).second;
+        if (cache_size < cache.size)
+            cache_size = cache.size;
+    }
+    return cache_size;
+}
+
 std::vector<CacheParent> parse_parents(
     const struct json * json_cache)
 {

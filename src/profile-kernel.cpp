@@ -171,6 +171,19 @@ duration_type profile_kernel_run(
     return execution_time;
 }
 
+void flush_cache(int cache_size)
+{
+    int N = 10*cache_size / sizeof(double);
+    std::vector<double> b(N);
+    #pragma omp for
+    for (int i = 0; i < N; i++)
+        b[i] = 1.1;
+    volatile double x = 0.0;
+    #pragma omp for
+    for (int i = 0; i < N; i++)
+        x += b[i];
+}
+
 /*
  * Perform multiple profiling runs for a kernel.
  */
@@ -178,6 +191,7 @@ Profiling profile_kernel(
     TraceConfig const & trace_config,
     Kernel & kernel,
     bool warmup,
+    bool flush_caches,
     int runs,
     perf::libpfm_context const & libpfm_context,
     std::vector<std::vector<std::vector<std::string>>> const & events_per_thread_per_event_group,
@@ -224,10 +238,13 @@ Profiling profile_kernel(
 
             // Initialise the kernel and perform a warm-up run
             kernel.prepare();
-
             if (warmup)
                 kernel.run();
+
             for (int run = 0; run < runs; run++) {
+                if (flush_caches)
+                    flush_cache(trace_config.max_cache_size());
+
                 duration_type execution_time = profile_kernel_run(
                     kernel, event_groups_per_thread);
 
@@ -277,6 +294,7 @@ Profiling profile_kernel(
     TraceConfig const & trace_config,
     Kernel & kernel,
     bool warmup,
+    bool flush_caches,
     int runs,
     perf::libpfm_context const & libpfm_context,
     std::ostream & o,
@@ -293,8 +311,9 @@ Profiling profile_kernel(
     }
 
     return profile_kernel(
-        trace_config, kernel, warmup, runs, libpfm_context,
-        events_per_thread_per_event_group, o, verbose);
+        trace_config, kernel, warmup, flush_caches,
+        runs, libpfm_context, events_per_thread_per_event_group,
+        o, verbose);
 }
 
 std::ostream & operator<<(

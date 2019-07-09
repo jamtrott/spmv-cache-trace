@@ -82,6 +82,7 @@ Profiling profile_kernel(
     TraceConfig const & trace_config,
     Kernel & kernel,
     bool warmup,
+    bool flush_caches,
     int runs,
     perf::libpfm_context const & libpfm_context,
     std::ostream & o,

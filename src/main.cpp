@@ -29,6 +29,7 @@ struct arguments
         : trace_config()
         , kernel()
         , profile(0)
+        , flush_caches(false)
         , list_perf_events(false)
         , verbose(false)
     {
@@ -37,6 +38,7 @@ struct arguments
     std::string trace_config;
     std::unique_ptr<Kernel> kernel;
     int profile;
+    bool flush_caches;
     bool list_perf_events;
     bool verbose;
 };
@@ -50,6 +52,7 @@ enum class short_options
     /* Sparse matrix-vector multplication kernels. */
     non_printable_characters = 128,
     list_perf_events,
+    flush_caches,
     triad,
     coo,
     csr,
@@ -73,6 +76,10 @@ error_t parse_option(int key, char * arg, argp_state * state)
         } catch (std::invalid_argument const & e) {
             argp_error(state, "Expected 'profile' to be an integer");
         }
+        break;
+
+    case int(short_options::flush_caches):
+        args.flush_caches = true;
         break;
 
     case int(short_options::list_perf_events):
@@ -145,6 +152,8 @@ int main(int argc, char ** argv)
          "Read cache parameters from a configuration file in JSON format."},
         {"profile", int(short_options::profile), "N", 0,
          "Measure cache misses using hardware performance counters", 0},
+        {"flush-caches", int(short_options::flush_caches),  nullptr, 0,
+         "Flush caches between each profiling run", 0},
         {"list-perf-events", int(short_options::list_perf_events), nullptr, 0,
          "Show available hardware performance monitoring events", 0},
         {"verbose", int(short_options::verbose), nullptr, 0,
@@ -197,6 +206,7 @@ int main(int argc, char ** argv)
                 trace_config,
                 *(args.kernel.get()),
                 true,
+                args.flush_caches,
                 args.profile,
                 libpfm_context,
                 std::cout,

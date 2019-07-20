@@ -117,6 +117,7 @@ Matrix::spmv_memory_reference_string(
     int num_threads,
     int const * numa_domains) const
 {
+    int page_size = numa_pagesize();
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);
     index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
@@ -143,9 +144,11 @@ Matrix::spmv_memory_reference_string(
             w[l++] = std::make_pair(
                 uintptr_t(&value[k]),
                 numa_domains[thread]);
+            int cpu = cpu_of_index<value_type>(
+                x.data(), columns, j, num_threads, page_size);
             w[l++] = std::make_pair(
                 uintptr_t(&x[j]),
-                numa_domains[thread_of_column(j, columns, num_threads)]);
+                numa_domains[cpu]);
         }
         w[l++] = std::make_pair(
             uintptr_t(&y[i]),

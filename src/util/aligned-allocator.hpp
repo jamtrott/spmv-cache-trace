@@ -5,6 +5,7 @@
 #include <numa.h>
 #include <numaif.h>
 
+#include <cassert>
 #include <cstddef>
 #include <cstdlib>
 #include <limits>
@@ -132,19 +133,93 @@ bool operator!=(
     return false;
 }
 
+static inline void * align_upwards(void const * p, uintptr_t alignment)
+{
+    assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
+    assert(p != 0);
+    uintptr_t address = (uintptr_t) p;
+    if (address % alignment != 0)
+        address += alignment - address % alignment;
+    assert(address >= (uintptr_t) p);
+    return (void *) address;
+}
+
+static inline void * align_downwards(void const * p, uintptr_t alignment)
+{
+    assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
+    assert(p != 0);
+    uintptr_t address = (uintptr_t) p;
+    address -= address % alignment;
+    assert(address <= (uintptr_t) p);
+    return (void *) address;
+}
+
+template <typename T>
+int cpu_of_page(
+    T const * p,
+    size_t num_elements,
+    int num_cpus,
+    int page)
+{
+    int page_size = numa_pagesize();
+    uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
+    int num_elements_per_cpu = (num_elements + num_cpus - 1) / num_cpus;
+    uint8_t * page_address = start_address + page * page_size;
+    int cpu = 0;
+    for (; cpu < num_cpus; cpu++) {
+        int cpu_end_element = std::min<int>(num_elements, (cpu + 1) * num_elements_per_cpu) - 1;
+        uint8_t * cpu_end_address = (uint8_t *) (p + cpu_end_element);
+        if (cpu_end_address >= page_address)
+            return cpu;
+    }
+    return num_cpus - 1;
+}
+
+template <typename T>
+int page_of_index(
+    T const * p,
+    size_t num_elements,
+    int index,
+    int num_cpus,
+    int page_size)
+{
+    uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
+    uint8_t * end_address = (uint8_t *) (p + num_elements);
+    int num_pages = (end_address - start_address + (page_size - 1)) / page_size;
+    for (int page = 0; page < num_pages; page++) {
+        T * next_page = (T *) align_upwards(p + 1, page_size);
+        int page_num_elements = next_page - p;
+        if (index < page_num_elements)
+            return page;
+        index -= page_num_elements;
+        p = next_page;
+    }
+    return num_pages - 1;
+}
+
+template <typename T>
+int cpu_of_index(
+    T const * p,
+    size_t num_elements,
+    int index,
+    int num_cpus,
+    int page_size)
+{
+    int page = page_of_index(p, num_elements, index, num_cpus, page_size);
+    return cpu_of_page(p, num_elements, num_cpus, page);
+}
+
 template <typename T>
 void distribute_pages(
-    T * p,
+    T const * p,
     size_t n)
 {
     #pragma omp master
     {
-        int num_cpus = omp_get_num_threads();
         int page_size = numa_pagesize();
-        int elements_per_page = page_size / sizeof(T);
-        int num_pages = (sizeof(T) * n + (page_size - 1)) / page_size;
-        int pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
-
+        uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
+        uint8_t * end_address = (uint8_t *) (p + n);
+        int num_pages = (end_address - start_address + (page_size - 1)) / page_size;
         void ** pages = (void **) malloc(
             num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
         int * nodes = (int *)(pages + num_pages);
@@ -152,15 +227,17 @@ void distribute_pages(
         if (!pages)
             throw std::system_error(errno, std::generic_category());
 
-        for (int cpu = 0; cpu < num_cpus; cpu++) {
-            int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
-            int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
+        int num_cpus = omp_get_num_threads();
+        for (int page = 0; page < num_pages; page++) {
+            uint8_t * page_address = start_address + page * page_size;
+            int cpu = cpu_of_page(p, n, num_cpus, page);
             int node = numa_node_of_cpu(cpu);
-            for (int page = cpu_start_page; page < cpu_end_page; page++) {
-                pages[page] = p + page * elements_per_page;
-                nodes[page] = node;
-                status[page] = 0;
-            }
+            pages[page] = (void *) page_address;
+            nodes[page] = node;
+            status[page] = 0;
+            // std::cout << "Moving page " << (void *) page_address << " "
+            //           << "(" << page << " of " << num_pages << ") "
+            //           << "to CPU " << cpu << ", NUMA domain " << node << '\n';
         }
 
         int err = numa_move_pages(
@@ -170,46 +247,20 @@ void distribute_pages(
             throw std::system_error(errno, std::generic_category());
         }
 
-        for (int cpu = 0; cpu < num_cpus; cpu++) {
-            int cpu_start_page = std::min(num_pages, cpu * pages_per_cpu);
-            int cpu_end_page = std::min(num_pages, (cpu + 1) * pages_per_cpu);
+        for (int page = 0; page < num_pages; page++) {
+            uint8_t * page_address = start_address + page * page_size;
+            int cpu = cpu_of_page(p, n, num_cpus, page);
             int node = numa_node_of_cpu(cpu);
-            for (int page = cpu_start_page; page < cpu_end_page; page++) {
-                if (status[page] != node) {
-                    std::cerr << "distribute_pages: "
-                              << "cpu " << cpu << ", "
-                              << "page " << page << ", "
-                              << "numa node " << node << ", "
-                              << "status " << status << ": "
-                              << strerror(-status[page])
-                              << '\n';
-                }
+            if (status[page] != node) {
+                std::cerr << "distribute_pages: "
+                          << "Failed to move page " << (void *) page_address << " "
+                          << "(" << page << " of " << num_pages << ") "
+                          << "to CPU " << cpu << ", NUMA domain " << node << ": "
+                          << strerror(-status[page]) << '\n';
             }
         }
-
         free(pages);
     }
-}
-
-template <typename T>
-int numa_domain_of_index(
-    int index,
-    int num_indices)
-{
-    int num_cpus = omp_get_num_threads();
-    int page_size = numa_pagesize();
-    int num_indices_per_page = page_size / sizeof(T);
-    int num_pages = (sizeof(T) * num_indices + (page_size - 1)) / page_size;
-    int num_pages_per_cpu = (num_pages + num_cpus - 1) / num_cpus;
-    for (int cpu = 0 ; cpu < num_cpus; cpu++) {
-        int cpu_page_start = std::min(num_pages, cpu * num_pages_per_cpu);
-        int cpu_page_end = std::min(num_pages, (cpu + 1) * num_pages_per_cpu);
-        int cpu_index_start = cpu_page_start * num_indices_per_page;
-        int cpu_index_end = cpu_page_end * num_indices_per_page;
-        if (index >= cpu_index_start && index < cpu_index_end)
-            return cpu;
-    }
-    return num_cpus - 1;
 }
 
 #endif

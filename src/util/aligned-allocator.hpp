@@ -155,24 +155,24 @@ static inline void * align_downwards(void const * p, uintptr_t alignment)
 }
 
 template <typename T>
-int cpu_of_page(
+int thread_of_page(
     T const * p,
     size_t num_elements,
-    int num_cpus,
+    int num_threads,
     int page)
 {
     int page_size = numa_pagesize();
     uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
-    int num_elements_per_cpu = (num_elements + num_cpus - 1) / num_cpus;
+    int num_elements_per_thread = (num_elements + num_threads - 1) / num_threads;
     uint8_t * page_address = start_address + page * page_size;
-    int cpu = 0;
-    for (; cpu < num_cpus; cpu++) {
-        int cpu_end_element = std::min<int>(num_elements, (cpu + 1) * num_elements_per_cpu) - 1;
-        uint8_t * cpu_end_address = (uint8_t *) (p + cpu_end_element);
-        if (cpu_end_address >= page_address)
-            return cpu;
+    int thread = 0;
+    for (; thread < num_threads; thread++) {
+        int thread_end_element = std::min<int>(num_elements, (thread + 1) * num_elements_per_thread) - 1;
+        uint8_t * thread_end_address = (uint8_t *) (p + thread_end_element);
+        if (thread_end_address >= page_address)
+            return thread;
     }
-    return num_cpus - 1;
+    return num_threads - 1;
 }
 
 template <typename T>
@@ -180,7 +180,7 @@ int page_of_index(
     T const * p,
     size_t num_elements,
     int index,
-    int num_cpus,
+    int num_threads,
     int page_size)
 {
     uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
@@ -198,21 +198,22 @@ int page_of_index(
 }
 
 template <typename T>
-int cpu_of_index(
+int thread_of_index(
     T const * p,
     size_t num_elements,
     int index,
-    int num_cpus,
+    int num_threads,
     int page_size)
 {
-    int page = page_of_index(p, num_elements, index, num_cpus, page_size);
-    return cpu_of_page(p, num_elements, num_cpus, page);
+    int page = page_of_index(p, num_elements, index, num_threads, page_size);
+    return thread_of_page(p, num_elements, num_threads, page);
 }
 
 template <typename T>
 void distribute_pages(
     T const * p,
-    size_t n)
+    size_t n,
+    int const * thread_affinity)
 {
     #pragma omp master
     {
@@ -227,10 +228,11 @@ void distribute_pages(
         if (!pages)
             throw std::system_error(errno, std::generic_category());
 
-        int num_cpus = omp_get_num_threads();
+        int num_threads = omp_get_num_threads();
         for (int page = 0; page < num_pages; page++) {
             uint8_t * page_address = start_address + page * page_size;
-            int cpu = cpu_of_page(p, n, num_cpus, page);
+            int thread = thread_of_page(p, n, num_threads, page);
+            int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
             pages[page] = (void *) page_address;
             nodes[page] = node;
@@ -249,7 +251,8 @@ void distribute_pages(
 
         for (int page = 0; page < num_pages; page++) {
             uint8_t * page_address = start_address + page * page_size;
-            int cpu = cpu_of_page(p, n, num_cpus, page);
+            int thread = thread_of_page(p, n, num_threads, page);
+            int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
             if (status[page] != node) {
                 std::cerr << "distribute_pages: "

@@ -24,7 +24,7 @@ public:
         std::ostream & o,
         bool verbose) = 0;
 
-    virtual void prepare() = 0;
+    virtual void prepare(TraceConfig const & trace_config) = 0;
 
     virtual void run() = 0;
 

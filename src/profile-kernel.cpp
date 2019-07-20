@@ -237,7 +237,7 @@ Profiling profile_kernel(
             }
 
             // Initialise the kernel and perform a warm-up run
-            kernel.prepare();
+            kernel.prepare(trace_config);
             if (warmup)
                 kernel.run();
 

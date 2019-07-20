@@ -32,11 +32,17 @@ void triad_kernel::init(
     }
 }
 
-void triad_kernel::prepare()
+void triad_kernel::prepare(TraceConfig const & trace_config)
 {
-    distribute_pages(a.data(), num_entries);
-    distribute_pages(b.data(), num_entries);
-    distribute_pages(c.data(), num_entries);
+    auto const & thread_affinities = trace_config.thread_affinities();
+    int num_threads = thread_affinities.size();
+    std::vector<int> cpus(num_threads, 0);
+    for (int thread = 0; thread < num_threads; thread++)
+        cpus[thread] = thread_affinities[thread].cpu;
+
+    distribute_pages(a.data(), num_entries, cpus.data());
+    distribute_pages(b.data(), num_entries, cpus.data());
+    distribute_pages(c.data(), num_entries, cpus.data());
 }
 
 void triad_kernel::run()

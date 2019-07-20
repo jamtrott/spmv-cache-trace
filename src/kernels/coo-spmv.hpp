@@ -17,7 +17,7 @@ public:
 
     void init(std::ostream & o,
               bool verbose) override;
-    void prepare() override;
+    void prepare(TraceConfig const & trace_config) override;
     void run() override;
 
     replacement::MemoryReferenceString memory_reference_string(

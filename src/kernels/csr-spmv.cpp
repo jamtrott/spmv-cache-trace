@@ -51,13 +51,20 @@ void csr_spmv_kernel::init(
     }
 }
 
-void csr_spmv_kernel::prepare()
+void csr_spmv_kernel::prepare(
+        TraceConfig const & trace_config)
 {
-    distribute_pages(A.row_ptr.data(), A.row_ptr.size());
-    distribute_pages(A.column_index.data(), A.column_index.size());
-    distribute_pages(A.value.data(), A.value.size());
-    distribute_pages(x.data(), x.size());
-    distribute_pages(y.data(), y.size());
+    auto const & thread_affinities = trace_config.thread_affinities();
+    int num_threads = thread_affinities.size();
+    std::vector<int> cpus(num_threads, 0);
+    for (int thread = 0; thread < num_threads; thread++)
+        cpus[thread] = thread_affinities[thread].cpu;
+
+    distribute_pages(A.row_ptr.data(), A.row_ptr.size(), cpus.data());
+    distribute_pages(A.column_index.data(), A.column_index.size(), cpus.data());
+    distribute_pages(A.value.data(), A.value.size(), cpus.data());
+    distribute_pages(x.data(), x.size(), cpus.data());
+    distribute_pages(y.data(), y.size(), cpus.data());
 }
 
 void csr_spmv_kernel::run()

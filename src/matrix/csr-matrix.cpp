@@ -144,11 +144,11 @@ Matrix::spmv_memory_reference_string(
             w[l++] = std::make_pair(
                 uintptr_t(&value[k]),
                 numa_domains[thread]);
-            int cpu = cpu_of_index<value_type>(
+            int thread = thread_of_index<value_type>(
                 x.data(), columns, j, num_threads, page_size);
             w[l++] = std::make_pair(
                 uintptr_t(&x[j]),
-                numa_domains[cpu]);
+                numa_domains[thread]);
         }
         w[l++] = std::make_pair(
             uintptr_t(&y[i]),

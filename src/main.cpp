@@ -29,6 +29,7 @@ struct arguments
         : trace_config()
         , kernel()
         , profile(0)
+        , warmup(false)
         , flush_caches(false)
         , list_perf_events(false)
         , verbose(false)
@@ -38,6 +39,7 @@ struct arguments
     std::string trace_config;
     std::unique_ptr<Kernel> kernel;
     int profile;
+    bool warmup;
     bool flush_caches;
     bool list_perf_events;
     bool verbose;
@@ -52,6 +54,7 @@ enum class short_options
     /* Sparse matrix-vector multplication kernels. */
     non_printable_characters = 128,
     list_perf_events,
+    warmup,
     flush_caches,
     triad,
     coo,
@@ -76,6 +79,10 @@ error_t parse_option(int key, char * arg, argp_state * state)
         } catch (std::invalid_argument const & e) {
             argp_error(state, "Expected 'profile' to be an integer");
         }
+        break;
+
+    case int(short_options::warmup):
+        args.warmup = true;
         break;
 
     case int(short_options::flush_caches):
@@ -152,6 +159,8 @@ int main(int argc, char ** argv)
          "Read cache parameters from a configuration file in JSON format."},
         {"profile", int(short_options::profile), "N", 0,
          "Measure cache misses using hardware performance counters", 0},
+        {"warmup", int(short_options::warmup), nullptr, 0,
+         "Warm up the cache before tracing or profiling", 0},
         {"flush-caches", int(short_options::flush_caches),  nullptr, 0,
          "Flush caches between each profiling run", 0},
         {"list-perf-events", int(short_options::list_perf_events), nullptr, 0,
@@ -196,7 +205,7 @@ int main(int argc, char ** argv)
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(
-                trace_config, *(args.kernel.get()));
+                trace_config, *(args.kernel.get()), args.warmup);
             auto o = json_ostreambuf(std::cout);
             std::cout << cache_trace << '\n';
         }

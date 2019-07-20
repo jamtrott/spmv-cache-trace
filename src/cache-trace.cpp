@@ -85,7 +85,8 @@ std::vector<int> active_threads(
 std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     TraceConfig const & trace_config,
     Kernel const & kernel,
-    Cache const & cache)
+    Cache const & cache,
+    bool warmup)
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     auto const & numa_domains = trace_config.numa_domains();
@@ -108,6 +109,13 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
 
     int num_cache_lines = (cache.size + (cache.line_size-1)) / cache.line_size;
     replacement::LRU replacement_algorithm(num_cache_lines, cache.line_size);
+    if (warmup) {
+        replacement::trace_cache_misses(
+            replacement_algorithm,
+            memory_reference_strings,
+            num_numa_domains);
+    }
+
     std::vector<std::vector<cache_miss_type>> active_threads_cache_misses =
         replacement::trace_cache_misses(
             replacement_algorithm,
@@ -123,7 +131,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
 
 CacheTrace trace_cache_misses(
     TraceConfig const & trace_config,
-    Kernel const & kernel)
+    Kernel const & kernel,
+    bool warmup)
 {
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> cache_misses;
 
@@ -135,7 +144,7 @@ CacheTrace trace_cache_misses(
         std::vector<std::vector<cache_miss_type>>
             num_cache_misses_per_thread_per_numa_domain =
             trace_cache_misses_per_cache(
-                trace_config, kernel, cache);
+                trace_config, kernel, cache, warmup);
         cache_misses.emplace(
             cache.name,
             num_cache_misses_per_thread_per_numa_domain);

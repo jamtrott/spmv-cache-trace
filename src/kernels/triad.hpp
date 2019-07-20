@@ -14,7 +14,7 @@ namespace triad
 
 typedef int32_t size_type;
 typedef double value_type;
-typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
+typedef std::vector<value_type, aligned_allocator<value_type, 4096>> value_array_type;
 
 }
 

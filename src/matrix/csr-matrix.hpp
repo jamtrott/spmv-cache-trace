@@ -15,9 +15,9 @@ namespace csr_matrix
 typedef int32_t size_type;
 typedef int32_t index_type;
 typedef double value_type;
-typedef std::vector<size_type, aligned_allocator<index_type, 64>> size_array_type;
-typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
-typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
+typedef std::vector<size_type, aligned_allocator<index_type, 4096>> size_array_type;
+typedef std::vector<index_type, aligned_allocator<index_type, 4096>> index_array_type;
+typedef std::vector<value_type, aligned_allocator<value_type, 4096>> value_array_type;
 
 struct Matrix
 {

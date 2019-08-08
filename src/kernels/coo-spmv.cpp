@@ -30,7 +30,7 @@ void coo_spmv_kernel::init(
     try {
         matrix_market::Matrix mm =
             matrix_market::load_matrix(matrix_path, o, verbose);
-        A = coo_matrix::from_matrix_market(mm, coo_matrix::Order::general);
+        A = coo_matrix::from_matrix_market(mm);
         x = coo_matrix::value_array_type(A.columns, 1.0);
         y = coo_matrix::value_array_type(A.rows, 0.0);
     }

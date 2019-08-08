@@ -209,18 +209,21 @@ Matrix from_matrix_market_row_aligned(
     matrix_market::Matrix const & m,
     index_type row_alignment)
 {
-    if (m.header.format != matrix_market::Format::coordinate)
+    if (m.format() != matrix_market::Format::coordinate)
         throw matrix::matrix_error("Expected matrix in coordinate format");
-    auto const & size = m.size;
-    auto entries = m.sortedCoordinateEntries(
-        matrix_market::Matrix::Order::row_major);
+
+    // Sort the matrix entries
+    matrix_market::Matrix m_sorted = sort_matrix_row_major(m);
+    auto row_indices = m_sorted.row_indices();
+    auto column_indices = m_sorted.column_indices();
+    auto values = m_sorted.values_real();
 
     // Compute the length of each row, including padding for alignment
     size_array_type row_ptr(m.rows() + 1, 0);
     size_type k = 0;
     size_type l = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
-        while (l < (size_type) entries.size() && entries[l].i - 1 == r) {
+        while (l < (size_type) row_indices.size() && row_indices[l]-1 == r) {
             l++;
             k++;
         }
@@ -229,28 +232,29 @@ Matrix from_matrix_market_row_aligned(
     }
 
     // Determine the column indices and values
-    index_array_type columns(row_ptr[m.rows()], 0);
-    value_array_type values(row_ptr[m.rows()], 0.0);
+    index_array_type column_indices_aligned(row_ptr[m.rows()], 0);
+    value_array_type values_aligned(row_ptr[m.rows()], 0.0);
     k = 0;
     l = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
-        while (l < (size_type) entries.size() && entries[l].i - 1 == r) {
-            columns[k] = entries[l].j - 1;
-            values[k] = entries[l].a;
+        while (l < (size_type) m.num_entries() && row_indices[l]-1 == r) {
+            column_indices_aligned[k] = column_indices[l]-1;
+            values_aligned[k] = values[l];
             ++k;
             ++l;
         }
 
         while (k < row_ptr[r+1]) {
-            columns[k] = 0;
-            values[k] = 0.0;
+            column_indices_aligned[k] = 0;
+            values_aligned[k] = 0.0;
             ++k;
         }
     }
 
     return Matrix(
-        size.rows, size.columns, size.num_entries,
-        row_alignment, row_ptr, columns, values);
+        m.rows(), m.columns(), m.num_entries(),
+        row_alignment, row_ptr,
+        column_indices_aligned, values_aligned);
 }
 
 csr_matrix::value_array_type operator*(

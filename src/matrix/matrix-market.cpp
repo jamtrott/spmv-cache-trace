@@ -11,32 +11,265 @@
 #include <tuple>
 #include <vector>
 
+#include <cfloat>
+#include <cmath>
+#include <cstring>
 #include <errno.h>
-#include <string.h>
 
 using namespace matrix_market;
 using namespace std::literals::string_literals;
 
-bool matrix_market::operator==(
-    CoordinateEntry const & a,
-    CoordinateEntry const & b)
+namespace matrix_market {
+
+bool operator==(CoordinateEntryReal const & a, CoordinateEntryReal const & b)
+{
+    return a.i == b.i && a.j == b.j && (fabs(a.a - b.a) < DBL_EPSILON);
+}
+
+bool operator==(CoordinateEntryComplex const & a, CoordinateEntryComplex const & b)
+{
+    return a.i == b.i && a.j == b.j &&
+        (fabs(a.real - b.real) < DBL_EPSILON) &&
+        (fabs(a.imag - b.imag) < DBL_EPSILON);
+}
+
+bool operator==(CoordinateEntryInteger const & a, CoordinateEntryInteger const & b)
 {
     return a.i == b.i && a.j == b.j && a.a == b.a;
 }
 
+bool operator==(CoordinateEntryPattern const & a, CoordinateEntryPattern const & b)
+{
+    return a.i == b.i && a.j == b.j;
+}
+
+Matrix::Matrix(Header const & header,
+               Comments const & comments,
+               Size const & size,
+               std::vector<CoordinateEntryReal> const & entries)
+    : header_(header)
+    , comments_(comments)
+    , size_(size)
+    , entries_real(entries)
+    , entries_complex()
+    , entries_integer()
+    , entries_pattern()
+{
+}
+
+Matrix::Matrix(Header const & header,
+               Comments const & comments,
+               Size const & size,
+               std::vector<CoordinateEntryComplex> const & entries)
+    : header_(header)
+    , comments_(comments)
+    , size_(size)
+    , entries_real()
+    , entries_complex(entries)
+    , entries_integer()
+    , entries_pattern()
+{
+}
+
+Matrix::Matrix(Header const & header,
+               Comments const & comments,
+               Size const & size,
+               std::vector<CoordinateEntryInteger> const & entries)
+    : header_(header)
+    , comments_(comments)
+    , size_(size)
+    , entries_real()
+    , entries_complex()
+    , entries_integer(entries)
+    , entries_pattern()
+{
+}
+
+Matrix::Matrix(Header const & header,
+               Comments const & comments,
+               Size const & size,
+               std::vector<CoordinateEntryPattern> const & entries)
+    : header_(header)
+    , comments_(comments)
+    , size_(size)
+    , entries_real()
+    , entries_complex()
+    , entries_integer()
+    , entries_pattern(entries)
+{
+}
+
+Header const & Matrix::header() const
+{
+    return header_;
+}
+
+Comments const & Matrix::comments() const
+{
+    return comments_;
+}
+
+Size const & Matrix::size() const
+{
+    return size_;
+}
+
+Format Matrix::format() const
+{
+    return header_.format;
+}
+
+Field Matrix::field() const
+{
+    return header_.field;
+}
+
+Symmetry Matrix::symmetry() const
+{
+    return header_.symmetry;
+}
+
 index_type Matrix::rows() const
 {
-    return size.rows;
+    return size_.rows;
 }
 
 index_type Matrix::columns() const
 {
-    return size.columns;
+    return size_.columns;
 }
 
 size_type Matrix::num_entries() const
 {
-    return size.num_entries;
+    return size_.num_entries;
+}
+
+std::vector<CoordinateEntryReal> const & Matrix::coordinate_entries_real() const
+{
+    return entries_real;
+}
+
+std::vector<CoordinateEntryComplex> const & Matrix::coordinate_entries_complex() const
+{
+    return entries_complex;
+}
+
+std::vector<CoordinateEntryInteger> const & Matrix::coordinate_entries_integer() const
+{
+    return entries_integer;
+}
+
+std::vector<CoordinateEntryPattern> const & Matrix::coordinate_entries_pattern() const
+{
+    return entries_pattern;
+}
+
+std::vector<index_type> Matrix::row_indices() const
+{
+    std::vector<index_type> row_indices_(size_.num_entries);
+    switch (header_.field) {
+    case Field::real:
+        {
+            auto entries = coordinate_entries_real();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                row_indices_[k] = entries[k].i;
+            break;
+        }
+    case Field::complex:
+        {
+            auto entries = coordinate_entries_complex();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                row_indices_[k] = entries[k].i;
+            break;
+        }
+    case Field::integer:
+        {
+            auto entries = coordinate_entries_integer();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                row_indices_[k] = entries[k].i;
+            break;
+        }
+    case Field::pattern:
+        {
+            auto entries = coordinate_entries_pattern();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                row_indices_[k] = entries[k].i;
+            break;
+        }
+    }
+    return row_indices_;
+}
+
+std::vector<index_type> Matrix::column_indices() const
+{
+    std::vector<index_type> column_indices_(size_.num_entries);
+    switch (header_.field) {
+    case Field::real:
+        {
+            auto entries = coordinate_entries_real();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                column_indices_[k] = entries[k].j;
+            break;
+        }
+    case Field::complex:
+        {
+            auto entries = coordinate_entries_complex();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                column_indices_[k] = entries[k].j;
+            break;
+        }
+    case Field::integer:
+        {
+            auto entries = coordinate_entries_integer();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                column_indices_[k] = entries[k].j;
+            break;
+        }
+    case Field::pattern:
+        {
+            auto entries = coordinate_entries_pattern();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                column_indices_[k] = entries[k].j;
+            break;
+        }
+    }
+    return column_indices_;
+}
+
+std::vector<real_type> Matrix::values_real() const
+{
+    std::vector<real_type> values_(size_.num_entries);
+    switch (header_.field) {
+    case Field::real:
+        {
+            auto entries = coordinate_entries_real();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                values_[k] = entries[k].a;
+            break;
+        }
+    case Field::complex:
+        {
+            auto entries = coordinate_entries_complex();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                values_[k] = entries[k].real;
+            break;
+        }
+    case Field::integer:
+        {
+            auto entries = coordinate_entries_integer();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                values_[k] = entries[k].a;
+            break;
+        }
+    case Field::pattern:
+        {
+            auto entries = coordinate_entries_pattern();
+            for (size_type k = 0; k < (size_type) entries.size(); k++)
+                values_[k] = 1.0;
+            break;
+        }
+    }
+    return values_;
 }
 
 /*
@@ -53,37 +286,27 @@ index_type Matrix::max_row_length() const
  */
 std::vector<index_type> Matrix::row_lengths() const
 {
-    std::vector<index_type> row_lengths_(size.rows, 0u);
+    std::vector<index_type> row_lengths_(size_.rows, 0u);
     std::for_each(
-        std::cbegin(entries), std::cend(entries),
+        std::cbegin(entries_real), std::cend(entries_real),
+        [&row_lengths_] (auto const & a) { ++row_lengths_[a.i-1u]; });
+    std::for_each(
+        std::cbegin(entries_complex), std::cend(entries_complex),
+        [&row_lengths_] (auto const & a) { ++row_lengths_[a.i-1u]; });
+    std::for_each(
+        std::cbegin(entries_integer), std::cend(entries_integer),
+        [&row_lengths_] (auto const & a) { ++row_lengths_[a.i-1u]; });
+    std::for_each(
+        std::cbegin(entries_pattern), std::cend(entries_pattern),
         [&row_lengths_] (auto const & a) { ++row_lengths_[a.i-1u]; });
     return row_lengths_;
-}
-
-/*
- * Obtain a copy of the matrix entries sorted in row- or column-major order
- */
-std::vector<CoordinateEntry> Matrix::sortedCoordinateEntries(
-    Order o) const
-{
-    auto sorted_entries = entries;
-    if (o == Order::column_major) {
-        std::sort(
-            std::begin(sorted_entries), std::end(sorted_entries),
-            [] (auto const & a, auto const & b)
-            { return std::tie(a.j, a.i) < std::tie(b.j, b.i); });
-    } else if (o == Order::row_major) {
-        std::sort(
-            std::begin(sorted_entries), std::end(sorted_entries),
-            [] (auto const & a, auto const & b)
-            { return std::tie(a.i, a.j) < std::tie(b.i, b.j); });
-    }
-    return sorted_entries;
 }
 
 matrix_market_error::matrix_market_error(std::string const & s) throw()
     : std::runtime_error(s)
 {}
+
+}
 
 namespace
 {
@@ -92,7 +315,6 @@ Object readObject(std::istream & i)
 {
     std::string object;
     i >> object;
-
     if (object != std::string{"matrix"}) {
         auto s = std::stringstream{};
         s << "Failed to parse header: "
@@ -103,10 +325,10 @@ Object readObject(std::istream & i)
     return Object::matrix;
 }
 
-Format readFormat(std::istream & i) {
+Format readFormat(std::istream & i)
+{
     std::string format;
     i >> format;
-
     if (format == std::string{"coordinate"}) {
         return Format::coordinate;
     } else if (format == std::string{"array"}) {
@@ -118,15 +340,52 @@ Format readFormat(std::istream & i) {
     throw matrix_market_error{s.str()};
 }
 
+Field readField(std::istream & i)
+{
+    std::string field;
+    i >> field;
+    if (field == std::string("real")) {
+        return Field::real;
+    } else if (field == std::string("complex")) {
+        return Field::complex;
+    } else if (field == std::string("integer")) {
+        return Field::integer;
+    } else if (field == std::string("pattern")) {
+        return Field::pattern;
+    }
+    auto s = std::stringstream{};
+    s << "Expected \"real\", \"complex\", \"integer\", or \"pattern\", "
+      << "got \"" << field << "\"";
+    throw matrix_market_error{s.str()};
+}
+
+Symmetry readSymmetry(std::istream & i)
+{
+    std::string symmetry;
+    i >> symmetry;
+    if (symmetry == std::string{"general"}) {
+        return Symmetry::general;
+    } else if (symmetry == std::string{"symmetric"}) {
+        return Symmetry::symmetric;
+    } else if (symmetry == std::string{"skew-symmetric"}) {
+        return Symmetry::skew_symmetric;
+    } else if (symmetry == std::string{"hermitian"}) {
+        return Symmetry::hermitian;
+    }
+    auto s = std::stringstream{};
+    s << "Expected \"general\", \"symmetric\", \"skew-symmetric\", or \"hermitian\", "
+      << "got \"" << symmetry << "\"";
+    throw matrix_market_error{s.str()};
+}
+
 Header readHeader(std::istream & i)
 {
     std::string header;
     std::getline(i, header);
 
     auto s = std::istringstream{header};
-    std::string identifier, field, symmetry;
+    std::string identifier;
     s >> identifier;
-
     if (identifier != std::string{"%%MatrixMarket"}) {
         auto s = std::stringstream{};
         s << "Failed to parse header: "
@@ -136,8 +395,8 @@ Header readHeader(std::istream & i)
 
     auto object = readObject(s);
     auto format = readFormat(s);
-    s >> field >> symmetry;
-
+    auto field = readField(s);
+    auto symmetry = readSymmetry(s);
     return Header{identifier, object, format, field, symmetry};
 }
 
@@ -171,34 +430,50 @@ Size readSize(std::istream & i, Format format)
     }
 }
 
-std::vector<CoordinateEntry> readEntries(
-    std::istream & i,
-    Size const & size)
-{
-    std::vector<CoordinateEntry> entries;
-    entries.reserve(size.num_entries);
-    std::copy_n(
-        std::istream_iterator<CoordinateEntry>(i),
-        size.num_entries,
-        std::back_inserter(entries));
-
-    if (size.num_entries != (size_type) entries.size()) {
-        std::stringstream s;
-        s << "Failed to parse entries: "
-          << "Expected " << size.num_entries << " entries, "
-          << "got " << entries.size() << " entries.";
-        throw matrix_market_error{s.str()};
-    }
-    return entries;
-}
-
 }
 
 namespace matrix_market {
 
-std::istream & operator>>(std::istream & i, CoordinateEntry & e)
+std::istream & operator>>(std::istream & i, CoordinateEntryReal & e)
 {
     return i >> e.i >> e.j >> e.a;
+}
+
+std::istream & operator>>(std::istream & i, CoordinateEntryComplex & e)
+{
+    return i >> e.i >> e.j >> e.real >> e.imag;
+}
+
+std::istream & operator>>(std::istream & i, CoordinateEntryInteger & e)
+{
+    return i >> e.i >> e.j >> e.a;
+}
+
+std::istream & operator>>(std::istream & i, CoordinateEntryPattern & e)
+{
+    return i >> e.i >> e.j;
+}
+
+template <typename T>
+std::vector<T> readEntries(
+    std::istream & i,
+    size_type num_entries)
+{
+    std::vector<T> entries;
+    entries.reserve(num_entries);
+    std::copy_n(
+        std::istream_iterator<T>(i),
+        num_entries,
+        std::back_inserter(entries));
+
+    if (num_entries != (size_type) entries.size()) {
+        std::stringstream s;
+        s << "Failed to parse entries: "
+          << "Expected " << num_entries << " entries, "
+          << "got " << entries.size() << " entries.";
+        throw matrix_market_error{s.str()};
+    }
+    return entries;
 }
 
 Matrix fromStream(std::istream & i)
@@ -206,8 +481,26 @@ Matrix fromStream(std::istream & i)
     auto header = readHeader(i);
     auto comments = readComments(i);
     auto size = readSize(i, header.format);
-    auto entries = readEntries(i, size);
-    return Matrix{header, comments, size, entries};
+
+    std::vector<CoordinateEntryReal> entries_real;
+    std::vector<CoordinateEntryComplex> entries_complex;
+    std::vector<CoordinateEntryInteger> entries_integer;
+    std::vector<CoordinateEntryPattern> entries_pattern;
+    switch (header.field) {
+    case Field::real:
+        entries_real = readEntries<CoordinateEntryReal>(i, size.num_entries);
+        return Matrix(header, comments, size, entries_real);
+    case Field::complex:
+        entries_complex = readEntries<CoordinateEntryComplex>(i, size.num_entries);
+        return Matrix(header, comments, size, entries_complex);
+    case Field::integer:
+        entries_integer = readEntries<CoordinateEntryInteger>(i, size.num_entries);
+        return Matrix(header, comments, size, entries_integer);
+    case Field::pattern:
+        entries_pattern = readEntries<CoordinateEntryPattern>(i, size.num_entries);
+        return Matrix(header, comments, size, entries_pattern);
+    }
+    throw matrix_market_error{"Unknown field"};
 }
 
 }
@@ -220,6 +513,28 @@ std::string toString(Object const &)
 std::string toString(Format const & f)
 {
     return std::string{f == Format::coordinate ? "coordinate" : "array"};
+}
+
+std::string toString(Field const & f)
+{
+    switch (f) {
+    case Field::real: return std::string("real");
+    case Field::complex: return std::string("complex");
+    case Field::integer: return std::string("integer");
+    case Field::pattern: return std::string("pattern");
+    }
+    throw matrix_market_error{"Unknown field"};
+}
+
+std::string toString(Symmetry const & s)
+{
+    switch (s) {
+    case Symmetry::general: return std::string("generall");
+    case Symmetry::symmetric: return std::string("symmetric");
+    case Symmetry::skew_symmetric: return std::string("skew-symmetric");
+    case Symmetry::hermitian: return std::string("hermitian");
+    }
+    throw matrix_market_error{"Unknown symmetry"};
 }
 
 namespace matrix_market
@@ -245,10 +560,13 @@ bool operator==(
 
 bool operator==(Matrix const & A, Matrix const & B)
 {
-    return A.header == B.header &&
-        A.comments == B.comments &&
-        A.size == B.size &&
-        A.entries == B.entries;
+    return A.header() == B.header() &&
+        A.comments() == B.comments() &&
+        A.size() == B.size() &&
+        A.coordinate_entries_real() == B.coordinate_entries_real() &&
+        A.coordinate_entries_complex() == B.coordinate_entries_complex() &&
+        A.coordinate_entries_integer() == B.coordinate_entries_integer() &&
+        A.coordinate_entries_pattern() == B.coordinate_entries_pattern();
 }
 
 std::ostream & operator<<(std::ostream & o, Header const & h)
@@ -256,8 +574,8 @@ std::ostream & operator<<(std::ostream & o, Header const & h)
     return o << h.identifier << ' '
              << toString(h.object) << ' '
              << toString(h.format) << ' '
-             << h.field << ' '
-             << h.symmetry;
+             << toString(h.field) << ' '
+             << toString(h.symmetry);
 }
 
 std::ostream & operator<<(
@@ -280,9 +598,30 @@ std::ostream & operator<<(
 
 std::ostream & operator<<(
     std::ostream & o,
-    CoordinateEntry const & e)
+    CoordinateEntryReal const & e)
 {
     return o << e.i << ' ' << e.j << ' ' << e.a;
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    CoordinateEntryComplex const & e)
+{
+    return o << e.i << ' ' << e.j << ' ' << e.real << ' ' << e.imag;
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    CoordinateEntryInteger const & e)
+{
+    return o << e.i << ' ' << e.j << ' ' << e.a;
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    CoordinateEntryPattern const & e)
+{
+    return o << e.i << ' ' << e.j;
 }
 
 std::ostream & toStream(
@@ -290,14 +629,32 @@ std::ostream & toStream(
     Matrix const & m,
     bool write_entries)
 {
-    o << m.header << '\n'
-      << m.comments
-      << m.size << '\n';
+    o << m.header() << '\n'
+      << m.comments()
+      << m.size() << '\n';
     if (write_entries) {
-        std::copy(
-            std::cbegin(m.entries),
-            std::cend(m.entries),
-            std::ostream_iterator<CoordinateEntry>(o, "\n"));
+        switch (m.field()) {
+        case Field::real:
+            std::copy(std::cbegin(m.coordinate_entries_real()),
+                      std::cend(m.coordinate_entries_real()),
+                      std::ostream_iterator<CoordinateEntryReal>(o, "\n"));
+            break;
+        case Field::complex:
+            std::copy(std::cbegin(m.coordinate_entries_complex()),
+                      std::cend(m.coordinate_entries_complex()),
+                      std::ostream_iterator<CoordinateEntryComplex>(o, "\n"));
+            break;
+        case Field::integer:
+            std::copy(std::cbegin(m.coordinate_entries_integer()),
+                      std::cend(m.coordinate_entries_integer()),
+                      std::ostream_iterator<CoordinateEntryInteger>(o, "\n"));
+            break;
+        case Field::pattern:
+            std::copy(std::cbegin(m.coordinate_entries_pattern()),
+                      std::cend(m.coordinate_entries_pattern()),
+                      std::ostream_iterator<CoordinateEntryPattern>(o, "\n"));
+            break;
+        }
     }
     return o;
 }
@@ -318,11 +675,7 @@ std::ostream & operator<<(
 
 std::ostream & operator<<(std::ostream & o, Matrix const & m)
 {
-    return o
-        << m.header << ' '
-        << m.comments << ' '
-        << m.size << ' '
-        << m.entries;
+    return toStream(o, m, true);
 }
 
 bool ends_with(std::string const & s, std::string const & t)
@@ -373,6 +726,74 @@ matrix_market::Matrix load_matrix(
     } else {
         return matrix_market::fromStream(f);
     }
+}
+
+matrix_market::Matrix sort_matrix_column_major(
+    matrix_market::Matrix const & m)
+{
+    auto compare_entries = [] (auto const & a, auto const & b)
+        { return std::tie(a.j, a.i) < std::tie(b.j, b.i); };
+    switch (m.field()) {
+    case Field::real:
+        {
+            std::vector<CoordinateEntryReal> entries = m.coordinate_entries_real();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::complex:
+        {
+            std::vector<CoordinateEntryComplex> entries = m.coordinate_entries_complex();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::integer:
+        {
+            std::vector<CoordinateEntryInteger> entries = m.coordinate_entries_integer();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::pattern:
+        {
+            std::vector<CoordinateEntryPattern> entries = m.coordinate_entries_pattern();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    }
+    throw matrix_market_error{"Unknown field"};
+}
+
+matrix_market::Matrix sort_matrix_row_major(
+    matrix_market::Matrix const & m)
+{
+    auto compare_entries = [] (auto const & a, auto const & b)
+        { return std::tie(a.i, a.j) < std::tie(b.i, b.j); };
+    switch (m.field()) {
+    case Field::real:
+        {
+            std::vector<CoordinateEntryReal> entries = m.coordinate_entries_real();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::complex:
+        {
+            std::vector<CoordinateEntryComplex> entries = m.coordinate_entries_complex();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::integer:
+        {
+            std::vector<CoordinateEntryInteger> entries = m.coordinate_entries_integer();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    case Field::pattern:
+        {
+            std::vector<CoordinateEntryPattern> entries = m.coordinate_entries_pattern();
+            std::sort(std::begin(entries), std::end(entries), compare_entries);
+            return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
+        }
+    }
+    throw matrix_market_error{"Unknown field"};
 }
 
 }

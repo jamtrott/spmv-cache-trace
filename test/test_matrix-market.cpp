@@ -12,7 +12,7 @@
 using namespace matrix_market;
 
 
-TEST(matrix_market, from_stream)
+TEST(matrix_market, from_stream_real)
 {
     auto s = std::string{
         "%%MatrixMarket matrix coordinate real general\n"
@@ -21,18 +21,91 @@ TEST(matrix_market, from_stream)
         "1 1 .5\n"};
     std::istringstream stream{s};
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header.identifier);
-    ASSERT_EQ(Object::matrix, m.header.object);
-    ASSERT_EQ(Format::coordinate, m.header.format);
-    ASSERT_EQ("real", m.header.field);
-    ASSERT_EQ("general", m.header.symmetry);
-    ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1, m.size.rows);
-    ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.num_entries);
-    ASSERT_EQ(1, m.entries[0].i);
-    ASSERT_EQ(1, m.entries[0].j);
-    ASSERT_EQ(0.5, m.entries[0].a);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::real, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_real().size());
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].j);
+    ASSERT_EQ(0.5, m.coordinate_entries_real()[0].a);
+}
+
+TEST(matrix_market, from_stream_complex)
+{
+    auto s = std::string{
+        "%%MatrixMarket matrix coordinate complex general\n"
+        "% Test matrix\n"
+        "1 1 1\n"
+        "1 1 .5 -0.5\n"};
+    std::istringstream stream{s};
+    auto m = fromStream(stream);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::complex, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_complex().size());
+    ASSERT_EQ(1, m.coordinate_entries_complex()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_complex()[0].j);
+    ASSERT_EQ( 0.5, m.coordinate_entries_complex()[0].real);
+    ASSERT_EQ(-0.5, m.coordinate_entries_complex()[0].imag);
+}
+
+TEST(matrix_market, from_stream_integer)
+{
+    auto s = std::string{
+        "%%MatrixMarket matrix coordinate integer general\n"
+        "% Test matrix\n"
+        "1 1 1\n"
+        "1 1 5\n"};
+    std::istringstream stream{s};
+    auto m = fromStream(stream);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::integer, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_integer().size());
+    ASSERT_EQ(1, m.coordinate_entries_integer()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_integer()[0].j);
+    ASSERT_EQ(5, m.coordinate_entries_integer()[0].a);
+}
+
+TEST(matrix_market, from_stream_pattern)
+{
+    auto s = std::string{
+        "%%MatrixMarket matrix coordinate pattern general\n"
+        "% Test matrix\n"
+        "1 1 1\n"
+        "1 1 5\n"};
+    std::istringstream stream{s};
+    auto m = fromStream(stream);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::pattern, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_pattern().size());
+    ASSERT_EQ(1, m.coordinate_entries_pattern()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_pattern()[0].j);
 }
 
 TEST(matrix_market, from_stream_gz)
@@ -50,18 +123,18 @@ TEST(matrix_market, from_stream_gz)
     std::istringstream string_stream{s};
     zlib::izlibstream stream(string_stream.rdbuf());
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header.identifier);
-    ASSERT_EQ(Object::matrix, m.header.object);
-    ASSERT_EQ(Format::coordinate, m.header.format);
-    ASSERT_EQ("real", m.header.field);
-    ASSERT_EQ("general", m.header.symmetry);
-    ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1, m.size.rows);
-    ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.num_entries);
-    ASSERT_EQ(1, m.entries[0].i);
-    ASSERT_EQ(1, m.entries[0].j);
-    ASSERT_EQ(0.5, m.entries[0].a);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::real, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].j);
+    ASSERT_EQ(0.5, m.coordinate_entries_real()[0].a);
 }
 
 Matrix test_matrix()
@@ -92,19 +165,18 @@ TEST(matrix_market, max_row_length)
 TEST(matrix_market, sort_entries_row_major)
 {
     auto m = test_matrix();
-    auto entries = m.sortedCoordinateEntries(
-        Matrix::Order::row_major);
-    auto size = m.size;
-    ASSERT_EQ(size.num_entries, entries.size());
-    std::vector<CoordinateEntry> expected({
-            CoordinateEntry{1, 1, 1.0},
-            CoordinateEntry{1, 2, 2.0},
-            CoordinateEntry{1, 4, 3.0},
-            CoordinateEntry{2, 1, 4.0},
-            CoordinateEntry{2, 2, 1.0},
-            CoordinateEntry{3, 3, 3.0},
-            CoordinateEntry{4, 4, 2.0},
-            CoordinateEntry{4, 5, 1.0}});
+    auto m_sorted = sort_matrix_row_major(m);
+    auto entries = m_sorted.coordinate_entries_real();
+    ASSERT_EQ(m.num_entries(), entries.size());
+    std::vector<CoordinateEntryReal> expected({
+            CoordinateEntryReal{1, 1, 1.0},
+            CoordinateEntryReal{1, 2, 2.0},
+            CoordinateEntryReal{1, 4, 3.0},
+            CoordinateEntryReal{2, 1, 4.0},
+            CoordinateEntryReal{2, 2, 1.0},
+            CoordinateEntryReal{3, 3, 3.0},
+            CoordinateEntryReal{4, 4, 2.0},
+            CoordinateEntryReal{4, 5, 1.0}});
     ASSERT_TRUE(
         std::equal(
             std::begin(entries), std::end(entries),
@@ -114,19 +186,18 @@ TEST(matrix_market, sort_entries_row_major)
 TEST(matrix_market, sort_entries_column_major)
 {
     auto m = test_matrix();
-    auto entries = m.sortedCoordinateEntries(
-        Matrix::Order::column_major);
-    auto size = m.size;
-    ASSERT_EQ(size.num_entries, entries.size());
-    std::vector<CoordinateEntry> expected({
-            CoordinateEntry{1, 1, 1.0},
-            CoordinateEntry{2, 1, 4.0},
-            CoordinateEntry{1, 2, 2.0},
-            CoordinateEntry{2, 2, 1.0},
-            CoordinateEntry{3, 3, 3.0},
-            CoordinateEntry{1, 4, 3.0},
-            CoordinateEntry{4, 4, 2.0},
-            CoordinateEntry{4, 5, 1.0}});
+    auto m_sorted = sort_matrix_column_major(m);
+    auto entries = m_sorted.coordinate_entries_real();
+    ASSERT_EQ(m.num_entries(), entries.size());
+    std::vector<CoordinateEntryReal> expected({
+            CoordinateEntryReal{1, 1, 1.0},
+            CoordinateEntryReal{2, 1, 4.0},
+            CoordinateEntryReal{1, 2, 2.0},
+            CoordinateEntryReal{2, 2, 1.0},
+            CoordinateEntryReal{3, 3, 3.0},
+            CoordinateEntryReal{1, 4, 3.0},
+            CoordinateEntryReal{4, 4, 2.0},
+            CoordinateEntryReal{4, 5, 1.0}});
     ASSERT_TRUE(
         std::equal(
             std::begin(entries), std::end(entries),
@@ -996,18 +1067,18 @@ TEST(matrix_market, from_stream_tar)
     std::istringstream string_stream{s};
     tar::itarstream stream(string_stream.rdbuf(), "test.mtx"s);
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header.identifier);
-    ASSERT_EQ(Object::matrix, m.header.object);
-    ASSERT_EQ(Format::coordinate, m.header.format);
-    ASSERT_EQ("real", m.header.field);
-    ASSERT_EQ("general", m.header.symmetry);
-    ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1, m.size.rows);
-    ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.num_entries);
-    ASSERT_EQ(1, m.entries[0].i);
-    ASSERT_EQ(1, m.entries[0].j);
-    ASSERT_EQ(0.5, m.entries[0].a);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::real, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].j);
+    ASSERT_EQ(0.5, m.coordinate_entries_real()[0].a);
 }
 
 unsigned char test_mtx_tar_gz [] = {
@@ -1036,16 +1107,16 @@ TEST(matrix_market, from_stream_tar_gz)
     zlib::izlibstream gzstream(string_stream.rdbuf());
     tar::itarstream stream(gzstream.rdbuf(), "test.mtx"s);
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header.identifier);
-    ASSERT_EQ(Object::matrix, m.header.object);
-    ASSERT_EQ(Format::coordinate, m.header.format);
-    ASSERT_EQ("real", m.header.field);
-    ASSERT_EQ("general", m.header.symmetry);
-    ASSERT_EQ("% Test matrix", m.comments[0]);
-    ASSERT_EQ(1, m.size.rows);
-    ASSERT_EQ(1, m.size.columns);
-    ASSERT_EQ(1, m.size.num_entries);
-    ASSERT_EQ(1, m.entries[0].i);
-    ASSERT_EQ(1, m.entries[0].j);
-    ASSERT_EQ(0.5, m.entries[0].a);
+    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
+    ASSERT_EQ(Object::matrix, m.header().object);
+    ASSERT_EQ(Format::coordinate, m.format());
+    ASSERT_EQ(Field::real, m.field());
+    ASSERT_EQ(Symmetry::general, m.symmetry());
+    ASSERT_EQ("% Test matrix", m.comments()[0]);
+    ASSERT_EQ(1, m.rows());
+    ASSERT_EQ(1, m.columns());
+    ASSERT_EQ(1, m.num_entries());
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].i);
+    ASSERT_EQ(1, m.coordinate_entries_real()[0].j);
+    ASSERT_EQ(0.5, m.coordinate_entries_real()[0].a);
 }

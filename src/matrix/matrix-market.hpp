@@ -12,19 +12,21 @@ namespace matrix_market
 
 typedef int32_t size_type;
 typedef int32_t index_type;
-typedef double value_type;
+typedef double real_type;
 
 enum class Object { matrix };
 enum class Format { coordinate, array };
+enum class Field { real, complex, integer, pattern };
+enum class Symmetry { general, symmetric, skew_symmetric, hermitian };
 
 class Header
 {
 public:
-    std::string const identifier;
-    Object const object;
-    Format const format;
-    std::string const field;
-    std::string const symmetry;
+    std::string identifier;
+    Object object;
+    Format format;
+    Field field;
+    Symmetry symmetry;
 };
 
 using Comments = std::vector<std::string>;
@@ -32,52 +34,99 @@ using Comments = std::vector<std::string>;
 class Size
 {
 public:
-    index_type const rows;
-    index_type const columns;
-    size_type const num_entries;
+    index_type rows;
+    index_type columns;
+    size_type num_entries;
 };
 
-struct CoordinateEntry
+struct CoordinateEntryReal
 {
     index_type i;
     index_type j;
-    value_type a;
-
-    CoordinateEntry()
-        : i(0u), j(0u), a(0.0)
-    {
-    }
-
-    CoordinateEntry(index_type i, index_type j, value_type a)
-        : i(i), j(j), a(a)
-    {
-    }
+    real_type a;
 };
 
-bool operator==(
-    CoordinateEntry const & a,
-    CoordinateEntry const & b);
+struct CoordinateEntryComplex
+{
+    index_type i;
+    index_type j;
+    real_type real, imag;
+};
 
-using Entries = std::vector<CoordinateEntry>;
+struct CoordinateEntryInteger
+{
+    index_type i;
+    index_type j;
+    int a;
+};
+
+struct CoordinateEntryPattern
+{
+    index_type i;
+    index_type j;
+};
+
+bool operator==(CoordinateEntryReal const & a, CoordinateEntryReal const & b);
+bool operator==(CoordinateEntryComplex const & a, CoordinateEntryComplex const & b);
+bool operator==(CoordinateEntryInteger const & a, CoordinateEntryInteger const & b);
+bool operator==(CoordinateEntryPattern const & a, CoordinateEntryPattern const & b);
 
 class Matrix
 {
 public:
+    Matrix(Header const & header,
+           Comments const & comments,
+           Size const & size,
+           std::vector<CoordinateEntryReal> const & entries);
+    Matrix(Header const & header,
+           Comments const & comments,
+           Size const & size,
+           std::vector<CoordinateEntryComplex> const & entries);
+    Matrix(Header const & header,
+           Comments const & comments,
+           Size const & size,
+           std::vector<CoordinateEntryInteger> const & entries);
+    Matrix(Header const & header,
+           Comments const & comments,
+           Size const & size,
+           std::vector<CoordinateEntryPattern> const & entries);
+
+    Matrix(Matrix && m) = default;
+    Matrix & operator=(Matrix && m) = default;
+
+public:
+    Header const & header() const;
+    Format format() const;
+    Field field() const;
+    Symmetry symmetry() const;
+
+    Comments const & comments() const;
+
+    Size const & size() const;
     index_type rows() const;
     index_type columns() const;
     size_type num_entries() const;
-    index_type max_row_length() const;
 
+    std::vector<CoordinateEntryReal> const & coordinate_entries_real() const;
+    std::vector<CoordinateEntryComplex> const & coordinate_entries_complex() const;
+    std::vector<CoordinateEntryInteger> const & coordinate_entries_integer() const;
+    std::vector<CoordinateEntryPattern> const & coordinate_entries_pattern() const;
+
+    std::vector<index_type> row_indices() const;
+    std::vector<index_type> column_indices() const;
+    std::vector<real_type> values_real() const;
+
+    index_type max_row_length() const;
     std::vector<index_type> row_lengths() const;
 
-    enum class Order { column_major, row_major };
-    std::vector<CoordinateEntry> sortedCoordinateEntries(Order o) const;
-
-public:
-    Header const header;
-    std::vector<std::string> const comments;
-    Size const size;
-    Entries entries;
+private:
+    Header header_;
+    Comments comments_;
+    Size size_;
+    std::vector<CoordinateEntryReal> entries_real;
+    std::vector<CoordinateEntryComplex> entries_complex;
+    std::vector<CoordinateEntryInteger> entries_integer;
+    std::vector<CoordinateEntryPattern> entries_pattern;
 };
 
 bool operator==(Matrix const & A, Matrix const & B);
@@ -94,6 +143,12 @@ matrix_market::Matrix load_matrix(
     std::string const & path,
     std::ostream & o,
     bool verbose = false);
+
+matrix_market::Matrix sort_matrix_column_major(
+    matrix_market::Matrix const & m);
+
+matrix_market::Matrix sort_matrix_row_major(
+    matrix_market::Matrix const & m);
 
 class matrix_market_error
     : public std::runtime_error

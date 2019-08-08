@@ -16,22 +16,10 @@ using namespace std::literals::string_literals;
 namespace coo_matrix
 {
 
-std::string to_string(Order o)
-{
-    switch (o) {
-    case Order::general: return "general";
-    case Order::column_major: return "column major";
-    case Order::row_major: return "row major";
-    default:
-        throw matrix::matrix_error("Unknown matrix order");
-    }
-}
-
 Matrix::Matrix()
     : rows(0)
     , columns(0)
     , num_entries(0)
-    , order(Order::general)
     , row_index()
     , column_index()
     , value()
@@ -42,14 +30,12 @@ Matrix::Matrix(
     index_type rows,
     index_type columns,
     size_type num_entries,
-    Order order,
     index_array_type const & row_index,
     index_array_type const & column_index,
     value_array_type const & value)
     : rows(rows)
     , columns(columns)
     , num_entries(num_entries)
-    , order(order)
     , row_index(row_index)
     , column_index(column_index)
     , value(value)
@@ -144,21 +130,9 @@ bool operator==(Matrix const & a, Matrix const & b)
     return a.rows == b.rows &&
         a.columns == b.columns &&
         a.num_entries == b.num_entries &&
-        a.order == b.order &&
         a.row_index == b.row_index &&
         a.column_index == b.column_index &&
         a.value == b.value;
-}
-
-std::ostream & operator<<(std::ostream & o, Order order)
-{
-    switch (order) {
-    case Order::general: return o << "general";
-    case Order::column_major: return o << "column-major";
-    case Order::row_major: return o << "row-major";
-    default:
-      throw matrix::matrix_error("Invalid matrix order");
-    }
 }
 
 template <typename T, typename allocator>
@@ -179,51 +153,34 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
     return o << x.rows << ' '
              << x.columns << ' '
              << x.num_entries << ' '
-             << x.order << ' '
              << x.row_index << ' '
              << x.column_index << ' '
              << x.value;
 }
 
-Matrix from_matrix_market_general(
+Matrix from_matrix_market(
     matrix_market::Matrix const & m)
 {
-    return from_matrix_market(m, Order::general);
-}
-
-Matrix from_matrix_market(
-    matrix_market::Matrix const & m,
-    Order o)
-{
-    if (m.header.format != matrix_market::Format::coordinate)
+    if (m.format() != matrix_market::Format::coordinate)
         throw matrix::matrix_error("Expected matrix in coordinate format");
 
-    auto const & size = m.size;
-    auto entries = m.entries;
-    if (o == Order::column_major) {
-        std::sort(
-            std::begin(entries), std::end(entries),
-            [] (auto const & a, auto const & b)
-            { return std::tie(a.j, a.i) < std::tie(b.j, b.i); });
-    } else if (o == Order::row_major) {
-        std::sort(
-            std::begin(entries), std::end(entries),
-            [] (auto const & a, auto const & b)
-            { return std::tie(a.i, a.j) < std::tie(b.i, b.j); });
-    }
+    auto mm_row_indices = m.row_indices();
+    index_array_type row_indices(m.num_entries());
+    for (size_type k = 0; k < (size_type) m.num_entries(); k++)
+        row_indices[k] = mm_row_indices[k] - 1;
 
-    index_array_type rows(entries.size());
-    index_array_type columns(entries.size());
-    value_array_type values(entries.size());
-    for (size_type k = 0u; k < (size_type) entries.size(); ++k) {
-        rows[k] = entries[k].i - 1;
-        columns[k] = entries[k].j - 1;
-        values[k] = entries[k].a;
-    }
+    auto mm_column_indices = m.column_indices();
+    index_array_type column_indices(m.num_entries());
+    for (size_type k = 0; k < (size_type) m.num_entries(); k++)
+        column_indices[k] = mm_column_indices[k] - 1;
 
-    return Matrix{
-        size.rows, size.columns, size.num_entries,
-        o, rows, columns, values};
+    auto mm_values = m.values_real();
+    value_array_type values(m.num_entries());
+    for (size_type k = 0; k < (size_type) m.num_entries(); k++)
+        values[k] = mm_values[k];
+
+    return Matrix(m.rows(), m.columns(), m.num_entries(),
+                  row_indices, column_indices, values);
 }
 
 namespace

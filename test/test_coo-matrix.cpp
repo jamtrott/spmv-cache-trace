@@ -23,8 +23,7 @@ coo_matrix::Matrix testMatrix()
     coo_matrix::index_array_type column_index{{0, 1, 1, 2, 3, 4}};
     coo_matrix::value_array_type value{{1.0, 2.0, 1.0, 3.0, 2.0, 1.0}};
     return coo_matrix::Matrix(
-        4, 5, 6, coo_matrix::Order::general,
-        row_index, column_index, value);
+        4, 5, 6, row_index, column_index, value);
 }
 
 }
@@ -35,7 +34,6 @@ TEST(coo_matrix, create)
     ASSERT_EQ(m.rows, 4);
     ASSERT_EQ(m.columns, 5);
     ASSERT_EQ(m.num_entries, 6);
-    ASSERT_EQ(m.order, coo_matrix::Order::general);
     coo_matrix::index_array_type row_index{{0, 0, 1, 2, 3, 3}};
     ASSERT_EQ(m.row_index, row_index);
     coo_matrix::index_array_type column_index = {{0, 1, 1, 2, 3, 4}};
@@ -58,8 +56,7 @@ TEST(coo_matrix, from_matrix_market)
         "4 5 1.0\n"};
     std::istringstream stream{s};
     auto mm = matrix_market::fromStream(stream);
-    auto m = from_matrix_market(
-        mm, coo_matrix::Order::general);
+    auto m = coo_matrix::from_matrix_market(mm);
     ASSERT_EQ(m, testMatrix());
 }
 
@@ -91,7 +88,7 @@ coo_matrix::Matrix testMatrixColumnMajor()
         "4 5 1.0\n"};
     std::istringstream stream{s};
     auto mm = matrix_market::fromStream(stream);
-    return coo_matrix::from_matrix_market(mm, coo_matrix::Order::column_major);
+    return coo_matrix::from_matrix_market(mm);
 }
 
 }
@@ -110,8 +107,9 @@ TEST(coo_matrix, matrix_vector_multiplication_column_major)
 TEST(coo_matrix, poisson2D)
 {
     std::istringstream stream{poisson2D};
-    auto mm = matrix_market::fromStream(stream);
-    auto A = coo_matrix::from_matrix_market(mm, coo_matrix::Order::column_major);
+    auto mm_unsorted = matrix_market::fromStream(stream);
+    auto mm = matrix_market::sort_matrix_row_major(mm_unsorted);
+    auto A = coo_matrix::from_matrix_market(mm);
     auto x = coo_matrix::value_array_type{
         std::cbegin(poisson2D_b), std::cend(poisson2D_b)};
     auto y = A * x;

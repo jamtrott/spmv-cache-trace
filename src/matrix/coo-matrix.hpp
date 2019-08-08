@@ -19,10 +19,6 @@ typedef double value_type;
 typedef std::vector<index_type, aligned_allocator<index_type, 4096>> index_array_type;
 typedef std::vector<value_type, aligned_allocator<value_type, 4096>> value_array_type;
 
-enum class Order { general, column_major, row_major };
-
-std::string to_string(Order o);
-
 class Matrix
 {
 public:
@@ -31,7 +27,6 @@ public:
         index_type rows,
         index_type columns,
         size_type num_entries,
-        Order order,
         index_array_type const & row_index,
         index_array_type const & column_index,
         value_array_type const & value);
@@ -59,7 +54,6 @@ public:
     index_type rows;
     index_type columns;
     size_type num_entries;
-    Order order;
     index_array_type row_index;
     index_array_type column_index;
     value_array_type value;
@@ -68,12 +62,8 @@ public:
 bool operator==(Matrix const & a, Matrix const & b);
 std::ostream & operator<<(std::ostream & o, Matrix const & x);
 
-Matrix from_matrix_market_general(
-    matrix_market::Matrix const & m);
-
 Matrix from_matrix_market(
-    matrix_market::Matrix const & m,
-    Order o);
+    matrix_market::Matrix const & m);
 
 void spmv(
     Matrix const & A,

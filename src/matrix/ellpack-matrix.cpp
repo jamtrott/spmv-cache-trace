@@ -140,16 +140,19 @@ Matrix from_matrix_market(
     matrix_market::Matrix const & m,
     bool skip_padding)
 {
-    if (m.header.format != matrix_market::Format::coordinate)
+    if (m.format() != matrix_market::Format::coordinate)
         throw matrix::matrix_error("Expected matrix in coordinate format");
-    auto const & size = m.size;
+    if (m.field() != matrix_market::Field::real)
+        throw matrix::matrix_error("Expected real-valued matrix");
 
     // Compute the row length and number of entries (including padding)
-    auto rows = size.rows;
+    auto rows = m.rows();
     auto row_length = m.max_row_length();
     auto num_entries = rows * row_length;
-    auto entries = m.sortedCoordinateEntries(
-        matrix_market::Matrix::Order::row_major);
+
+    // Sort the matrix entries
+    matrix_market::Matrix m_sorted = sort_matrix_row_major(m);
+    auto entries = m_sorted.coordinate_entries_real();
 
     // Insert the values and column indices with the required padding
     index_array_type columns(num_entries, 0u);
@@ -173,7 +176,7 @@ Matrix from_matrix_market(
     }
 
     return Matrix(
-        size.rows, size.columns, size.num_entries,
+        m.rows(), m.columns(), m.num_entries(),
         row_length, columns, values, skip_padding);
 }
 

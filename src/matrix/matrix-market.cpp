@@ -311,10 +311,18 @@ matrix_market_error::matrix_market_error(std::string const & s) throw()
 namespace
 {
 
+char asciitolower(char c)
+{
+    if (c <= 'Z' && c >= 'A')
+        return c - ('Z' - 'z');
+    return c;
+}
+
 Object readObject(std::istream & i)
 {
     std::string object;
     i >> object;
+    std::transform(object.begin(), object.end(), object.begin(), asciitolower);
     if (object != std::string{"matrix"}) {
         auto s = std::stringstream{};
         s << "Failed to parse header: "
@@ -329,12 +337,12 @@ Format readFormat(std::istream & i)
 {
     std::string format;
     i >> format;
+    std::transform(format.begin(), format.end(), format.begin(), asciitolower);
     if (format == std::string{"coordinate"}) {
         return Format::coordinate;
     } else if (format == std::string{"array"}) {
         return Format::array;
     }
-
     auto s = std::stringstream{};
     s << "Expected \"coordinate\" or \"array\", got \"" << format << "\"";
     throw matrix_market_error{s.str()};
@@ -344,6 +352,7 @@ Field readField(std::istream & i)
 {
     std::string field;
     i >> field;
+    std::transform(field.begin(), field.end(), field.begin(), asciitolower);
     if (field == std::string("real")) {
         return Field::real;
     } else if (field == std::string("complex")) {
@@ -363,6 +372,7 @@ Symmetry readSymmetry(std::istream & i)
 {
     std::string symmetry;
     i >> symmetry;
+    std::transform(symmetry.begin(), symmetry.end(), symmetry.begin(), asciitolower);
     if (symmetry == std::string{"general"}) {
         return Symmetry::general;
     } else if (symmetry == std::string{"symmetric"}) {

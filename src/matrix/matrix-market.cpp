@@ -428,16 +428,32 @@ Size readSize(std::istream & i, Format format)
         throw matrix_market_error{"Failed to parse size"};
 
     std::stringstream s{line};
-    if (format == Format::coordinate) {
-        index_type rows, columns;
-        size_type num_entries;
-        s >> rows >> columns >> num_entries;
-        return Size{rows, columns, num_entries};
-    } else {
-        index_type rows, columns;
-        s >> rows >> columns;
-        return Size{rows, columns, 0u};
+    index_type rows, columns;
+    s >> rows;
+    if (!s) {
+        throw matrix_market_error(
+            "Failed to parse size: "
+            "Integer overflow when reading number of rows");
     }
+    s >> columns;
+    if (!s) {
+        throw matrix_market_error(
+            "Failed to parse size: "
+            "Integer overflow when reading number of columns");
+    }
+
+    if (format == Format::array)
+        return Size{rows, columns, 0u};
+
+    size_type num_entries;
+    s >> num_entries;
+    if (!s) {
+        throw matrix_market_error(
+            "Failed to parse size: "
+            "Integer overflow when reading number of non-zeros");
+    }
+
+    return Size{rows, columns, num_entries};
 }
 
 }

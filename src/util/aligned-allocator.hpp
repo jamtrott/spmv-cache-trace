@@ -133,25 +133,25 @@ bool operator!=(
     return false;
 }
 
-static inline void * align_upwards(void const * p, uintptr_t alignment)
+static inline intptr_t align_upwards(void const * p, int alignment)
 {
     assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
     assert(p != 0);
-    uintptr_t address = (uintptr_t) p;
+    intptr_t address = (intptr_t) p;
     if (address % alignment != 0)
         address += alignment - address % alignment;
-    assert(address >= (uintptr_t) p);
-    return (void *) address;
+    assert(address >= (intptr_t) p);
+    return address;
 }
 
-static inline void * align_downwards(void const * p, uintptr_t alignment)
+static inline intptr_t align_downwards(void const * p, int alignment)
 {
     assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
     assert(p != 0);
-    uintptr_t address = (uintptr_t) p;
+    intptr_t address = (intptr_t) p;
     address -= address % alignment;
-    assert(address <= (uintptr_t) p);
-    return (void *) address;
+    assert(address <= (intptr_t) p);
+    return address;
 }
 
 template <typename T>
@@ -162,14 +162,16 @@ int thread_of_page(
     int page)
 {
     int page_size = numa_pagesize();
-    uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
-    int num_elements_per_thread = (num_elements + num_threads - 1) / num_threads;
-    uint8_t * page_address = start_address + page * page_size;
+    intptr_t start_address = align_downwards(p, page_size);
+    size_t num_elements_per_thread = (num_elements + num_threads - 1) / num_threads;
+    intptr_t page_address = start_address + page * page_size;
     int thread = 0;
     for (; thread < num_threads; thread++) {
-        int thread_end_element = std::min<int>(num_elements, (thread + 1) * num_elements_per_thread) - 1;
-        uint8_t * thread_end_address = (uint8_t *) (p + thread_end_element);
-        if (thread_end_address >= page_address)
+        size_t thread_start_element = std::min<size_t>(num_elements, thread * num_elements_per_thread);
+        size_t thread_end_element = std::min<size_t>(num_elements, (thread + 1) * num_elements_per_thread);
+        intptr_t thread_start_address = (intptr_t) (p + thread_start_element);
+        intptr_t thread_end_address = (intptr_t) (p + thread_end_element);
+        if (thread_start_address <= page_address && page_address < thread_end_address)
             return thread;
     }
     return num_threads - 1;
@@ -179,16 +181,16 @@ template <typename T>
 int page_of_index(
     T const * p,
     size_t num_elements,
-    int index,
+    size_t index,
     int num_threads,
     int page_size)
 {
-    uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
-    uint8_t * end_address = (uint8_t *) (p + num_elements);
+    intptr_t start_address = align_downwards(p, page_size);
+    intptr_t end_address = (intptr_t) (p + num_elements);
     int num_pages = (end_address - start_address + (page_size - 1)) / page_size;
     for (int page = 0; page < num_pages; page++) {
-        T * next_page = (T *) align_upwards(p + 1, page_size);
-        int page_num_elements = next_page - p;
+        T const * next_page = (T *) align_upwards(p + 1, page_size);
+        size_t page_num_elements = next_page - p;
         if (index < page_num_elements)
             return page;
         index -= page_num_elements;
@@ -201,7 +203,7 @@ template <typename T>
 int thread_of_index(
     T const * p,
     size_t num_elements,
-    int index,
+    size_t index,
     int num_threads,
     int page_size)
 {
@@ -218,9 +220,9 @@ void distribute_pages(
     #pragma omp master
     {
         int page_size = numa_pagesize();
-        uint8_t * start_address = (uint8_t *) align_downwards(p, page_size);
-        uint8_t * end_address = (uint8_t *) (p + n);
-        int num_pages = (end_address - start_address + (page_size - 1)) / page_size;
+        intptr_t start_address = align_downwards(p, page_size);
+        intptr_t end_address = align_upwards(p + n, page_size);
+        int num_pages = (end_address - start_address) / page_size;
         void ** pages = (void **) malloc(
             num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
         int * nodes = (int *)(pages + num_pages);
@@ -230,7 +232,7 @@ void distribute_pages(
 
         int num_threads = omp_get_num_threads();
         for (int page = 0; page < num_pages; page++) {
-            uint8_t * page_address = start_address + page * page_size;
+            intptr_t page_address = start_address + page * page_size;
             int thread = thread_of_page(p, n, num_threads, page);
             int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
@@ -238,7 +240,7 @@ void distribute_pages(
             nodes[page] = node;
             status[page] = 0;
             // std::cout << "Moving page " << (void *) page_address << " "
-            //           << "(" << page << " of " << num_pages << ") "
+            //           << "(" << (page+1) << " of " << num_pages << ") "
             //           << "to CPU " << cpu << ", NUMA domain " << node << '\n';
         }
 
@@ -250,14 +252,14 @@ void distribute_pages(
         }
 
         for (int page = 0; page < num_pages; page++) {
-            uint8_t * page_address = start_address + page * page_size;
+            intptr_t page_address = start_address + page * page_size;
             int thread = thread_of_page(p, n, num_threads, page);
             int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
             if (status[page] != node) {
                 std::cerr << "distribute_pages: "
                           << "Failed to move page " << (void *) page_address << " "
-                          << "(" << page << " of " << num_pages << ") "
+                          << "(" << (page+1) << " of " << num_pages << ") "
                           << "to CPU " << cpu << ", NUMA domain " << node << ": "
                           << strerror(-status[page]) << '\n';
             }

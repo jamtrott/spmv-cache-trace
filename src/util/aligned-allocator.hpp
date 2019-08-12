@@ -217,6 +217,7 @@ void distribute_pages(
     size_t n,
     int const * thread_affinity)
 {
+    #pragma omp barrier
     #pragma omp master
     {
         int page_size = numa_pagesize();
@@ -266,6 +267,8 @@ void distribute_pages(
         }
         free(pages);
     }
+
+    #pragma omp barrier
 }
 
 #endif

@@ -22,8 +22,6 @@ typedef std::vector<value_type, aligned_allocator<value_type, 4096>> value_array
 struct Matrix
 {
 public:
-
-public:
     Matrix();
     Matrix(index_type rows,
            index_type columns,

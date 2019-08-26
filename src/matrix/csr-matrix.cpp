@@ -2,12 +2,12 @@
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 
-#include <ostream>
 #include <iterator>
+#include <ostream>
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <valarray>
+#include <vector>
 
 using namespace std::literals::string_literals;
 

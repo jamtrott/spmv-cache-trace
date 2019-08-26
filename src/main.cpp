@@ -59,6 +59,7 @@ enum class short_options
     triad,
     coo,
     csr,
+    ellpack,
     mkl_csr,
 };
 
@@ -128,7 +129,13 @@ error_t parse_option(int key, char * arg, argp_state * state)
                 matrix_path);
             break;
         }
-
+    case int(short_options::ellpack):
+        {
+            std::string matrix_path = arg;
+            args.kernel = std::make_unique<ellpack_spmv_kernel>(
+                matrix_path);
+            break;
+        }
     case int(short_options::mkl_csr):
         {
             std::string matrix_path = arg;
@@ -175,6 +182,7 @@ int main(int argc, char ** argv)
         {0, 0, 0, 0, "Sparse matrix-vector multplication kernels:" },
         {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},
         {"csr", int(short_options::csr), "PATH", 0, "Compressed sparse row", 0},
+        {"ellpack", int(short_options::ellpack), "PATH", 0, "ELLPACK", 0},
         {"mkl-csr", int(short_options::mkl_csr), "PATH", 0, "Compressed sparse row using Intel MKL", 0},
         {nullptr}};
 

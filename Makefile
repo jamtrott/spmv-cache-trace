@@ -112,12 +112,14 @@ kernels_a = src/cache-simulation/kernels.a
 kernels_sources = \
 	src/kernels/coo-spmv.cpp \
 	src/kernels/csr-spmv.cpp \
+	src/kernels/ellpack-spmv.cpp \
 	src/kernels/mkl-csr-spmv.cpp \
 	src/kernels/triad.cpp \
 	src/kernels/kernel.cpp
 kernels_headers = \
 	src/kernels/coo-spmv.hpp \
 	src/kernels/csr-spmv.hpp \
+	src/kernels/ellpack-spmv.hpp \
 	src/kernels/mkl-csr-spmv.hpp \
 	src/kernels/triad.hpp \
 	src/kernels/kernel.hpp

@@ -3,8 +3,8 @@
 
 #include "util/aligned-allocator.hpp"
 
+#include <cstdint>
 #include <iosfwd>
-#include <valarray>
 #include <vector>
 
 namespace matrix_market { class Matrix; }
@@ -12,12 +12,12 @@ namespace matrix_market { class Matrix; }
 namespace ellpack_matrix
 {
 
-typedef int64_t size_type;
+typedef int32_t size_type;
 typedef int32_t index_type;
 typedef double value_type;
-typedef std::vector<size_type, aligned_allocator<index_type, 64>> size_array_type;
-typedef std::vector<index_type, aligned_allocator<index_type, 64>> index_array_type;
-typedef std::vector<value_type, aligned_allocator<value_type, 64>> value_array_type;
+typedef std::vector<size_type, aligned_allocator<index_type, 4096>> size_array_type;
+typedef std::vector<index_type, aligned_allocator<index_type, 4096>> index_array_type;
+typedef std::vector<value_type, aligned_allocator<value_type, 4096>> value_array_type;
 
 struct Matrix
 {
@@ -43,11 +43,15 @@ public:
     std::size_t value_padding_size() const;
     std::size_t index_padding_size() const;
 
+    index_type spmv_rows_per_thread(int thread, int num_threads) const;
+    size_type spmv_nonzeros_per_thread(int thread, int num_threads) const;
+
     std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         value_array_type const & x,
         value_array_type const & y,
-        unsigned int thread,
-        unsigned int num_threads) const;
+        int thread,
+        int num_threads,
+        int const * numa_domains) const;
 
 public:
     index_type rows;
@@ -69,18 +73,25 @@ Matrix from_matrix_market(
     matrix_market::Matrix const & m,
     bool skip_padding = false);
 
-void spmv(
-    Matrix const & A,
-    value_array_type const & x,
-    value_array_type & y);
-
-std::valarray<value_type> operator*(
-    Matrix const & A,
-    std::valarray<value_type> const & x);
-
 value_array_type operator*(
     Matrix const & A,
     value_array_type const & x);
+
+void spmv(
+    Matrix const & A,
+    value_array_type const & x,
+    value_array_type & y,
+    index_type chunk_size = 0);
+
+index_type spmv_rows_per_thread(
+    Matrix const & A,
+    int thread,
+    int num_threads);
+
+size_type spmv_nonzeros_per_thread(
+    Matrix const & A,
+    int thread,
+    int num_threads);
 
 }
 

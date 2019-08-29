@@ -1,8 +1,13 @@
 # Configuration
-CFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
-CXXFLAGS = -fopenmp -Wall -DUSE_POSIX_MEMALIGN
+CFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
+CXXFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
 LDFLAGS = -lz -lpfm -lnuma
+
+ifdef OPENMP
+CFLAGS += -fopenmp
+CXXFLAGS += -fopenmp
+endif
 
 ifdef DEBUG
 CFLAGS += -O2 -g -fsanitize=address
@@ -13,7 +18,7 @@ CXXFLAGS += -O3 -march=native
 endif
 
 ifeq ($(CXX),icpc)
-CXXFLAGS += -std=c++14 -Iinclude -D__PURE_INTEL_C99_HEADERS__
+CXXFLAGS += -Iinclude -D__PURE_INTEL_C99_HEADERS__
 endif
 
 ifdef USE_INTEL_MKL

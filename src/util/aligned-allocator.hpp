@@ -1,9 +1,44 @@
 #ifndef ALIGNED_ALLOCATOR_HPP
 #define ALIGNED_ALLOCATOR_HPP
 
+#ifdef USE_OPENMP
 #include <omp.h>
+#else
+int omp_get_num_threads(void)
+{
+    return 1;
+}
+#endif
+
+#ifdef HAVE_LIBNUMA
 #include <numa.h>
 #include <numaif.h>
+#else
+#include <unistd.h>
+
+int numa_pagesize(void)
+{
+    return getpagesize();
+}
+
+int numa_node_of_cpu(int cpu)
+{
+    return 0;
+}
+
+#define MPOL_MF_MOVE 0
+
+int numa_move_pages(
+    int pid,
+    unsigned long count,
+    void **pages,
+    const int *nodes,
+    int *status,
+    int flags)
+{
+    return 0;
+}
+#endif
 
 #include <cassert>
 #include <cstddef>

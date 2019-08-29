@@ -2,7 +2,11 @@
 CFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 CXXFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
-LDFLAGS = -lz -lpfm -lnuma
+LDFLAGS = -lz -lpfm
+
+ifdef USE_LIBNUMA
+LDFLAGS = -lnuma
+endif
 
 ifdef OPENMP
 CFLAGS += -fopenmp

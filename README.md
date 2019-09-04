@@ -6,8 +6,9 @@ Based on a few, reasonable assumptions, we estimate the number of cache misses i
 
 Table of contents
 -----------------
-   * [Requirements](#requirements)
    * [Installation](#installation)
+     * [Requirements](#requirements)
+     * [Building](#building)
    * [Usage](#usage)
       * [Sparse matrix-vector multiplication](#sparse-matrix-vector-multiplication)
       * [Trace configuration](#trace-configuration)

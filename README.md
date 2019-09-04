@@ -6,6 +6,7 @@ Based on a few, reasonable assumptions, we estimate the number of cache misses i
 
 Table of contents
 -----------------
+   * [Requirements](#requirements)
    * [Installation](#installation)
    * [Usage](#usage)
       * [Sparse matrix-vector multiplication](#sparse-matrix-vector-multiplication)
@@ -16,20 +17,25 @@ Table of contents
 
 Installation
 ============
-To build, simply run `make`. To run the unit tests, run `make check`.
 
-For the unit tests, it may be necessary to set the environment variable `GTEST_ROOT` to point to the Google Test directory.
-
-#### Dependencies
+Requirements
+------------
+  * OpenMP
   * zlib (https://zlib.net/)
   * libpfm4 (http://perfmon2.sourceforge.net/)
-  * Google Test (https://github.com/google/googletest) for unit tests.
+  * libnuma (https://github.com/numactl/numactl)
+
+In addition, Google Test (https://github.com/google/googletest) is required to build and run the unit tests. Set the environment variable `GTEST_ROOT` to point to the Google Test directory.
+
 
 Tested on Ubuntu 18.04.2 LTS (GNU/Linux 4.18.0-20-generic x86_64).
 
 
-### Intel C compiler and Math Kernel Library
-To build with the Intel C compiler, run `CC=icc CXX=icpc make`. Additionally, to use the Intel Math Kernel Library (MKL), set `MKLROOT` to point to the MKL directory, and set `USE_INTEL_MKL=1`.
+Building
+--------
+To build, simply run `make`. To run the unit tests, run `make check`.
+
+To build with the **Intel C compiler**, run `CC=icc CXX=icpc make`. Additionally, to use the **Intel Math Kernel Library (MKL)**, set `MKLROOT` to point to the MKL directory, and set `USE_INTEL_MKL=1`.
 
 Usage
 =====

@@ -1,5 +1,5 @@
 # Configuration
-CFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
+CFLAGS = -Wall -DUSE_POSIX_MEMALIGN
 CXXFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
 LDFLAGS = -lz -lpfm

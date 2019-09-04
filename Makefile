@@ -11,7 +11,9 @@ LDFLAGS += -lpfm
 endif
 
 ifdef USE_LIBNUMA
-LDFLAGS = -lnuma
+CFLAGS += -DHAVE_LIBNUMA
+CXXFLAGS += -DHAVE_LIBNUMA
+LDFLAGS += -lnuma
 endif
 
 ifdef OPENMP

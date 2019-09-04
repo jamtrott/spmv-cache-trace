@@ -13,31 +13,6 @@ int omp_get_num_threads(void)
 #ifdef HAVE_LIBNUMA
 #include <numa.h>
 #include <numaif.h>
-#else
-#include <unistd.h>
-
-int numa_pagesize(void)
-{
-    return getpagesize();
-}
-
-int numa_node_of_cpu(int cpu)
-{
-    return 0;
-}
-
-#define MPOL_MF_MOVE 0
-
-int numa_move_pages(
-    int pid,
-    unsigned long count,
-    void **pages,
-    const int *nodes,
-    int *status,
-    int flags)
-{
-    return 0;
-}
 #endif
 
 #include <cassert>
@@ -194,9 +169,9 @@ int thread_of_page(
     T const * p,
     size_t num_elements,
     int num_threads,
-    int page)
+    int page,
+    int page_size)
 {
-    int page_size = numa_pagesize();
     intptr_t start_address = align_downwards(p, page_size);
     size_t num_elements_per_thread = (num_elements + num_threads - 1) / num_threads;
     intptr_t page_address = start_address + page * page_size;
@@ -243,9 +218,10 @@ int thread_of_index(
     int page_size)
 {
     int page = page_of_index(p, num_elements, index, num_threads, page_size);
-    return thread_of_page(p, num_elements, num_threads, page);
+    return thread_of_page(p, num_elements, num_threads, page, page_size);
 }
 
+#ifdef HAVE_LIBNUMA
 template <typename T>
 void distribute_pages(
     T const * p,
@@ -269,7 +245,7 @@ void distribute_pages(
         int num_threads = omp_get_num_threads();
         for (int page = 0; page < num_pages; page++) {
             intptr_t page_address = start_address + page * page_size;
-            int thread = thread_of_page(p, n, num_threads, page);
+            int thread = thread_of_page(p, n, num_threads, page, page_size);
             int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
             pages[page] = (void *) page_address;
@@ -289,7 +265,7 @@ void distribute_pages(
 
         for (int page = 0; page < num_pages; page++) {
             intptr_t page_address = start_address + page * page_size;
-            int thread = thread_of_page(p, n, num_threads, page);
+            int thread = thread_of_page(p, n, num_threads, page, page_size);
             int cpu = thread_affinity[thread];
             int node = numa_node_of_cpu(cpu);
             if (status[page] != node) {
@@ -305,5 +281,15 @@ void distribute_pages(
 
     #pragma omp barrier
 }
+
+#else
+template <typename T>
+void distribute_pages(
+    T const * p,
+    size_t n,
+    int const * thread_affinity)
+{
+}
+#endif
 
 #endif

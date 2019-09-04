@@ -79,6 +79,11 @@ replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     auto const & numa_domains = trace_config.numa_domains();
+#ifdef HAVE_LIBNUMA
+    int page_size = numa_pagesize();
+#else
+    int page_size = 4096;
+#endif
 
     std::vector<int> numa_domain_affinity(thread_affinities.size(), 0);
     for (size_t i = 0; i < thread_affinities.size(); i++) {
@@ -91,7 +96,8 @@ replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
 
     return A.spmv_memory_reference_string(
         x, y, thread, num_threads,
-        numa_domain_affinity.data());
+        numa_domain_affinity.data(),
+        page_size);
 }
 
 std::string csr_spmv_kernel::name() const

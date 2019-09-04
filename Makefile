@@ -16,7 +16,7 @@ CXXFLAGS += -DHAVE_LIBNUMA
 LDFLAGS += -lnuma
 endif
 
-ifdef OPENMP
+ifndef NO_OPENMP
 CFLAGS += -fopenmp -DUSE_OPENMP
 CXXFLAGS += -fopenmp -DUSE_OPENMP
 endif

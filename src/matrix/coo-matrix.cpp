@@ -2,6 +2,10 @@
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
+
 #include <algorithm>
 #include <iterator>
 #include <numeric>
@@ -211,7 +215,11 @@ void spmv(
     coo_matrix::index_type chunk_size)
 {
     if (chunk_size <= 0) {
+#ifdef USE_OPENMP
         int num_threads = omp_get_num_threads();
+#else
+        int num_threads = 1;
+#endif
         chunk_size = (A.num_entries + num_threads - 1) / num_threads;
     }
 

@@ -1,16 +1,32 @@
 # Configuration
-CFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
+CFLAGS = -Wall -DUSE_POSIX_MEMALIGN
 CXXFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
-LDFLAGS = -lz -lpfm
+LDFLAGS = -lz
 
-ifdef USE_LIBNUMA
-LDFLAGS = -lnuma
+ifndef NO_LIBPFM
+CFLAGS += -DHAVE_LIBPFM
+CXXFLAGS += -DHAVE_LIBPFM
+LDFLAGS += -lpfm
 endif
 
-ifdef OPENMP
-CFLAGS += -fopenmp
-CXXFLAGS += -fopenmp
+ifndef NO_LIBNUMA
+CFLAGS += -DHAVE_LIBNUMA
+CXXFLAGS += -DHAVE_LIBNUMA
+LDFLAGS += -lnuma
+endif
+
+ifndef NO_OPENMP
+CFLAGS += -fopenmp -DUSE_OPENMP
+CXXFLAGS += -fopenmp -DUSE_OPENMP
+endif
+
+ifndef NO_GTEST
+ifdef GTEST_ROOT
+GTEST_INCLUDES = -isystem $(GTEST_ROOT)/include
+GTEST_LIBS = -Wl,-rpath,$(GTEST_ROOT)/lib -L$(GTEST_ROOT)/lib
+endif
+GTEST_LIBS += -lgtest -lgtest_main
 endif
 
 ifdef DEBUG
@@ -165,22 +181,6 @@ spmv-cache-trace: $(spmv_cache_trace_objects) $(cache_simulation_a) $(kernels_a)
 check: unittest
 	./unittest
 
-# Build the unit testing framework
-gtest_headers = $(GTEST_ROOT)/include/gtest/*.h \
-		$(GTEST_ROOT)/include/gtest/internal/*.h
-gtest_sources = $(GTEST_ROOT)/src/*.cc \
-		$(GTEST_ROOT)/src/*.h \
-		$(gtest_headers)
-
-gtest-all.o: $(gtest_sources)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_ROOT) -I$(GTEST_ROOT)/include $(CXXFLAGS) -c \
-		$(GTEST_ROOT)/src/gtest-all.cc
-gtest_main.o: $(gtest_sources)
-	$(CXX) $(CPPFLAGS) -I$(GTEST_ROOT) -I$(GTEST_ROOT)/include $(CXXFLAGS) -c \
-		$(GTEST_ROOT)/src/gtest_main.cc
-gtest_main.a: gtest-all.o gtest_main.o
-	$(AR) $(ARFLAGS) $@ $^
-
 # Build the unit tests
 unittest_sources = \
 	test/test_aligned-allocator.cpp \
@@ -197,10 +197,9 @@ unittest_objects := \
 	$(foreach source,$(unittest_sources),$(source:.cpp=.o))
 
 $(unittest_objects): %.o: %.cpp
-	$(CXX) $(CPPFLAGS) -c $(CXXFLAGS) $(INCLUDES) \
-		-isystem $(GTEST_ROOT)/include $^ -o $@
-unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a) gtest_main.a
-	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) -o $@
+	$(CXX) $(CPPFLAGS) -c $(CXXFLAGS) $(INCLUDES) $(GTEST_INCLUDES) $^ -o $@
+unittest: $(unittest_objects) $(cache_simulation_a) $(kernels_a) $(matrix_a) $(util_a)
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ $(LDFLAGS) $(GTEST_LIBS) -o $@
 
 
 # Clean
@@ -212,6 +211,5 @@ clean:
 	rm -f $(kernels_objects) $(kernels_a)
 	rm -f $(spmv_cache_trace_objects)
 	rm -f spmv-cache-trace
-	rm -f gtest_main.o gtest_main.a gtest-all.o
 	rm -f $(unittest_objects)
 	rm -f unittest

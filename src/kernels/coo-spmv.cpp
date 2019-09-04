@@ -57,11 +57,11 @@ void coo_spmv_kernel::prepare(TraceConfig const & trace_config)
     for (int thread = 0; thread < num_threads; thread++)
         cpus[thread] = thread_affinities[thread].cpu;
 
-    distribute_pages(A.row_index.data(), A.row_index.size(), cpus.data());
-    distribute_pages(A.column_index.data(), A.column_index.size(), cpus.data());
-    distribute_pages(A.value.data(), A.value.size(), cpus.data());
-    distribute_pages(x.data(), x.size(), cpus.data());
-    distribute_pages(y.data(), y.size(), cpus.data());
+    distribute_pages(A.row_index.data(), A.row_index.size(), num_threads, cpus.data());
+    distribute_pages(A.column_index.data(), A.column_index.size(), num_threads, cpus.data());
+    distribute_pages(A.value.data(), A.value.size(), num_threads, cpus.data());
+    distribute_pages(x.data(), x.size(), num_threads, cpus.data());
+    distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
 void coo_spmv_kernel::run()

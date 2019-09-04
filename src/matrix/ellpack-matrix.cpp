@@ -2,6 +2,10 @@
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
+
 #include <algorithm>
 #include <iterator>
 #include <numeric>
@@ -10,8 +14,6 @@
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <omp.h>
 
 using namespace std::literals::string_literals;
 
@@ -118,9 +120,9 @@ Matrix::spmv_memory_reference_string(
     value_array_type const & y,
     int thread,
     int num_threads,
-    int const * numa_domains) const
+    int const * numa_domains,
+    int page_size) const
 {
-    int page_size = numa_pagesize();
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);
     index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
@@ -322,7 +324,11 @@ void spmv(
     index_type chunk_size)
 {
     if (chunk_size <= 0) {
+#ifdef USE_OPENMP
         int num_threads = omp_get_num_threads();
+#else
+        int num_threads = 1;
+#endif
         chunk_size = (A.rows + num_threads - 1) / num_threads;
     }
 

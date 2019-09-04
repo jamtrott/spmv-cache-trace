@@ -51,7 +51,8 @@ public:
         value_array_type const & y,
         int thread,
         int num_threads,
-        int const * numa_domains) const;
+        int const * numa_domains,
+        int page_size) const;
 
 public:
     index_type rows;

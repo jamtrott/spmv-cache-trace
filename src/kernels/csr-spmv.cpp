@@ -60,11 +60,11 @@ void csr_spmv_kernel::prepare(
     for (int thread = 0; thread < num_threads; thread++)
         cpus[thread] = thread_affinities[thread].cpu;
 
-    distribute_pages(A.row_ptr.data(), A.row_ptr.size(), cpus.data());
-    distribute_pages(A.column_index.data(), A.column_index.size(), cpus.data());
-    distribute_pages(A.value.data(), A.value.size(), cpus.data());
-    distribute_pages(x.data(), x.size(), cpus.data());
-    distribute_pages(y.data(), y.size(), cpus.data());
+    distribute_pages(A.row_ptr.data(), A.row_ptr.size(), num_threads, cpus.data());
+    distribute_pages(A.column_index.data(), A.column_index.size(), num_threads, cpus.data());
+    distribute_pages(A.value.data(), A.value.size(), num_threads, cpus.data());
+    distribute_pages(x.data(), x.size(), num_threads, cpus.data());
+    distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
 void csr_spmv_kernel::run()
@@ -79,6 +79,11 @@ replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     auto const & numa_domains = trace_config.numa_domains();
+#ifdef HAVE_LIBNUMA
+    int page_size = numa_pagesize();
+#else
+    int page_size = 4096;
+#endif
 
     std::vector<int> numa_domain_affinity(thread_affinities.size(), 0);
     for (size_t i = 0; i < thread_affinities.size(); i++) {
@@ -91,7 +96,8 @@ replacement::MemoryReferenceString csr_spmv_kernel::memory_reference_string(
 
     return A.spmv_memory_reference_string(
         x, y, thread, num_threads,
-        numa_domain_affinity.data());
+        numa_domain_affinity.data(),
+        page_size);
 }
 
 std::string csr_spmv_kernel::name() const

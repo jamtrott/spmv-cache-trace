@@ -1,7 +1,13 @@
 #include "perf-events.hpp"
 
+#ifdef HAVE_LIBPFM
 #include <perfmon/pfmlib.h>
 #include <perfmon/pfmlib_perf_event.h>
+#else
+struct perf_event_attr {};
+#endif
+
+#include <unistd.h>
 
 #include <cstdint>
 #include <cstring>
@@ -27,14 +33,20 @@ perf_error::perf_error(std::string const & s) throw()
 libpfm_context::libpfm_context()
     : m()
 {
+#ifdef HAVE_LIBPFM
     auto ret = pfm_initialize();
     if (ret != PFM_SUCCESS)
         throw perf_error("pfm_initialise: "s + pfm_strerror(ret));
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 libpfm_context::~libpfm_context()
 {
+#ifdef HAVE_LIBPFM
     pfm_terminate();
+#endif
 }
 
 EventGroup libpfm_context::make_event_group(
@@ -42,6 +54,7 @@ EventGroup libpfm_context::make_event_group(
     pid_t pid,
     int cpu) const
 {
+#ifdef HAVE_LIBPFM
     std::map<std::string, Event> events;
     int groupfd = -1;
     if (!event_names.empty()) {
@@ -69,11 +82,15 @@ EventGroup libpfm_context::make_event_group(
         }
     }
     return EventGroup(pid, cpu, groupfd, events);
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 void libpfm_context::print_perf_events(
     std::ostream & o) const
 {
+#ifdef HAVE_LIBPFM
     std::lock_guard<std::mutex> l(m);
 
     o << "Hardware performance counter events:" << '\n';
@@ -108,6 +125,9 @@ void libpfm_context::print_perf_events(
         }
         o << '\n';
     }
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 Event libpfm_context::make_event(
@@ -118,6 +138,7 @@ Event libpfm_context::make_event(
     uint64_t read_format,
     int groupfd) const
 {
+#ifdef HAVE_LIBPFM
     struct perf_event_attr pe = event_encoding(name);
     pe.read_format = read_format;
     pe.disabled = disabled ? 1 : 0;
@@ -137,11 +158,15 @@ Event libpfm_context::make_event(
     uint64_t id;
     ioctl(fd, PERF_EVENT_IOC_ID, &id);
     return Event(name, fd, id);
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 struct perf_event_attr libpfm_context::event_encoding(
     std::string const & name) const
 {
+#ifdef HAVE_LIBPFM
     std::lock_guard<std::mutex> l(m);
 
     struct perf_event_attr pe;
@@ -165,6 +190,9 @@ struct perf_event_attr libpfm_context::event_encoding(
         throw perf_error(s.str());
     }
     return pe;
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 std::ostream & operator<<(
@@ -229,6 +257,7 @@ EventGroup::~EventGroup()
 
 void EventGroup::enable()
 {
+#ifdef HAVE_LIBPFM
     if (!events_.empty() && groupfd_ != -1) {
         int ret;
         ret = ioctl(groupfd_, PERF_EVENT_IOC_RESET, PERF_IOC_FLAG_GROUP);
@@ -255,12 +284,15 @@ void EventGroup::enable()
         }
     }
     enabled_ = true;
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 void EventGroup::disable()
 {
+#ifdef HAVE_LIBPFM
     if (!events_.empty() && groupfd_ != -1) {
-
         int ret = ioctl(groupfd_, PERF_EVENT_IOC_DISABLE, PERF_IOC_FLAG_GROUP);
         if (ret < 0) {
             std::stringstream s;
@@ -274,6 +306,9 @@ void EventGroup::disable()
         }
     }
     enabled_ = false;
+#else
+    throw perf_error("Please re-build with libpfm enabled");
+#endif
 }
 
 int EventGroup::perf_event_group_read(

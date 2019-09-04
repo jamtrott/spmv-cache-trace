@@ -40,9 +40,9 @@ void triad_kernel::prepare(TraceConfig const & trace_config)
     for (int thread = 0; thread < num_threads; thread++)
         cpus[thread] = thread_affinities[thread].cpu;
 
-    distribute_pages(a.data(), num_entries, cpus.data());
-    distribute_pages(b.data(), num_entries, cpus.data());
-    distribute_pages(c.data(), num_entries, cpus.data());
+    distribute_pages(a.data(), num_entries, num_threads, cpus.data());
+    distribute_pages(b.data(), num_entries, num_threads, cpus.data());
+    distribute_pages(c.data(), num_entries, num_threads, cpus.data());
 }
 
 void triad_kernel::run()

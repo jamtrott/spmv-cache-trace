@@ -1,15 +1,6 @@
 #ifndef ALIGNED_ALLOCATOR_HPP
 #define ALIGNED_ALLOCATOR_HPP
 
-#ifdef USE_OPENMP
-#include <omp.h>
-#else
-int omp_get_num_threads(void)
-{
-    return 1;
-}
-#endif
-
 #ifdef HAVE_LIBNUMA
 #include <numa.h>
 #include <numaif.h>
@@ -226,6 +217,7 @@ template <typename T>
 void distribute_pages(
     T const * p,
     size_t n,
+    int num_threads,
     int const * thread_affinity)
 {
     #pragma omp barrier
@@ -242,7 +234,6 @@ void distribute_pages(
         if (!pages)
             throw std::system_error(errno, std::generic_category());
 
-        int num_threads = omp_get_num_threads();
         for (int page = 0; page < num_pages; page++) {
             intptr_t page_address = start_address + page * page_size;
             int thread = thread_of_page(p, n, num_threads, page, page_size);
@@ -287,6 +278,7 @@ template <typename T>
 void distribute_pages(
     T const * p,
     size_t n,
+    int num_threads,
     int const * thread_affinity)
 {
 }

@@ -13,6 +13,7 @@ Table of contents
       * [Trace configuration](#trace-configuration)
       * [Cache tracing](#cache-tracing)
       * [Profiling](#profiling)
+      * [Known issues](#known-issues)
 
 
 Installation
@@ -118,7 +119,7 @@ will perform a cache trace for a sparse matrix-vector multiplication in the comp
 For each cache, the cache misses are given for each combination of thread and NUMA domain. Thus, for the third-level cache, the first thread incurred 396 cache misses that would have to be fetched from the first NUMA domain, and none for the second NUMA domain. The second thread incurred 23 cache misses for the first NUMA domain, and 427 for the second NUMA domain.
 
 Profiling
--------------
+---------
 The command
 ```bash
 ./spmv-cache-trace --trace-config trace-config.json --csr 1138_bus.tar.gz --profile=10
@@ -194,3 +195,11 @@ The following example shows a single thread configured with two event groups:
 In the above example, the first event group will measure the events `"l1-dcache-loads"` and `"l1-dcache-load-misses"`, which, roughly speaking, correspond to the number of loads that access the L1 cache and the number of loads that miss the L1 cache, respectively. The second event group measures the event `"llc-load-misses"`, which should correspond to the number of loads that miss the last-level cache.
 
 To see a list of available events, use `./spmv-cache-trace --list-perf-events`.
+
+
+Known issues
+------------
+#### perf_event_open(...): Permission denied
+If you see this message, then you may not have sufficient permissions to access hardware performance events on your system. This can be controlled through the kernel parameter `perf_event_paranoid`.
+
+The following command can be used to allow profiling of CPU events: `sudo sysctl -w kernel.perf_event_paranoid=0`.

@@ -22,7 +22,7 @@ CXXFLAGS += -O3 -march=native
 endif
 
 ifeq ($(CXX),icpc)
-CXXFLAGS += -Iinclude -D__PURE_INTEL_C99_HEADERS__
+CXXFLAGS += -D__PURE_INTEL_C99_HEADERS__ -D'__builtin_addressof(x) reinterpret_cast<_Tp*>(&const_cast<char&>(reinterpret_cast<const volatile char&>(x)));'
 endif
 
 ifdef USE_INTEL_MKL

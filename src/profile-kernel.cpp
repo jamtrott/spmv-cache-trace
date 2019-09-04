@@ -3,7 +3,9 @@
 #include "util/perf-events.hpp"
 #include "util/sample.hpp"
 
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 #include <chrono>
 #include <ostream>
@@ -138,7 +140,11 @@ duration_type profile_kernel_run(
 {
     profiling_clock::time_point t0, t1;
     duration_type execution_time;
+#ifdef USE_OPENMP
     int thread = omp_get_thread_num();
+#else
+    int thread = 0;
+#endif
 
     #pragma omp barrier
     if ((size_t) thread < event_groups_per_thread.size()) {
@@ -203,7 +209,15 @@ Profiling profile_kernel(
 
     auto const & thread_affinities = trace_config.thread_affinities();
     int num_threads = thread_affinities.size();
+#ifdef USE_OPENMP
     omp_set_num_threads(num_threads);
+#else
+    if (num_threads > 1) {
+        throw trace_config_error(
+            "Multi-threaded profiling failed: "
+            "Please re-build with OpenMP enabled");
+    }
+#endif
 
     std::vector<std::vector<perf::EventGroup>> event_groups_per_thread(
         events_per_thread_per_event_group.size());
@@ -211,7 +225,11 @@ Profiling profile_kernel(
 
     #pragma omp parallel
     {
+#ifdef USE_OPENMP
         int thread = omp_get_thread_num();
+#else
+        int thread = 0;
+#endif
         int cpu = thread_affinities[thread].cpu;
 
         try {

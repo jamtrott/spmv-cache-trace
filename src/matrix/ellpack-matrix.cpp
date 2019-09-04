@@ -2,6 +2,10 @@
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 
+#ifdef USE_OPENMP
+#include <omp.h>
+#endif
+
 #include <algorithm>
 #include <iterator>
 #include <numeric>
@@ -10,8 +14,6 @@
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <omp.h>
 
 using namespace std::literals::string_literals;
 
@@ -322,7 +324,11 @@ void spmv(
     index_type chunk_size)
 {
     if (chunk_size <= 0) {
+#ifdef USE_OPENMP
         int num_threads = omp_get_num_threads();
+#else
+        int num_threads = 1;
+#endif
         chunk_size = (A.rows + num_threads - 1) / num_threads;
     }
 

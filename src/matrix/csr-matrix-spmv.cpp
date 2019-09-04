@@ -1,7 +1,9 @@
 #include "csr-matrix.hpp"
 #include "matrix-error.hpp"
 
+#ifdef USE_OPENMP
 #include <omp.h>
+#endif
 
 #if defined(__AVX__) || defined(__AVX2__)
 #include <x86intrin.h>
@@ -150,7 +152,11 @@ void csr_matrix::spmv(
     index_type chunk_size)
 {
     if (chunk_size <= 0) {
+#ifdef USE_OPENMP
         int num_threads = omp_get_num_threads();
+#else
+        int num_threads = 1;
+#endif
         chunk_size = (A.rows + num_threads - 1) / num_threads;
     }
 

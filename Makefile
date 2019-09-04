@@ -17,8 +17,8 @@ LDFLAGS += -lnuma
 endif
 
 ifdef OPENMP
-CFLAGS += -fopenmp
-CXXFLAGS += -fopenmp
+CFLAGS += -fopenmp -DUSE_OPENMP
+CXXFLAGS += -fopenmp -DUSE_OPENMP
 endif
 
 ifdef DEBUG

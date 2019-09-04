@@ -24,7 +24,7 @@ endif
 ifndef NO_GTEST
 ifdef GTEST_ROOT
 GTEST_INCLUDES = -isystem $(GTEST_ROOT)/include
-GTEST_LIBS = -L$(GTEST_ROOT)/lib
+GTEST_LIBS = -Wl,-rpath,$(GTEST_ROOT)/lib -L$(GTEST_ROOT)/lib
 endif
 GTEST_LIBS += -lgtest -lgtest_main
 endif

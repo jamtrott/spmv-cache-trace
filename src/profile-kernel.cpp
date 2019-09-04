@@ -233,6 +233,7 @@ Profiling profile_kernel(
         int cpu = thread_affinities[thread].cpu;
 
         try {
+#ifdef __linux__
             cpu_set_t cpuset;
             CPU_ZERO(&cpuset);
             CPU_SET(cpu, &cpuset);
@@ -240,6 +241,7 @@ Profiling profile_kernel(
                 throw std::system_error(
                     errno, std::generic_category(), "sched_setaffinity");
             }
+#endif
 
             // Configure per-thread hardware performance counters
             if ((size_t) thread < events_per_thread_per_event_group.size()) {

@@ -196,7 +196,8 @@ Event libpfm_context::make_event(
     int fd = perf_event_open(&pe, pid, cpu, groupfd, flags);
     if (fd < 0) {
         std::stringstream s;
-        s << "perf_event_open("
+        s << "Failed to read event \"" << name << "\": "
+          << "perf_event_open("
           << "&pe" << ',' << ' '
           << pid << ',' << ' '
           << cpu << ',' << ' '

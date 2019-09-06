@@ -1,4 +1,5 @@
 #include "perf-events.hpp"
+#include "indenting-ostreambuf.hpp"
 
 #ifdef HAVE_LIBPFM
 #include <perfmon/pfmlib.h>
@@ -11,6 +12,7 @@ struct perf_event_attr {};
 
 #include <cstdint>
 #include <cstring>
+#include <iomanip>
 #include <map>
 #include <mutex>
 #include <ostream>
@@ -87,24 +89,42 @@ EventGroup libpfm_context::make_event_group(
 #endif
 }
 
+std::string wrap_text(
+    std::string s,
+    std::string::size_type width)
+{
+    if (s.size() < width)
+        return s;
+    std::string::size_type n = s.rfind(' ', width);
+    if (n != std::string::npos)
+        s.at(n) = '\n';
+    return s.substr(0, n) + wrap_text(s.substr(n), width);
+}
+
 void libpfm_context::print_perf_events(
     std::ostream & o) const
 {
 #ifdef HAVE_LIBPFM
     std::lock_guard<std::mutex> l(m);
 
-    o << "Hardware performance counter events:" << '\n';
-    for (auto pmu = PFM_PMU_NONE; pmu < PFM_PMU_MAX; pmu = pfm_pmu_t(int(pmu) + 1)) {
+    pfm_err_t err;
+    indenting_ostreambuf indenting_buf(o);
+    std::size_t first_column_width = 24;
+    std::size_t width = 80;
+    std::size_t tab_width = 4;
+
+    for (pfm_pmu_t pmu = PFM_PMU_NONE;
+         pmu < PFM_PMU_MAX;
+         pmu = pfm_pmu_t(int(pmu) + 1))
+    {
         pfm_pmu_info_t pmu_info;
         memset(&pmu_info, 0, sizeof(pmu_info));
 
-        auto err = pfm_get_pmu_info(pmu, &pmu_info);
+        err = pfm_get_pmu_info(pmu, &pmu_info);
         if (err != PFM_SUCCESS || !pmu_info.is_present)
             continue;
 
-        o << pmu_info.name << ": " << pmu_info.desc << '\n';
-
-        for (auto event = pmu_info.first_event;
+        for (int event = pmu_info.first_event;
              event != -1;
              event = pfm_get_event_next(event)) {
             pfm_event_info_t event_info;
@@ -120,8 +140,38 @@ void libpfm_context::print_perf_events(
                 throw perf_error(s.str());
             }
 
-            o << "  " << pmu_info.name << "::" << event_info.name << '\n'
-              << "    " << event_info.desc << '\n';
+            indenting_buf.set_indent(0);
+            o << pmu_info.name << "::" << event_info.name << '\n';
+            indenting_buf.set_indent(4);
+            o << wrap_text(event_info.desc, width) << '\n';
+
+            for (int i = 0; i < event_info.nattrs; i++) {
+                pfm_event_attr_info_t event_attr;
+                memset(&event_attr, 0, sizeof(event_attr));
+                err = pfm_get_event_attr_info(
+                    event, i, PFM_OS_NONE, &event_attr);
+                if (err != PFM_SUCCESS) {
+                    std::stringstream s;
+                    s << "pfm_get_event_attr_info("
+                      << std::to_string(event) << ',' << ' '
+                      << i << ',' << ' '
+                      << "PFM_OS_NONE" << ',' << ' '
+                      << "&event_attr" << ')' << ':' << ' '
+                      << pfm_strerror(err);
+                    throw perf_error(s.str());
+                }
+
+                indenting_buf.set_indent(0);
+                o << std::setw(first_column_width) << event_attr.name;
+
+                size_t event_attr_name_len = strlen(event_attr.name);
+                size_t w = std::max(first_column_width, event_attr_name_len);
+                size_t indent = w + 2*tab_width - w % tab_width;
+                o << std::string(2*tab_width - w % tab_width, ' ');
+                indenting_buf.set_indent(indent);
+                o << wrap_text(event_attr.desc, width - indent) << '\n';
+            }
+            o << '\n';
         }
         o << '\n';
     }

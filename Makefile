@@ -73,11 +73,13 @@ util_c_headers = \
 util_c_objects := \
 	$(foreach source,$(util_c_sources),$(source:.c=.o))
 util_cxx_sources = \
+	src/util/indenting-ostreambuf.cpp \
 	src/util/json-ostreambuf.cpp \
 	src/util/perf-events.cpp \
 	src/util/tarstream.cpp \
 	src/util/zlibstream.cpp
 util_cxx_headers = \
+	src/util/indenting-ostreambuf.hpp \
 	src/util/circular-buffer.hpp \
 	src/util/json-ostreambuf.hpp \
 	src/util/perf-events.hpp \

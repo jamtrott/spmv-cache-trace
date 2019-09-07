@@ -312,20 +312,20 @@ matrix_market_error::matrix_market_error(std::string const & s) throw()
 void Matrix::permute (std::vector<int> const & new_order)
 {
   if (format() != Format::coordinate) {
-    cout<<"Expected matrix in coordinate format!\n";
-    cout<<"No permutation is done.\n";
+    std::cout<<"Expected matrix in coordinate format!\n";
+    std::cout<<"No permutation is done.\n";
     return;
   }
 
   if (field() != Field::real) {
-    cout<<"Expected matrix with real values!\n";
-    cout<<"No permutation is done.\n";
+    std::cout<<"Expected matrix with real values!\n";
+    std::cout<<"No permutation is done.\n";
     return;
   }
 
   if (new_order.size() != size().rows || new_order.size() != size().columns) {
-    cout<<"The dimension of the matrix doesn't match!\n";
-    cout<<"No permutation is done.\n";
+    std::cout<<"The dimension of the matrix doesn't match!\n";
+    std::cout<<"No permutation is done.\n";
     return;
   }
 

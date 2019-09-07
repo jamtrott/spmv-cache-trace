@@ -797,12 +797,12 @@ matrix_market::Matrix load_matrix(
 	  o << "The input matrix will be reordered using graph partitioning\n";
     }
     
-    auto f = std::ifstream{path};
+    auto f = std::ifstream{path_};
     if (!f)
         throw matrix_market::matrix_market_error(strerror(errno));
 
-    if (ends_with(path, ".tar.gz"s)) {
-        matrix_market::Matrix m=load_compressed_matrix(f, path, ".tar.gz"s, o, verbose);
+    if (ends_with(path_, ".tar.gz"s)) {
+        matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tar.gz"s, o, verbose);
 	if (reorder_RCM) {
 	  std::vector<int> new_order = find_new_order_RCM (m);
 	  m.permute (new_order);
@@ -812,8 +812,8 @@ matrix_market::Matrix load_matrix(
 	  m.permute (new_order);
 	}
 	return m;
-    } else if (ends_with(path, ".tgz"s)) {
-        matrix_market::Matrix m=load_compressed_matrix(f, path, ".tgz"s, o, verbose);
+    } else if (ends_with(path_, ".tgz"s)) {
+        matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tgz"s, o, verbose);
 	if (reorder_RCM) {
 	  std::vector<int> new_order = find_new_order_RCM (m);
 	  m.permute (new_order);

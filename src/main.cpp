@@ -190,7 +190,6 @@ int main(int argc, char ** argv)
         options,
         parse_option,
         nullptr,
-        "spmv-cache-trace -- "
         "Estimate CPU cache misses for sparse matrix-vector multiplication"};
 
     arguments args;

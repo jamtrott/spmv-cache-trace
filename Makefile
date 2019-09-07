@@ -4,6 +4,12 @@ CXXFLAGS = -std=c++14 -Wall -DUSE_POSIX_MEMALIGN
 INCLUDES = -Isrc
 LDFLAGS = -lz
 
+ifdef USE_METIS
+CFLAGS += -DUSE_METIS
+CXXFLAGS += -DUSE_METIS
+LDFLAGS += -lmetis
+endif
+
 ifndef NO_LIBPFM
 CFLAGS += -DHAVE_LIBPFM
 CXXFLAGS += -DHAVE_LIBPFM
@@ -103,13 +109,15 @@ matrix_sources = \
 	src/matrix/csr-matrix-spmv.cpp \
 	src/matrix/ellpack-matrix.cpp \
 	src/matrix/matrix-error.cpp \
-	src/matrix/matrix-market.cpp
+	src/matrix/matrix-market.cpp \
+	src/matrix/matrix-market-reorder.cpp
 matrix_headers = \
 	src/matrix/coo-matrix.hpp \
 	src/matrix/csr-matrix.hpp \
 	src/matrix/ellpack-matrix.hpp \
 	src/matrix/matrix-error.hpp \
-	src/matrix/matrix-market.hpp
+	src/matrix/matrix-market.hpp \
+	src/matrix/matrix-market-reorder.hpp
 matrix_objects := \
 	$(foreach source,$(matrix_sources),$(source:.cpp=.o))
 

@@ -1,4 +1,5 @@
 #include "matrix-market.hpp"
+#include "matrix-market-reorder.hpp"
 #include "util/zlibstream.hpp"
 #include "util/tarstream.hpp"
 
@@ -10,6 +11,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <cstdio>
 
 #include <cfloat>
 #include <cmath>
@@ -306,6 +308,32 @@ matrix_market_error::matrix_market_error(std::string const & s) throw()
     : std::runtime_error(s)
 {}
 
+ 
+void Matrix::permute (std::vector<int> const & new_order)
+{
+  if (format() != Format::coordinate) {
+    cout<<"Expected matrix in coordinate format!\n";
+    cout<<"No permutation is done.\n";
+    return;
+  }
+
+  if (field() != Field::real) {
+    cout<<"Expected matrix with real values!\n";
+    cout<<"No permutation is done.\n";
+    return;
+  }
+
+  if (new_order.size() != size().rows || new_order.size() != size().columns) {
+    cout<<"The dimension of the matrix doesn't match!\n";
+    cout<<"No permutation is done.\n";
+    return;
+  }
+
+  for (int e=0; e<size().num_entries; e++) {
+    entries_real[e].i = new_order[entries_real[e].i-1]+1;
+    entries_real[e].j = new_order[entries_real[e].j-1]+1;
+  }
+}
 }
 
 namespace
@@ -739,18 +767,73 @@ matrix_market::Matrix load_matrix(
     std::ostream & o,
     bool verbose)
 {
-    if (verbose)
-        o << "Loading matrix from " << path << '\n';
+  bool reorder_RCM = false, reorder_GP = false;
+  int nparts = 0;
+  size_t pos;
+
+  std::string path_ = path;
+  pos = path_.rfind("__RCM");
+  if (pos<path_.length()) {
+    reorder_RCM = true;
+    path_.erase(pos, path_.length());
+  }
+
+  pos = path_.rfind("__GP");
+  if (pos<path_.length()) {
+    reorder_GP = true;
+    if (pos<path_.length()-4) {
+      char tmp[20];
+      path_.copy (tmp, path_.length()-pos-4, pos+4);
+      std::sscanf (tmp, "%d", &nparts);
+    }
+    path_.erase(pos, path_.length());
+  }
+  
+    if (verbose) {
+        o << "Loading matrix from " << path_ << '\n';
+	if (reorder_RCM)
+	  o << "The input matrix will be reordered using reverse Cuthill-McKee\n";
+	if (reorder_GP)
+	  o << "The input matrix will be reordered using graph partitioning\n";
+    }
+    
     auto f = std::ifstream{path};
     if (!f)
         throw matrix_market::matrix_market_error(strerror(errno));
 
     if (ends_with(path, ".tar.gz"s)) {
-        return load_compressed_matrix(f, path, ".tar.gz"s, o, verbose);
+        matrix_market::Matrix m=load_compressed_matrix(f, path, ".tar.gz"s, o, verbose);
+	if (reorder_RCM) {
+	  std::vector<int> new_order = find_new_order_RCM (m);
+	  m.permute (new_order);
+	}
+	if (reorder_GP) {
+	  std::vector<int> new_order = find_new_order_GP (m, nparts);
+	  m.permute (new_order);
+	}
+	return m;
     } else if (ends_with(path, ".tgz"s)) {
-        return load_compressed_matrix(f, path, ".tgz"s, o, verbose);
+        matrix_market::Matrix m=load_compressed_matrix(f, path, ".tgz"s, o, verbose);
+	if (reorder_RCM) {
+	  std::vector<int> new_order = find_new_order_RCM (m);
+	  m.permute (new_order);
+	}
+	if (reorder_GP) {
+	  std::vector<int> new_order = find_new_order_GP (m, nparts);
+	  m.permute (new_order);
+	}
+	return m;
     } else {
-        return matrix_market::fromStream(f);
+        matrix_market::Matrix m=matrix_market::fromStream(f);
+	if (reorder_RCM) {
+	  std::vector<int> new_order = find_new_order_RCM (m);
+	  m.permute (new_order);
+	}
+	if (reorder_GP) {
+	  std::vector<int> new_order = find_new_order_GP (m, nparts);
+	  m.permute (new_order);
+	}
+	return m;
     }
 }
 

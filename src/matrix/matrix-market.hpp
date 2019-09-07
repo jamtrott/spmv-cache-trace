@@ -119,6 +119,8 @@ public:
     index_type max_row_length() const;
     std::vector<index_type> row_lengths() const;
 
+    void permute (std::vector<int> const & new_order);
+
 private:
     Header header_;
     Comments comments_;

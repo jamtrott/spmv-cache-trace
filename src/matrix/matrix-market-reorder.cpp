@@ -2,6 +2,7 @@
 
 #include <queue>
 #include <iostream>
+#include <algorithm>
 
 #ifdef USE_METIS
 #include "metis.h"

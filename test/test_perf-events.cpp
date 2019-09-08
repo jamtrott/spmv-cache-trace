@@ -9,6 +9,7 @@
 
 using namespace std::literals::string_literals;
 
+#ifdef HAVE_LIBPFM
 
 TEST(profiling_perf, count_cpu_cycles)
 {
@@ -154,3 +155,5 @@ TEST(profiling_perf, cpu_wide_monitoring)
     ASSERT_GE(event_groups[0].event_counts().at("PERF_COUNT_HW_CACHE_L1D:READ:ACCESS"s), 0u);
     ASSERT_GE(event_groups[0].event_counts().at("PERF_COUNT_HW_CACHE_L1D:READ:MISS"s), 0u);
 }
+
+#endif

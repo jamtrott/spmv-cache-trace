@@ -196,6 +196,7 @@ unittest_sources = \
 	test/test_aligned-allocator.cpp \
 	test/test_circular-buffer.cpp \
 	test/test_json.cpp \
+	test/test_json_ostreambuf.cpp \
 	test/test_matrix-market.cpp \
 	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \

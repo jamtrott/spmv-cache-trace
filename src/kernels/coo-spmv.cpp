@@ -33,11 +33,6 @@ void coo_spmv_kernel::init(
         A = coo_matrix::from_matrix_market(mm);
         x = coo_matrix::value_array_type(A.columns, 1.0);
         y = coo_matrix::value_array_type(A.rows, 0.0);
-    }
-    catch (matrix_market::matrix_market_error & e) {
-        std::stringstream s;
-        s << matrix_path << ": " << e.what();
-        throw kernel_error(s.str());
     } catch (matrix::matrix_error & e) {
         std::stringstream s;
         s << matrix_path << ": " << e.what();

@@ -1,5 +1,6 @@
 #include "matrix-market.hpp"
 #include "matrix-market-reorder.hpp"
+#include "matrix-error.hpp"
 #include "util/zlibstream.hpp"
 #include "util/tarstream.hpp"
 
@@ -21,7 +22,8 @@
 using namespace matrix_market;
 using namespace std::literals::string_literals;
 
-namespace matrix_market {
+namespace matrix_market
+{
 
 bool operator==(CoordinateEntryReal const & a, CoordinateEntryReal const & b)
 {
@@ -304,11 +306,6 @@ std::vector<index_type> Matrix::row_lengths() const
     return row_lengths_;
 }
 
-matrix_market_error::matrix_market_error(std::string const & s) throw()
-    : std::runtime_error(s)
-{}
-
- 
 void Matrix::permute (std::vector<int> const & new_order)
 {
   if (format() != Format::coordinate) {
@@ -355,7 +352,7 @@ Object readObject(std::istream & i)
         auto s = std::stringstream{};
         s << "Failed to parse header: "
           << "Expected \"matrix\", got \"" << object << "\"";
-        throw matrix_market_error{s.str()};
+        throw matrix::matrix_error{s.str()};
     }
 
     return Object::matrix;
@@ -373,7 +370,7 @@ Format readFormat(std::istream & i)
     }
     auto s = std::stringstream{};
     s << "Expected \"coordinate\" or \"array\", got \"" << format << "\"";
-    throw matrix_market_error{s.str()};
+    throw matrix::matrix_error{s.str()};
 }
 
 Field readField(std::istream & i)
@@ -393,7 +390,7 @@ Field readField(std::istream & i)
     auto s = std::stringstream{};
     s << "Expected \"real\", \"complex\", \"integer\", or \"pattern\", "
       << "got \"" << field << "\"";
-    throw matrix_market_error{s.str()};
+    throw matrix::matrix_error{s.str()};
 }
 
 Symmetry readSymmetry(std::istream & i)
@@ -413,7 +410,7 @@ Symmetry readSymmetry(std::istream & i)
     auto s = std::stringstream{};
     s << "Expected \"general\", \"symmetric\", \"skew-symmetric\", or \"hermitian\", "
       << "got \"" << symmetry << "\"";
-    throw matrix_market_error{s.str()};
+    throw matrix::matrix_error{s.str()};
 }
 
 Header readHeader(std::istream & i)
@@ -428,7 +425,7 @@ Header readHeader(std::istream & i)
         auto s = std::stringstream{};
         s << "Failed to parse header: "
           << "Expected \"%%MatrixMarket\", got \"" << identifier << "\"";
-        throw matrix_market_error{s.str()};
+        throw matrix::matrix_error{s.str()};
     }
 
     auto object = readObject(s);
@@ -453,19 +450,19 @@ Size readSize(std::istream & i, Format format)
 {
     std::string line;
     if (!std::getline(i, line))
-        throw matrix_market_error{"Failed to parse size"};
+        throw matrix::matrix_error{"Failed to parse size"};
 
     std::stringstream s{line};
     index_type rows, columns;
     s >> rows;
     if (!s) {
-        throw matrix_market_error(
+        throw matrix::matrix_error(
             "Failed to parse size: "
             "Integer overflow when reading number of rows");
     }
     s >> columns;
     if (!s) {
-        throw matrix_market_error(
+        throw matrix::matrix_error(
             "Failed to parse size: "
             "Integer overflow when reading number of columns");
     }
@@ -476,7 +473,7 @@ Size readSize(std::istream & i, Format format)
     size_type num_entries;
     s >> num_entries;
     if (!s) {
-        throw matrix_market_error(
+        throw matrix::matrix_error(
             "Failed to parse size: "
             "Integer overflow when reading number of non-zeros");
     }
@@ -525,7 +522,7 @@ std::vector<T> readEntries(
         s << "Failed to parse entries: "
           << "Expected " << num_entries << " entries, "
           << "got " << entries.size() << " entries.";
-        throw matrix_market_error{s.str()};
+        throw matrix::matrix_error{s.str()};
     }
     return entries;
 }
@@ -554,7 +551,7 @@ Matrix fromStream(std::istream & i)
         entries_pattern = readEntries<CoordinateEntryPattern>(i, size.num_entries);
         return Matrix(header, comments, size, entries_pattern);
     }
-    throw matrix_market_error{"Unknown field"};
+    throw matrix::matrix_error{"Unknown field"};
 }
 
 }
@@ -577,7 +574,7 @@ std::string toString(Field const & f)
     case Field::integer: return std::string("integer");
     case Field::pattern: return std::string("pattern");
     }
-    throw matrix_market_error{"Unknown field"};
+    throw matrix::matrix_error{"Unknown field"};
 }
 
 std::string toString(Symmetry const & s)
@@ -588,7 +585,7 @@ std::string toString(Symmetry const & s)
     case Symmetry::skew_symmetric: return std::string("skew-symmetric");
     case Symmetry::hermitian: return std::string("hermitian");
     }
-    throw matrix_market_error{"Unknown symmetry"};
+    throw matrix::matrix_error{"Unknown symmetry"};
 }
 
 namespace matrix_market
@@ -758,7 +755,7 @@ matrix_market::Matrix load_compressed_matrix(
         tar::itarstream stream(gzstream.rdbuf(), filename);
         return matrix_market::fromStream(stream);
     } catch (zlib::zlibstream_error const & e) {
-        throw matrix_market::matrix_market_error(e.what());
+        throw matrix::matrix_error(e.what());
     }
 }
 
@@ -799,7 +796,7 @@ matrix_market::Matrix load_matrix(
     
     auto f = std::ifstream{path_};
     if (!f)
-        throw matrix_market::matrix_market_error(strerror(errno));
+        throw matrix::matrix_error(strerror(errno));
 
     if (ends_with(path_, ".tar.gz"s)) {
         matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tar.gz"s, o, verbose);
@@ -868,7 +865,7 @@ matrix_market::Matrix sort_matrix_column_major(
             return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
         }
     }
-    throw matrix_market_error{"Unknown field"};
+    throw matrix::matrix_error{"Unknown field"};
 }
 
 matrix_market::Matrix sort_matrix_row_major(
@@ -902,7 +899,7 @@ matrix_market::Matrix sort_matrix_row_major(
             return matrix_market::Matrix(m.header(), m.comments(), m.size(), entries);
         }
     }
-    throw matrix_market_error{"Unknown field"};
+    throw matrix::matrix_error{"Unknown field"};
 }
 
 }

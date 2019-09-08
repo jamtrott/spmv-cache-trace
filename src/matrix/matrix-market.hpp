@@ -152,13 +152,6 @@ matrix_market::Matrix sort_matrix_column_major(
 matrix_market::Matrix sort_matrix_row_major(
     matrix_market::Matrix const & m);
 
-class matrix_market_error
-    : public std::runtime_error
-{
-public:
-    matrix_market_error(std::string const & s) throw();
-};
-
 }
 
 #endif

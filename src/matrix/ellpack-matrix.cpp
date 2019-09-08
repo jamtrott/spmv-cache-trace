@@ -197,7 +197,13 @@ Matrix from_matrix_market(
     // Compute the row length and number of entries (including padding)
     index_type rows = m.rows();
     index_type row_length = m.max_row_length();
-    size_type num_entries = rows * row_length;
+    size_type num_entries;
+    if (__builtin_mul_overflow(rows, row_length, &num_entries)) {
+        throw matrix::matrix_error(
+            "Failed to convert to ELLPACK: "
+            "Integer overflow when computing number of non-zeros");
+    }
+    num_entries = rows * row_length;
 
     // Sort the matrix entries
     matrix_market::Matrix m_sorted = sort_matrix_row_major(m);

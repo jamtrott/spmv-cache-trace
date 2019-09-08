@@ -71,6 +71,13 @@ bool operator==(CoordinateEntryComplex const & a, CoordinateEntryComplex const &
 bool operator==(CoordinateEntryInteger const & a, CoordinateEntryInteger const & b);
 bool operator==(CoordinateEntryPattern const & a, CoordinateEntryPattern const & b);
 
+/*
+ * A matrix in the matrix market file format.
+ *
+ * The matrix market format is a commonly used text-based file format
+ * for storing sparse matrices. For example, the matrices in the
+ * SuiteSparse Matrix Collection are supplied in this format.
+ */
 class Matrix
 {
 public:

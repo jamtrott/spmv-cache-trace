@@ -99,21 +99,6 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
     return nonzeros;
 }
 
-int thread_of_column(
-    index_type column,
-    index_type num_columns,
-    int num_threads)
-{
-    index_type columns_per_thread = (num_columns + num_threads - 1) / num_threads;
-    for (int thread = 0 ; thread < num_threads; thread++) {
-        index_type start_columns = std::min(num_columns, thread * columns_per_thread);
-        index_type end_columns = std::min(num_columns, (thread + 1) * columns_per_thread);
-        if (column >= start_columns && column < end_columns)
-            return thread;
-    }
-    return num_threads-1;
-}
-
 std::vector<std::pair<uintptr_t, int>>
 Matrix::spmv_memory_reference_string(
     value_array_type const & x,

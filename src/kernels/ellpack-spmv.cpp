@@ -40,13 +40,11 @@ void ellpack_spmv_kernel::init(
         throw kernel_error(s.str());
     } catch (matrix::matrix_error & e) {
         std::stringstream s;
-        s << matrix_path << ": "
-          << e.what() << '\n';
+        s << matrix_path << ": " << e.what();
         throw kernel_error(s.str());
     } catch (std::system_error & e) {
         std::stringstream s;
-        s << matrix_path << ": "
-          << e.what() << '\n';
+        s << matrix_path << ": " << e.what();
         throw kernel_error(s.str());
     }
 }

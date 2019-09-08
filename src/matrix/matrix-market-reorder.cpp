@@ -174,7 +174,7 @@ vector<int> find_new_order_GP (matrix_market::Matrix const & m, int nparts)
 {
   cout<<"Warning: No reordering is done. You should compile with 'USE_METIS' defined\n";
   vector<int> same_order(m.size().rows);
-  for (i=0; i<m.size().rows; i++)
+  for (int i=0; i<m.size().rows; i++)
     same_order[i] = i;
   return same_order;
 }

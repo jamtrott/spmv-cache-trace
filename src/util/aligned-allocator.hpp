@@ -254,7 +254,7 @@ void distribute_pages(
             throw std::system_error(errno, std::generic_category());
         }
 
-        for (int page = 0; page < num_pages; page++) {
+        for (size_t page = 0; page < num_pages; page++) {
             intptr_t page_address = start_address + page * page_size;
             int thread = thread_of_page(p, n, num_threads, page, page_size);
             int cpu = thread_affinity[thread];

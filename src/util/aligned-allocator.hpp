@@ -179,17 +179,17 @@ int thread_of_page(
 }
 
 template <typename T>
-int page_of_index(
+size_t page_of_index(
     T const * p,
     size_t num_elements,
     size_t index,
     int num_threads,
-    int page_size)
+    size_t page_size)
 {
     intptr_t start_address = align_downwards(p, page_size);
     intptr_t end_address = (intptr_t) (p + num_elements);
-    int num_pages = (end_address - start_address + (page_size - 1)) / page_size;
-    for (int page = 0; page < num_pages; page++) {
+    size_t num_pages = (end_address - start_address + (page_size - 1)) / page_size;
+    for (size_t page = 0; page < num_pages; page++) {
         T const * next_page = (T *) align_upwards(p + 1, page_size);
         size_t page_num_elements = next_page - p;
         if (index < page_num_elements)
@@ -201,14 +201,14 @@ int page_of_index(
 }
 
 template <typename T>
-int thread_of_index(
+size_t thread_of_index(
     T const * p,
     size_t num_elements,
     size_t index,
     int num_threads,
-    int page_size)
+    size_t page_size)
 {
-    int page = page_of_index(p, num_elements, index, num_threads, page_size);
+    size_t page = page_of_index(p, num_elements, index, num_threads, page_size);
     return thread_of_page(p, num_elements, num_threads, page, page_size);
 }
 
@@ -223,10 +223,10 @@ void distribute_pages(
     #pragma omp barrier
     #pragma omp master
     {
-        int page_size = numa_pagesize();
+        size_t page_size = numa_pagesize();
         intptr_t start_address = align_downwards(p, page_size);
         intptr_t end_address = align_upwards(p + n, page_size);
-        int num_pages = (end_address - start_address) / page_size;
+        size_t num_pages = (end_address - start_address) / page_size;
         void ** pages = (void **) malloc(
             num_pages * (sizeof(void *) + sizeof(int) + sizeof(int)));
         int * nodes = (int *)(pages + num_pages);
@@ -234,7 +234,7 @@ void distribute_pages(
         if (!pages)
             throw std::system_error(errno, std::generic_category());
 
-        for (int page = 0; page < num_pages; page++) {
+        for (size_t page = 0; page < num_pages; page++) {
             intptr_t page_address = start_address + page * page_size;
             int thread = thread_of_page(p, n, num_threads, page, page_size);
             int cpu = thread_affinity[thread];

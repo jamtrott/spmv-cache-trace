@@ -99,21 +99,6 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
     return nonzeros;
 }
 
-int thread_of_column(
-    index_type column,
-    index_type num_columns,
-    int num_threads)
-{
-    index_type columns_per_thread = (num_columns + num_threads - 1) / num_threads;
-    for (int thread = 0 ; thread < num_threads; thread++) {
-        index_type start_columns = std::min(num_columns, thread * columns_per_thread);
-        index_type end_columns = std::min(num_columns, (thread + 1) * columns_per_thread);
-        if (column >= start_columns && column < end_columns)
-            return thread;
-    }
-    return num_threads-1;
-}
-
 std::vector<std::pair<uintptr_t, int>>
 Matrix::spmv_memory_reference_string(
     value_array_type const & x,
@@ -212,7 +197,13 @@ Matrix from_matrix_market(
     // Compute the row length and number of entries (including padding)
     index_type rows = m.rows();
     index_type row_length = m.max_row_length();
-    size_type num_entries = rows * row_length;
+    size_type num_entries;
+    if (__builtin_mul_overflow(rows, row_length, &num_entries)) {
+        throw matrix::matrix_error(
+            "Failed to convert to ELLPACK: "
+            "Integer overflow when computing number of non-zeros");
+    }
+    num_entries = rows * row_length;
 
     // Sort the matrix entries
     matrix_market::Matrix m_sorted = sort_matrix_row_major(m);

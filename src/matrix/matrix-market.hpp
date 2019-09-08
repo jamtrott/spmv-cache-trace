@@ -19,10 +19,8 @@ enum class Format { coordinate, array };
 enum class Field { real, complex, integer, pattern };
 enum class Symmetry { general, symmetric, skew_symmetric, hermitian };
 
-class Header
+struct Header
 {
-public:
-    std::string identifier;
     Object object;
     Format format;
     Field field;
@@ -31,9 +29,8 @@ public:
 
 using Comments = std::vector<std::string>;
 
-class Size
+struct Size
 {
-public:
     index_type rows;
     index_type columns;
     size_type num_entries;

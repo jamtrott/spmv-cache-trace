@@ -21,7 +21,6 @@ TEST(matrix_market, from_stream_real)
         "1 1 .5\n"};
     std::istringstream stream{s};
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::real, m.field());
@@ -45,7 +44,6 @@ TEST(matrix_market, from_stream_complex)
         "1 1 .5 -0.5\n"};
     std::istringstream stream{s};
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::complex, m.field());
@@ -70,7 +68,6 @@ TEST(matrix_market, from_stream_integer)
         "1 1 5\n"};
     std::istringstream stream{s};
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::integer, m.field());
@@ -94,7 +91,6 @@ TEST(matrix_market, from_stream_pattern)
         "1 1 5\n"};
     std::istringstream stream{s};
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::pattern, m.field());
@@ -123,7 +119,6 @@ TEST(matrix_market, from_stream_gz)
     std::istringstream string_stream{s};
     zlib::izlibstream stream(string_stream.rdbuf());
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::real, m.field());
@@ -1067,7 +1062,6 @@ TEST(matrix_market, from_stream_tar)
     std::istringstream string_stream{s};
     tar::itarstream stream(string_stream.rdbuf(), "test.mtx"s);
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::real, m.field());
@@ -1107,7 +1101,6 @@ TEST(matrix_market, from_stream_tar_gz)
     zlib::izlibstream gzstream(string_stream.rdbuf());
     tar::itarstream stream(gzstream.rdbuf(), "test.mtx"s);
     auto m = fromStream(stream);
-    ASSERT_EQ("%%MatrixMarket", m.header().identifier);
     ASSERT_EQ(Object::matrix, m.header().object);
     ASSERT_EQ(Format::coordinate, m.format());
     ASSERT_EQ(Field::real, m.field());

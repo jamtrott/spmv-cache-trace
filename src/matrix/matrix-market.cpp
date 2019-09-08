@@ -432,7 +432,7 @@ Header readHeader(std::istream & i)
     auto format = readFormat(s);
     auto field = readField(s);
     auto symmetry = readSymmetry(s);
-    return Header{identifier, object, format, field, symmetry};
+    return Header{object, format, field, symmetry};
 }
 
 std::vector<std::string> readComments(std::istream & i)
@@ -593,7 +593,7 @@ namespace matrix_market
 
 bool operator==(Header const & A, Header const & B)
 {
-    return A.identifier == B.identifier &&
+    return
         A.object == B.object &&
         A.format == B.format &&
         A.field == B.field &&
@@ -622,7 +622,7 @@ bool operator==(Matrix const & A, Matrix const & B)
 
 std::ostream & operator<<(std::ostream & o, Header const & h)
 {
-    return o << h.identifier << ' '
+    return o << "%%MatrixMarket" << ' '
              << toString(h.object) << ' '
              << toString(h.format) << ' '
              << toString(h.field) << ' '

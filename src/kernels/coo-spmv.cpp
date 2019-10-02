@@ -24,15 +24,28 @@ coo_spmv_kernel::~coo_spmv_kernel()
 }
 
 void coo_spmv_kernel::init(
+    TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
 {
+    auto const & thread_affinities = trace_config.thread_affinities();
+    int num_threads = thread_affinities.size();
+
     try {
         matrix_market::Matrix mm =
             matrix_market::load_matrix(matrix_path, o, verbose);
         A = coo_matrix::from_matrix_market(mm);
         x = coo_matrix::value_array_type(A.columns, 1.0);
         y = coo_matrix::value_array_type(A.rows, 0.0);
+
+        size_t workspace_size;
+        if (__builtin_mul_overflow(num_threads, A.rows, &workspace_size)) {
+            throw matrix::matrix_error(
+                "Failed to compute COO SpMV: "
+            "Integer overflow when computing workspace size");
+        }
+        workspace_size = num_threads * A.rows;
+        workspace = coo_matrix::value_array_type(workspace_size, 0.0);
     } catch (matrix::matrix_error & e) {
         std::stringstream s;
         s << matrix_path << ": " << e.what();
@@ -57,11 +70,14 @@ void coo_spmv_kernel::prepare(TraceConfig const & trace_config)
     distribute_pages(A.value.data(), A.value.size(), num_threads, cpus.data());
     distribute_pages(x.data(), x.size(), num_threads, cpus.data());
     distribute_pages(y.data(), y.size(), num_threads, cpus.data());
+    distribute_pages(workspace.data(), workspace.size(), num_threads, cpus.data());
 }
 
-void coo_spmv_kernel::run()
+void coo_spmv_kernel::run(TraceConfig const & trace_config)
 {
-    coo_matrix::spmv(A, x, y);
+    auto const & thread_affinities = trace_config.thread_affinities();
+    int num_threads = thread_affinities.size();
+    coo_matrix::spmv(num_threads, A, x, y, workspace);
 }
 
 replacement::MemoryReferenceString coo_spmv_kernel::memory_reference_string(

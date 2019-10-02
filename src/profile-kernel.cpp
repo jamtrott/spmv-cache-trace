@@ -135,6 +135,7 @@ std::vector<ProfilingEvent> const & Profiling::profiling_events() const
  * and the given groups of hardware performance events.
  */
 duration_type profile_kernel_run(
+    TraceConfig const & trace_config,
     Kernel & kernel,
     std::vector<std::vector<perf::EventGroup>> & event_groups_per_thread)
 {
@@ -156,7 +157,7 @@ duration_type profile_kernel_run(
     t0 = profiling_clock::now();
 
     #pragma omp barrier
-    kernel.run();
+    kernel.run(trace_config);
     #pragma omp barrier
 
     #pragma omp master
@@ -259,14 +260,14 @@ Profiling profile_kernel(
             // Initialise the kernel and perform a warm-up run
             kernel.prepare(trace_config);
             if (warmup)
-                kernel.run();
+                kernel.run(trace_config);
 
             for (int run = 0; run < runs; run++) {
                 if (flush_caches)
                     flush_cache(trace_config.max_cache_size());
 
                 duration_type execution_time = profile_kernel_run(
-                    kernel, event_groups_per_thread);
+                    trace_config, kernel, event_groups_per_thread);
 
                 #pragma omp master
                 {

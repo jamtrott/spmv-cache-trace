@@ -24,10 +24,11 @@ public:
     triad_kernel(triad::size_type num_entries);
     ~triad_kernel();
 
-    void init(std::ostream & o,
+    void init(TraceConfig const & trace_config,
+              std::ostream & o,
               bool verbose) override;
     void prepare(TraceConfig const & trace_config) override;
-    void run() override;
+    void run(TraceConfig const & trace_config) override;
 
     replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,

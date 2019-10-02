@@ -15,10 +15,11 @@ public:
     coo_spmv_kernel(std::string const & matrix_path);
     ~coo_spmv_kernel();
 
-    void init(std::ostream & o,
+    void init(TraceConfig const & trace_config,
+              std::ostream & o,
               bool verbose) override;
     void prepare(TraceConfig const & trace_config) override;
-    void run() override;
+    void run(TraceConfig const & trace_config) override;
 
     replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,
@@ -34,6 +35,7 @@ private:
     coo_matrix::Matrix A;
     coo_matrix::value_array_type x;
     coo_matrix::value_array_type y;
+    coo_matrix::value_array_type workspace;
 };
 
 #endif

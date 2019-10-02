@@ -208,7 +208,7 @@ int main(int argc, char ** argv)
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
 
-        args.kernel->init(std::cout, args.verbose);
+        args.kernel->init(trace_config, std::cout, args.verbose);
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(

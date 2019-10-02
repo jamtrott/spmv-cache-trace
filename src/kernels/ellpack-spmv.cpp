@@ -24,6 +24,7 @@ ellpack_spmv_kernel::~ellpack_spmv_kernel()
 }
 
 void ellpack_spmv_kernel::init(
+    TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
 {
@@ -59,7 +60,7 @@ void ellpack_spmv_kernel::prepare(
     distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
-void ellpack_spmv_kernel::run()
+void ellpack_spmv_kernel::run(TraceConfig const & trace_config)
 {
     ellpack_matrix::spmv(A, x, y);
 }

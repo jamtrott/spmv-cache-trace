@@ -191,42 +191,67 @@ namespace
 {
 
 void coo_spmv(
+    int num_threads,
+    index_type const num_rows,
     size_type const num_entries,
     index_type const * row_index,
     index_type const * column_index,
     value_type const * value,
     value_type const * x,
     value_type * y,
+    value_type * workspace,
     index_type chunk_size)
 {
-    #pragma omp for nowait schedule(static, chunk_size)
-    for (size_type k = 0; k < num_entries; ++k) {
-        #pragma omp atomic
-        y[row_index[k]] += value[k] * x[column_index[k]];
+#ifdef USE_OPENMP
+    size_t thread = omp_get_thread_num();
+#else
+    size_t thread = 0;
+#endif
+
+    if (num_threads == 1) {
+        for (size_type k = 0; k < num_entries; ++k) {
+            y[row_index[k]] += value[k] * x[column_index[k]];
+        }
+    } else {
+        /* Compute a partial result vector for each thread. */
+        #pragma omp for schedule(static, chunk_size)
+        for (size_type k = 0; k < num_entries; ++k) {
+            workspace[thread*num_rows+row_index[k]] += value[k] * x[column_index[k]];
+        }
+
+        /* Perform a reduction step to combine the partial result vectors. */
+        #pragma omp for schedule(static, chunk_size)
+        for (index_type i = 0; i < num_rows; i++) {
+            for (size_type j = 0; j < num_threads; j++) {
+                y[i] += workspace[j*num_rows+i];
+            }
+        }
     }
 }
 
 }
 
 void spmv(
+    int num_threads,
     coo_matrix::Matrix const & A,
     coo_matrix::value_array_type const & x,
     coo_matrix::value_array_type & y,
+    coo_matrix::value_array_type & workspace,
     coo_matrix::index_type chunk_size)
 {
     if (chunk_size <= 0) {
-#ifdef USE_OPENMP
-        int num_threads = omp_get_num_threads();
-#else
-        int num_threads = 1;
-#endif
         chunk_size = (A.num_entries + num_threads - 1) / num_threads;
     }
 
-    coo_spmv(A.num_entries,
-             A.row_index.data(), A.column_index.data(),
+    coo_spmv(num_threads,
+             A.rows,
+             A.num_entries,
+             A.row_index.data(),
+             A.column_index.data(),
              A.value.data(),
-             x.data(), y.data(),
+             x.data(),
+             y.data(),
+             workspace.data(),
              chunk_size);
 }
 
@@ -242,8 +267,15 @@ coo_matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
+#ifdef USE_OPENMP
+    int num_threads = omp_get_num_threads();
+#else
+    int num_threads = 1;
+#endif
+
     coo_matrix::value_array_type y(A.rows, 0.0);
-    spmv(A, x, y);
+    coo_matrix::value_array_type workspace(num_threads*A.rows, 0.0);
+    spmv(num_threads, A, x, y, workspace);
     return y;
 }
 

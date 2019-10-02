@@ -6,6 +6,8 @@
 
 #include <gtest/gtest.h>
 
+#include <omp.h>
+
 #include <cmath>
 #include <numeric>
 #include <stdexcept>
@@ -113,6 +115,29 @@ TEST(coo_matrix, poisson2D)
     auto x = coo_matrix::value_array_type{
         std::cbegin(poisson2D_b), std::cend(poisson2D_b)};
     auto y = A * x;
+    auto z = coo_matrix::value_array_type{
+        std::cbegin(poisson2D_result), std::cend(poisson2D_result)};
+    ASSERT_NEAR(l2norm(y - z), 0.0, std::numeric_limits<double>::epsilon());
+}
+
+TEST(coo_matrix, poisson2D_parallel)
+{
+    std::istringstream stream{poisson2D};
+    auto mm_unsorted = matrix_market::fromStream(stream);
+    auto mm = matrix_market::sort_matrix_row_major(mm_unsorted);
+    auto A = coo_matrix::from_matrix_market(mm);
+    auto x = coo_matrix::value_array_type{
+        std::cbegin(poisson2D_b), std::cend(poisson2D_b)};
+    auto y = coo_matrix::value_array_type(A.rows, 0.0);
+
+    int num_threads = 2;
+    omp_set_num_threads(num_threads);
+    auto workspace = coo_matrix::value_array_type(num_threads*A.rows, 0.0);
+    #pragma omp parallel
+    {
+        coo_matrix::spmv(num_threads, A, x, y, workspace);
+    }
+
     auto z = coo_matrix::value_array_type{
         std::cbegin(poisson2D_result), std::cend(poisson2D_result)};
     ASSERT_NEAR(l2norm(y - z), 0.0, std::numeric_limits<double>::epsilon());

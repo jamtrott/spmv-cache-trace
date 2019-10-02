@@ -20,6 +20,7 @@ triad_kernel::~triad_kernel()
 }
 
 void triad_kernel::init(
+    TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
 {
@@ -45,7 +46,7 @@ void triad_kernel::prepare(TraceConfig const & trace_config)
     distribute_pages(c.data(), num_entries, num_threads, cpus.data());
 }
 
-void triad_kernel::run()
+void triad_kernel::run(TraceConfig const & trace_config)
 {
     triad::value_type d = 3.1;
     #pragma omp for

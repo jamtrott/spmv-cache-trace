@@ -24,6 +24,7 @@ csr_spmv_kernel::~csr_spmv_kernel()
 }
 
 void csr_spmv_kernel::init(
+    TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
 {
@@ -60,7 +61,7 @@ void csr_spmv_kernel::prepare(
     distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
-void csr_spmv_kernel::run()
+void csr_spmv_kernel::run(TraceConfig const & trace_config)
 {
     csr_matrix::spmv(A, x, y);
 }

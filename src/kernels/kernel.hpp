@@ -21,12 +21,13 @@ public:
     virtual ~Kernel() {}
 
     virtual void init(
+        TraceConfig const & trace_config,
         std::ostream & o,
         bool verbose) = 0;
 
     virtual void prepare(TraceConfig const & trace_config) = 0;
 
-    virtual void run() = 0;
+    virtual void run(TraceConfig const & trace_config) = 0;
 
     virtual replacement::MemoryReferenceString memory_reference_string(
         TraceConfig const & trace_config,

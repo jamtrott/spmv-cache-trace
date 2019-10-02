@@ -165,9 +165,9 @@ TEST(csr_matrix, poisson2D_parallel)
         std::cbegin(poisson2D_b), std::cend(poisson2D_b)};
     auto y = csr_matrix::value_array_type(A.rows, 0.0);
 
+    omp_set_num_threads(2);
     #pragma omp parallel
     {
-        omp_set_num_threads(2);
         csr_matrix::spmv(A, x, y);
     }
 

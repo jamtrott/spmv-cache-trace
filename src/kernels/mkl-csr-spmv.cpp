@@ -23,6 +23,7 @@ mkl_csr_spmv_kernel::~mkl_csr_spmv_kernel()
 }
 
 void mkl_csr_spmv_kernel::init(
+    TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
 {
@@ -59,7 +60,7 @@ void mkl_csr_spmv_kernel::prepare(
     distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
-void mkl_csr_spmv_kernel::run()
+void mkl_csr_spmv_kernel::run(TraceConfig const & trace_config)
 {
     try {
         csr_matrix::spmv_mkl(A, x, y);

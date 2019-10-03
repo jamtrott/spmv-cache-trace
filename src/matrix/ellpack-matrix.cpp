@@ -129,11 +129,11 @@ Matrix::spmv_memory_reference_string(
             w[l++] = std::make_pair(
                 uintptr_t(&value[k]),
                 numa_domains[thread]);
-            int thread = thread_of_index<value_type>(
+            int column_thread = thread_of_index<value_type>(
                 x.data(), columns, j, num_threads, page_size);
             w[l++] = std::make_pair(
                 uintptr_t(&x[j]),
-                numa_domains[thread]);
+                numa_domains[column_thread]);
         }
         w[l++] = std::make_pair(
             uintptr_t(&y[i]),

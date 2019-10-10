@@ -45,17 +45,16 @@ bool cache_has_ancestor(
         return true;
 
     auto const & caches = trace_config.caches();
-    for (CacheParent const & parent : a.parents) {
-        std::string const & parent_name = parent.name;
-        auto it = caches.find(parent_name);
-        if (it == caches.end())
-            return false;
+    std::string const & parent_name = a.parent;
+    if (parent_name.empty())
+        return false;
 
-        Cache const & parent_cache = (*it).second;
-        if (cache_has_ancestor(trace_config, parent_cache, b))
-            return true;
-    }
-    return false;
+    auto it = caches.find(parent_name);
+    if (it == caches.end())
+        return false;
+
+    Cache const & parent_cache = (*it).second;
+    return cache_has_ancestor(trace_config, parent_cache, b);
 }
 
 std::vector<int> active_threads(
@@ -89,9 +88,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     bool warmup)
 {
     auto const & thread_affinities = trace_config.thread_affinities();
-    auto const & numa_domains = trace_config.numa_domains();
     int num_threads = thread_affinities.size();
-    replacement::numa_domain_type num_numa_domains = numa_domains.size();
+    replacement::numa_domain_type num_numa_domains = trace_config.num_numa_domains();
 
     // Determine which threads are active for the given cache
     std::vector<int> threads = active_threads(

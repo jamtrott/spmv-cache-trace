@@ -60,15 +60,10 @@ replacement::MemoryReferenceString triad_kernel::memory_reference_string(
     int num_threads) const
 {
     auto const & thread_affinities = trace_config.thread_affinities();
-    auto const & numa_domains = trace_config.numa_domains();
 
     std::vector<int> numa_domain_affinity(thread_affinities.size(), 0);
     for (size_t i = 0; i < thread_affinities.size(); i++) {
-        auto numa_domain = thread_affinities[i].numa_domain;
-        auto numa_domain_it = std::find(
-            std::cbegin(numa_domains), std::cend(numa_domains), numa_domain);
-        auto index = std::distance(std::cbegin(numa_domains), numa_domain_it);
-        numa_domain_affinity[i] = index;
+        numa_domain_affinity[i] = thread_affinities[i].numa_domain;
     }
 
     triad::size_type entries_per_thread = (num_entries + num_threads - 1) / num_threads;
@@ -95,6 +90,6 @@ std::ostream & triad_kernel::print(
     return o
         << "{\n"
         << '"' << "name" << '"' << ": " << '"' << "triad" << '"' << ',' << '\n'
-        << '"' << "num_entries" << '"' << ": " << '"' << num_entries << '"' << ',' << '\n'
+        << '"' << "num_entries" << '"' << ": " << '"' << num_entries << '"'
         << "\n}";
 }

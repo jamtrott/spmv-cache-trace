@@ -71,7 +71,6 @@ replacement::MemoryReferenceString ellpack_spmv_kernel::memory_reference_string(
     int num_threads) const
 {
     auto const & thread_affinities = trace_config.thread_affinities();
-    auto const & numa_domains = trace_config.numa_domains();
 #ifdef HAVE_LIBNUMA
     int page_size = numa_pagesize();
 #else
@@ -80,11 +79,7 @@ replacement::MemoryReferenceString ellpack_spmv_kernel::memory_reference_string(
 
     std::vector<int> numa_domain_affinity(thread_affinities.size(), 0);
     for (size_t i = 0; i < thread_affinities.size(); i++) {
-        auto numa_domain = thread_affinities[i].numa_domain;
-        auto numa_domain_it = std::find(
-            std::cbegin(numa_domains), std::cend(numa_domains), numa_domain);
-        auto index = std::distance(std::cbegin(numa_domains), numa_domain_it);
-        numa_domain_affinity[i] = index;
+        numa_domain_affinity[i] = thread_affinities[i].numa_domain;
     }
 
     return A.spmv_memory_reference_string(

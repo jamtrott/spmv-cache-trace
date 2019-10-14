@@ -48,33 +48,31 @@ The sparse matrix-vector multiplication kernels require a matrix stored in the *
 
 Trace configuration
 -------------------
-The `spmv-cache-trace` program uses a *trace configuration* to describe the memory hierarchy and the set of threads to use for a given simulation. The configuration is given by a file in JSON format, as shown below.
-
-The trace configuration consists of three parts:
-
-1. `"numa_domains"` describe one or more regions that partition the main memory in case of a *non-uniform memory access (NUMA)* system. These are typically used to distinguish between local and remote memory accesses in a multi-socket system.
-
-1. `"caches"` describe the size of each cache and its cache lines, as well as how caches are shared. The cache sizes and cache line sizes are given in bytes. For each cache, `"parents"` is either the name of a cache or the names of one or more NUMA domains, which, in either case, represents the cache or NUMA domains to search whenever a cache miss occurs.
-
-1. `"thread_affinities"` describe the number of threads, as well as specifying which (first-level) cache and NUMA domain that each thread belongs to.
-
-The following example is a trace configuration for a simulation that might correspond to using two threads on a two-socket system with a shared third-level cache:
+The `spmv-cache-trace` program uses a *trace configuration* to describe the memory hierarchy and the set of threads to use for a given simulation. The configuration is given by a file in JSON format, as shown in the following example:
 ```json
 {
-  "numa_domains": ["DRAM-0", "DRAM-1"],
   "caches": {
-    "L1-0": {"size":    32768, "line_size": 64, "parents": ["L2-0"]},
-    "L1-1": {"size":    32768, "line_size": 64, "parents": ["L2-1"]},
-    "L2-0": {"size":   262144, "line_size": 64, "parents": ["L3"]},
-    "L2-1": {"size":   262144, "line_size": 64, "parents": ["L3"]},
-    "L3":   {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"]}
+    "L1-0": {"size":    32768, "line_size": 64, "parent": "L2-0"},
+    "L1-1": {"size":    32768, "line_size": 64, "parent": "L2-1"},
+    "L2-0": {"size":   262144, "line_size": 64, "parent": "L3"},
+    "L2-1": {"size":   262144, "line_size": 64, "parent": "L3"},
+    "L3":   {"size": 20971520, "line_size": 64, "parent": null}
   },
+  "num_numa_domains": 2,
   "thread_affinities": [
-    {"thread": 0, "cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0"},
-    {"thread": 1, "cpu": 1, "cache": "L1-1", "numa_domain": "DRAM-1"}
+    {"thread": 0, "cpu": 0, "cache": "L1-0", "numa_domain": 0},
+    {"thread": 1, "cpu": 1, "cache": "L1-1", "numa_domain": 1}
   ]
 }
 ```
+
+The above configuration describes a system with a shared, third-level cache and two separate NUMA domains.  The trace configuration consists of three parts:
+
+1. `"caches"` describe the size of each cache and its cache lines, as well as how caches are shared. The cache sizes and cache line sizes are given in bytes. For each cache, `"parent"` is either the name of a cache at the next, lower level of the memory hierarchy, farther from the CPU, from which data is requested whenever a cache miss occurs, or, `null` in the case of a last-level cache.
+
+1. Many multi-core CPUs have a *non-uniform memory access (NUMA)* architecture, where main memory is partitioned into regions, or NUMA domains.  In the trace configuration, `"num_numa_domains"` specifies the number NUMA domains.  Memory accesses to a given NUMA domain may exhibit different performance characteristics depending on the distance between a CPU core and the NUMA domain.  For example, separate NUMA domains are typically used to distinguish between local and remote memory accesses in a multi-socket system.
+
+1. `"thread_affinities"` describe the number of threads, as well as specifying which (first-level) cache and NUMA domain that each thread belongs to.
 
 Cache tracing
 -------------
@@ -86,17 +84,17 @@ will perform a cache trace for a sparse matrix-vector multiplication in the comp
 ```json
 {
   "trace_config": {
-    "numa_domains": ["DRAM-0", "DRAM-1"],
     "caches": {
-      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"], "events": []},
-      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"], "events": []},
-      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
-      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
-      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"], "events": []}
+      "L1-0": {"size": 32768, "line_size": 64, "parent": "L2-0", "cache_miss_event": null},
+      "L1-1": {"size": 32768, "line_size": 64, "parent": "L2-1", "cache_miss_event": null},
+      "L2-0": {"size": 262144, "line_size": 64, "parent": "L3", "cache_miss_event": null},
+      "L2-1": {"size": 262144, "line_size": 64, "parent": "L3", "cache_miss_event": null},
+      "L3": {"size": 20971520, "line_size": 64, "parent": null, "cache_miss_event": null}
     },
+    "num_numa_domains": 2,
     "thread_affinities": [
-      {"cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0", "event_groups": []},
-      {"cpu": 1, "cache": "L1-1", "numa_domain": "DRAM-1", "event_groups": []}
+      {"cpu": 0, "cache": "L1-0", "numa_domain": 0, "event_groups": []},
+      {"cpu": 1, "cache": "L1-1", "numa_domain": 1, "event_groups": []}
     ]
   },
   "kernel": {
@@ -129,17 +127,17 @@ will profile ten runs of the sparse matrix-vector multiplication kernel for the 
 ```json
 {
   "trace_config": {
-    "numa_domains": ["DRAM-0", "DRAM-1"],
     "caches": {
-      "L1-0": {"size": 32768, "line_size": 64, "parents": ["L2-0"], "events": []},
-      "L1-1": {"size": 32768, "line_size": 64, "parents": ["L2-1"], "events": []},
-      "L2-0": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
-      "L2-1": {"size": 262144, "line_size": 64, "parents": ["L3"], "events": []},
-      "L3": {"size": 20971520, "line_size": 64, "parents": ["DRAM-0", "DRAM-1"], "events": []}
+      "L1-0": {"size": 32768, "line_size": 64, "parent": "L2-0", "cache_miss_event": null},
+      "L1-1": {"size": 32768, "line_size": 64, "parent": "L2-1", "cache_miss_event": null},
+      "L2-0": {"size": 262144, "line_size": 64, "parent": "L3", "cache_miss_event": null},
+      "L2-1": {"size": 262144, "line_size": 64, "parent": "L3", "cache_miss_event": null},
+      "L3": {"size": 20971520, "line_size": 64, "parent": null, "cache_miss_event": null}
     },
+    "num_numa_domains": 2,
     "thread_affinities": [
-      {"cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0", "event_groups": []},
-      {"cpu": 1, "cache": "L1-1", "numa_domain": "DRAM-1", "event_groups": []}
+      {"cpu": 0, "cache": "L1-0", "numa_domain": 0, "event_groups": []},
+      {"cpu": 1, "cache": "L1-1", "numa_domain": 1, "event_groups": []}
     ]
   },
   "kernel": {
@@ -181,14 +179,14 @@ In addition, it is possible to obtain more profiling information by using hardwa
 The following example shows a single thread configured with two event groups:
 ```json
 {
-  "numa_domains": ["DRAM"],
   "caches": {
-    "L1": {"size":    32768, "line_size": 64, "parents": ["L2"]},
-    "L2": {"size":   262144, "line_size": 64, "parents": ["L3"]},
-    "L3":   {"size": 20971520, "line_size": 64, "parents": ["DRAM"]}
+    "L1": {"size":    32768, "line_size": 64, "parent": "L2"},
+    "L2": {"size":   262144, "line_size": 64, "parent": "L3"},
+    "L3": {"size": 20971520, "line_size": 64, "parent": null}
   },
+  "num_numa_domains": 1,
   "thread_affinities": [
-    {"thread": 0, "cpu": 0, "cache": "L1-0", "numa_domain": "DRAM-0",
+    {"thread": 0, "cpu": 0, "cache": "L1-0", "numa_domain": 0,
      "event_groups": [["l1-dcache-loads", "l1-dcache-load-misses"], ["llc-load-misses"]]}
   ]
 }

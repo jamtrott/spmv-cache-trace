@@ -108,6 +108,7 @@ matrix_sources = \
 	src/matrix/csr-matrix.cpp \
 	src/matrix/csr-matrix-spmv.cpp \
 	src/matrix/ellpack-matrix.cpp \
+	src/matrix/hybrid-matrix.cpp \
 	src/matrix/matrix-error.cpp \
 	src/matrix/matrix-market.cpp \
 	src/matrix/matrix-market-reorder.cpp
@@ -115,6 +116,7 @@ matrix_headers = \
 	src/matrix/coo-matrix.hpp \
 	src/matrix/csr-matrix.hpp \
 	src/matrix/ellpack-matrix.hpp \
+	src/matrix/hybrid-matrix.hpp \
 	src/matrix/matrix-error.hpp \
 	src/matrix/matrix-market.hpp \
 	src/matrix/matrix-market-reorder.hpp
@@ -201,6 +203,7 @@ unittest_sources = \
 	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \
 	test/test_ellpack-matrix.cpp \
+	test/test_hybrid-matrix.cpp \
 	test/test_perf-events.cpp \
 	test/test_replacement.cpp \
 	test/test_sample.cpp

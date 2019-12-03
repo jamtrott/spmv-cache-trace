@@ -55,6 +55,7 @@ public:
     std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string(
         value_array_type const & x,
         value_array_type const & y,
+        value_array_type const & workspace,
         int thread,
         int num_threads,
         int const * numa_domains,
@@ -92,9 +93,11 @@ value_array_type operator*(
     value_array_type const & x);
 
 void spmv(
+    int num_threads,
     Matrix const & A,
     value_array_type const & x,
     value_array_type & y,
+    value_array_type & workspace,
     index_type chunk_size = 0);
 
 index_type spmv_rows_per_thread(

@@ -119,12 +119,13 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
 
 std::vector<std::pair<uintptr_t, int>>
 Matrix::spmv_memory_reference_string(
-    value_array_type const & x,
-    value_array_type const & y,
-    int thread,
-    int num_threads,
-    int const * numa_domains,
-    int page_size) const
+        value_array_type const & x,
+        value_array_type const & y,
+        value_array_type const & workspace,
+        int thread,
+        int num_threads,
+        int const * numa_domains,
+        int page_size) const
 {
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);

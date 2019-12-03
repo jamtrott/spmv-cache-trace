@@ -6,5 +6,6 @@
 #include "kernels/csr-spmv.hpp"
 #include "kernels/ellpack-spmv.hpp"
 #include "kernels/mkl-csr-spmv.hpp"
+#include "kernels/hybrid-spmv.hpp"
 
 #endif

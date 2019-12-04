@@ -137,7 +137,6 @@ bool operator!=(
 static inline intptr_t align_upwards(void const * p, int alignment)
 {
     assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
-    assert(p != 0);
     intptr_t address = (intptr_t) p;
     if (address % alignment != 0)
         address += alignment - address % alignment;
@@ -148,7 +147,6 @@ static inline intptr_t align_upwards(void const * p, int alignment)
 static inline intptr_t align_downwards(void const * p, int alignment)
 {
     assert(alignment > 0 && (alignment & (alignment - 1)) == 0);
-    assert(p != 0);
     intptr_t address = (intptr_t) p;
     address -= address % alignment;
     assert(address <= (intptr_t) p);

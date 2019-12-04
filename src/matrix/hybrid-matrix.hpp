@@ -29,6 +29,7 @@ public:
            index_type columns,
            size_type num_entries,
            index_type ellpack_row_length,
+           size_type num_ellpack_entries,
            index_array_type const & ellpack_column_index,
            value_array_type const & ellpack_value,
            bool ellpack_skip_padding,
@@ -66,8 +67,8 @@ public:
     index_type columns;
     size_type num_entries;
 
-    size_type num_ellpack_entries;
     index_type ellpack_row_length;
+    size_type num_ellpack_entries;
     index_array_type ellpack_column_index;
     value_array_type ellpack_value;
     bool ellpack_skip_padding;

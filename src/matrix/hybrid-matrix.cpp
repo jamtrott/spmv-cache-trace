@@ -25,6 +25,7 @@ Matrix::Matrix()
     , columns(0)
     , num_entries(0)
     , ellpack_row_length(0)
+    , num_ellpack_entries(0)
     , ellpack_column_index()
     , ellpack_value()
     , ellpack_skip_padding(false)
@@ -40,6 +41,7 @@ Matrix::Matrix(
     index_type columns,
     size_type num_entries,
     index_type ellpack_row_length,
+    size_type num_ellpack_entries,
     index_array_type const & ellpack_column_index,
     value_array_type const & ellpack_value,
     bool ellpack_skip_padding,
@@ -51,6 +53,7 @@ Matrix::Matrix(
     , columns(columns)
     , num_entries(num_entries)
     , ellpack_row_length(ellpack_row_length)
+    , num_ellpack_entries(num_ellpack_entries)
     , ellpack_column_index(ellpack_column_index)
     , ellpack_value(ellpack_value)
     , ellpack_skip_padding(ellpack_skip_padding)
@@ -167,6 +170,7 @@ bool operator==(Matrix const & a, Matrix const & b)
         a.columns == b.columns &&
         a.num_entries == b.num_entries &&
         a.ellpack_row_length == b.ellpack_row_length &&
+        a.num_ellpack_entries == b.num_ellpack_entries &&
         std::equal(
             std::begin(a.ellpack_column_index),
             std::end(a.ellpack_column_index),
@@ -174,7 +178,19 @@ bool operator==(Matrix const & a, Matrix const & b)
         std::equal(
             std::begin(a.ellpack_value),
             std::end(a.ellpack_value),
-            std::begin(b.ellpack_value));
+            std::begin(b.ellpack_value)) &&
+        std::equal(
+            std::begin(a.coo_row_index),
+            std::end(a.coo_row_index),
+            std::begin(b.coo_row_index)) &&
+        std::equal(
+            std::begin(a.coo_column_index),
+            std::end(a.coo_column_index),
+            std::begin(b.coo_column_index)) &&
+        std::equal(
+            std::begin(a.coo_value),
+            std::end(a.coo_value),
+            std::begin(b.coo_value));
 }
 
 template <typename T, typename allocator>
@@ -196,8 +212,10 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
     return o << x.rows << ' ' << x.columns << ' '
              << x.num_entries << ' '
              << x.ellpack_row_length << ' '
+             << x.num_ellpack_entries << ' '
              << x.ellpack_column_index << ' '
-             << x.ellpack_value
+             << x.ellpack_value << ' '
+             << x.num_coo_entries << ' '
              << x.coo_row_index << ' '
              << x.coo_column_index << ' '
              << x.coo_value;
@@ -218,22 +236,23 @@ Matrix from_matrix_market(
 
     /* Compute the histogram of row lengths. */
     std::vector<index_type> row_lengths = m.row_lengths();
-    std::vector<index_type> histogram(m.max_row_length()+1, 0);
-    for (index_type k = 0; k < m.rows(); k++) {
-        histogram[row_lengths[k]]++;
+    std::vector<index_type> num_rows_per_row_length(m.max_row_length()+1, 0);
+    for (index_type i = 0; i < m.rows(); i++) {
+        num_rows_per_row_length[row_lengths[i]]++;
     }
 
     /* Choose the row length for ELLPACK as the 2/3 median. */
-    index_type median = 0;
-    index_type past_rows = 0;
-    while (past_rows < 2 * m.rows() / 3) {
-        past_rows += histogram[median];
-        median++;
+    index_type median_row_length = 0;
+    index_type num_rows_less_than_median = 0;
+    while (num_rows_less_than_median < (2*m.rows()) / 3) {
+        num_rows_less_than_median += num_rows_per_row_length[median_row_length];
+        median_row_length++;
     }
+    median_row_length = (median_row_length == 0) ? 0 : median_row_length-1;
 
     // Compute the row length and number of entries (including padding)
     index_type rows = m.rows();
-    index_type ellpack_row_length = median;
+    index_type ellpack_row_length = median_row_length;
     size_type num_ellpack_entries;
     if (__builtin_mul_overflow(rows, ellpack_row_length, &num_ellpack_entries)) {
         throw matrix::matrix_error(
@@ -244,8 +263,8 @@ Matrix from_matrix_market(
 
     /* The remaining entries are stored in COO format. */
     index_type num_coo_entries = 0;
-    for (index_type r = median+1; r <= m.max_row_length(); r++) {
-        num_coo_entries += histogram[r] * r;
+    for (index_type l = ellpack_row_length+1; l <= m.max_row_length(); l++) {
+        num_coo_entries += num_rows_per_row_length[l] * (l - ellpack_row_length);
     }
 
     // Sort the matrix entries
@@ -264,7 +283,7 @@ Matrix from_matrix_market(
     num_ellpack_entries = 0;
     num_coo_entries = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
-        if (row_lengths[r] <= ellpack_row_length) {
+        if (row_lengths[r] < ellpack_row_length) {
             for (index_type j = 0; j < row_lengths[r]; j++) {
                 ellpack_columns[num_ellpack_entries] = column_indices[k] - 1;
                 ellpack_values[num_ellpack_entries] = values[k];
@@ -299,7 +318,8 @@ Matrix from_matrix_market(
 
     return Matrix(
         m.rows(), m.columns(), m.num_entries(),
-        ellpack_row_length, ellpack_columns, ellpack_values, ellpack_skip_padding,
+        ellpack_row_length, num_ellpack_entries,
+        ellpack_columns, ellpack_values, ellpack_skip_padding,
         num_coo_entries, coo_rows, coo_columns, coo_values);
 }
 

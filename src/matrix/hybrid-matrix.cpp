@@ -294,7 +294,7 @@ Matrix from_matrix_market(
             for (index_type j = row_lengths[r]; j < ellpack_row_length; j++) {
                 ellpack_columns[num_ellpack_entries] = ellpack_skip_padding
                     ? std::numeric_limits<index_type>::max()
-                    : column_indices[k-1] - 1;
+                    : (k>0 ? column_indices[k-1] - 1 : 0);
                 ellpack_values[num_ellpack_entries] = 0.0;
                 num_ellpack_entries++;
             }

@@ -785,52 +785,52 @@ matrix_market::Matrix load_matrix(
     }
     path_.erase(pos, path_.length());
   }
-  
+
     if (verbose) {
         o << "Loading matrix from " << path_ << '\n';
-	if (reorder_RCM)
-	  o << "The input matrix will be reordered using reverse Cuthill-McKee\n";
-	if (reorder_GP)
-	  o << "The input matrix will be reordered using graph partitioning\n";
+        if (reorder_RCM)
+          o << "The input matrix will be reordered using reverse Cuthill-McKee\n";
+        if (reorder_GP)
+          o << "The input matrix will be reordered using graph partitioning\n";
     }
-    
+
     auto f = std::ifstream{path_};
     if (!f)
         throw matrix::matrix_error(strerror(errno));
 
     if (ends_with(path_, ".tar.gz"s)) {
         matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tar.gz"s, o, verbose);
-	if (reorder_RCM) {
-	  std::vector<int> new_order = find_new_order_RCM (m);
-	  m.permute (new_order);
-	}
-	if (reorder_GP) {
-	  std::vector<int> new_order = find_new_order_GP (m, nparts);
-	  m.permute (new_order);
-	}
-	return m;
+        if (reorder_RCM) {
+          std::vector<int> new_order = find_new_order_RCM (m);
+          m.permute (new_order);
+        }
+        if (reorder_GP) {
+          std::vector<int> new_order = find_new_order_GP (m, nparts);
+          m.permute (new_order);
+        }
+        return m;
     } else if (ends_with(path_, ".tgz"s)) {
         matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tgz"s, o, verbose);
-	if (reorder_RCM) {
-	  std::vector<int> new_order = find_new_order_RCM (m);
-	  m.permute (new_order);
-	}
-	if (reorder_GP) {
-	  std::vector<int> new_order = find_new_order_GP (m, nparts);
-	  m.permute (new_order);
-	}
-	return m;
+        if (reorder_RCM) {
+          std::vector<int> new_order = find_new_order_RCM (m);
+          m.permute (new_order);
+        }
+        if (reorder_GP) {
+          std::vector<int> new_order = find_new_order_GP (m, nparts);
+          m.permute (new_order);
+        }
+        return m;
     } else {
         matrix_market::Matrix m=matrix_market::fromStream(f);
-	if (reorder_RCM) {
-	  std::vector<int> new_order = find_new_order_RCM (m);
-	  m.permute (new_order);
-	}
-	if (reorder_GP) {
-	  std::vector<int> new_order = find_new_order_GP (m, nparts);
-	  m.permute (new_order);
-	}
-	return m;
+        if (reorder_RCM) {
+          std::vector<int> new_order = find_new_order_RCM (m);
+          m.permute (new_order);
+        }
+        if (reorder_GP) {
+          std::vector<int> new_order = find_new_order_GP (m, nparts);
+          m.permute (new_order);
+        }
+        return m;
     }
 }
 

@@ -124,6 +124,6 @@ std::ostream & hybrid_spmv_kernel::print(
         << '"' << "matrix_size" << '"' << ": "  << A.size() << ',' << '\n'
         << '"' << "ellpack_row_length" << '"' << ": " << A.ellpack_row_length << ',' << '\n'
         << '"' << "num_ellpack_entries" << '"' << ": " << A.num_ellpack_entries << ',' << '\n'
-        << '"' << "num_coo_entries" << '"' << ": " << A.num_coo_entries << ',' << '\n'
+        << '"' << "num_coo_entries" << '"' << ": " << A.num_coo_entries
         << "\n}";
 }

@@ -244,7 +244,8 @@ Matrix from_matrix_market(
 
     /* Compute the histogram of row lengths. */
     std::vector<index_type> row_lengths = m.row_lengths();
-    std::vector<index_type> num_rows_per_row_length(m.max_row_length()+1, 0);
+    index_type max_row_length = *std::max_element(std::cbegin(row_lengths), std::cend(row_lengths));
+    std::vector<index_type> num_rows_per_row_length(max_row_length+1, 0);
     for (index_type i = 0; i < m.rows(); i++) {
         num_rows_per_row_length[row_lengths[i]]++;
     }
@@ -271,7 +272,7 @@ Matrix from_matrix_market(
 
     /* The remaining entries are stored in COO format. */
     index_type num_coo_entries = 0;
-    for (index_type l = ellpack_row_length+1; l <= m.max_row_length(); l++) {
+    for (index_type l = ellpack_row_length+1; l <= max_row_length; l++) {
         num_coo_entries += num_rows_per_row_length[l] * (l - ellpack_row_length);
     }
 

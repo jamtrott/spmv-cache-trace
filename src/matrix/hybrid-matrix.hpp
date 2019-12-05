@@ -87,7 +87,9 @@ Matrix from_matrix_market_default(
 
 Matrix from_matrix_market(
     matrix_market::Matrix const & m,
-    bool skip_padding = false);
+    bool skip_padding,
+    std::ostream & o,
+    bool verbose);
 
 value_array_type operator*(
     Matrix const & A,

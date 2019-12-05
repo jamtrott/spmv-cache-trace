@@ -34,7 +34,7 @@ void hybrid_spmv_kernel::init(
     try {
         matrix_market::Matrix mm =
             matrix_market::load_matrix(matrix_path, o, verbose);
-        A = hybrid_matrix::from_matrix_market(mm);
+        A = hybrid_matrix::from_matrix_market(mm, false, o, verbose);
         x = hybrid_matrix::value_array_type(A.columns, 1.0);
         y = hybrid_matrix::value_array_type(A.rows, 0.0);
 

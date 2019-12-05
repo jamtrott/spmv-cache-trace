@@ -222,15 +222,23 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
 }
 
 Matrix from_matrix_market_default(
-    matrix_market::Matrix const & m)
+    matrix_market::Matrix const & m,
+    std::ostream & o,
+    bool verbose)
 {
-    return from_matrix_market(m, false);
+    return from_matrix_market(m, false, o, verbose);
 }
 
 Matrix from_matrix_market(
     matrix_market::Matrix const & m,
-    bool ellpack_skip_padding)
+    bool ellpack_skip_padding,
+    std::ostream & o,
+    bool verbose)
 {
+    if (verbose) {
+        o << "Converting matrix to hybrid format" << std::endl;
+    }
+
     if (m.format() != matrix_market::Format::coordinate)
         throw matrix::matrix_error("Expected matrix in coordinate format");
 

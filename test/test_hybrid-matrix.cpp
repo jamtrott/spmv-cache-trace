@@ -92,7 +92,7 @@ TEST(hybrid_matrix, from_matrix_market)
         "4 5 1.0\n"};
     std::istringstream stream{s};
     auto mm = matrix_market::fromStream(stream);
-    auto m = hybrid_matrix::from_matrix_market(mm);
+    auto m = hybrid_matrix::from_matrix_market(mm, false, std::cerr, false);
     ASSERT_EQ(m, testMatrix());
 }
 
@@ -111,7 +111,7 @@ TEST(hybrid_matrix, poisson2D)
 {
     std::istringstream stream{poisson2D};
     auto mm = matrix_market::fromStream(stream);
-    auto A = hybrid_matrix::from_matrix_market(mm);
+    auto A = hybrid_matrix::from_matrix_market(mm, false, std::cerr, false);
     auto x = hybrid_matrix::value_array_type{
         std::begin(poisson2D_b), std::end(poisson2D_b)};
     auto y = A * x;

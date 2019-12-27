@@ -121,14 +121,14 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
 }
 
 std::vector<std::pair<uintptr_t, int>>
-Matrix::spmv_memory_reference_string(
-        value_array_type const & x,
-        value_array_type const & y,
-        value_array_type const & workspace,
-        int thread,
-        int num_threads,
-        int const * numa_domains,
-        int page_size) const
+Matrix::spmv_memory_reference_string_ellpack(
+    value_array_type const & x,
+    value_array_type const & y,
+    value_array_type const & workspace,
+    int thread,
+    int num_threads,
+    int const * numa_domains,
+    int page_size) const
 {
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);
@@ -143,7 +143,9 @@ Matrix::spmv_memory_reference_string(
         num_references, std::make_pair(0,0));
     size_type l = 0;
     for (index_type i = start_row; i < end_row; ++i) {
-        for (size_type k = i * ellpack_row_length; k < (i+1)*ellpack_row_length; ++k) {
+        for (size_type k = i * ellpack_row_length;
+             k < (i+1)*ellpack_row_length; ++k)
+        {
             index_type j = ellpack_column_index[k];
             w[l++] = std::make_pair(
                 uintptr_t(&ellpack_column_index[k]),
@@ -162,6 +164,88 @@ Matrix::spmv_memory_reference_string(
             numa_domains[thread]);
     }
     return w;
+}
+
+std::vector<std::pair<uintptr_t, int>>
+Matrix::spmv_memory_reference_string_coo(
+    value_array_type const & x,
+    value_array_type const & y,
+    value_array_type const & workspace,
+    int thread,
+    int num_threads,
+    int const * numa_domains,
+    int page_size) const
+{
+    index_type num_entries_per_thread = (num_coo_entries + num_threads - 1) / num_threads;
+    index_type thread_start_entry = std::min(num_coo_entries, thread * num_entries_per_thread);
+    index_type thread_end_entry = std::min(num_coo_entries, (thread + 1) * num_entries_per_thread);
+    index_type thread_num_entries = thread_end_entry - thread_start_entry;
+
+    index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
+    index_type start_row = std::min(rows, thread * rows_per_thread);
+    index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
+    index_type thread_num_rows = end_row - start_row;
+
+    std::vector<std::pair<uintptr_t, int>> w(
+        5 * thread_num_entries + 2 * thread_num_rows * num_threads,
+        std::make_pair(0,0));
+    size_t l = 0;
+    for (size_type k = thread_start_entry; k < thread_end_entry; ++k, l += 5) {
+        index_type i = coo_row_index[k];
+        index_type j = coo_column_index[k];
+        w[l+0] = std::make_pair(
+            uintptr_t(&coo_row_index[k]),
+            numa_domains[thread]);
+        w[l+1] = std::make_pair(
+            uintptr_t(&coo_column_index[k]),
+            numa_domains[thread]);
+        w[l+2] = std::make_pair(
+            uintptr_t(&coo_value[k]),
+            numa_domains[thread]);
+        int column_thread = thread_of_index<value_type>(
+            x.data(), columns, j, num_threads, page_size);
+        w[l+3] = std::make_pair(
+            uintptr_t(&x[j]),
+            numa_domains[column_thread]);
+        w[l+4] = std::make_pair(
+            uintptr_t(&workspace[thread*rows+i]),
+            numa_domains[thread]);
+    }
+
+    for (index_type i = start_row; i < end_row; i++) {
+        for (size_type j = 0; j < num_threads; j++, l += 2) {
+            int t0 = thread_of_index<value_type>(
+                workspace.data(), num_threads*thread_num_rows, j*rows+i,
+                num_threads, page_size);
+            w[l+0] =  std::make_pair(
+                uintptr_t(&workspace[j*rows+i]),
+                numa_domains[t0]);
+            w[l+1] =  std::make_pair(
+                uintptr_t(&y[i]),
+                numa_domains[thread]);
+        }
+    }
+    return w;
+}
+
+std::vector<std::pair<uintptr_t, int>>
+Matrix::spmv_memory_reference_string(
+        value_array_type const & x,
+        value_array_type const & y,
+        value_array_type const & workspace,
+        int thread,
+        int num_threads,
+        int const * numa_domains,
+        int page_size) const
+{
+    auto w0 = spmv_memory_reference_string_ellpack(
+        x, y, workspace, thread, num_threads,
+        numa_domains, page_size);
+    auto w1 = spmv_memory_reference_string_coo(
+        x, y, workspace, thread, num_threads,
+        numa_domains, page_size);
+    w0.insert(std::end(w0), std::begin(w1), std::end(w1));
+    return w0;
 }
 
 bool operator==(Matrix const & a, Matrix const & b)

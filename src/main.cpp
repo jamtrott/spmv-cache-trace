@@ -221,7 +221,7 @@ int main(int argc, char ** argv)
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(
-                trace_config, *(args.kernel.get()), args.warmup);
+                trace_config, *(args.kernel.get()), args.warmup, args.verbose);
             auto o = json_ostreambuf(std::cout);
             std::cout << cache_trace << '\n';
         }

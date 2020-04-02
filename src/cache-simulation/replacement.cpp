@@ -2,6 +2,7 @@
 
 #include <iterator>
 #include <numeric>
+#include <iostream>
 #include <ostream>
 #include <utility>
 
@@ -26,7 +27,8 @@ std::vector<cache_miss_type> trace_cache_misses(
 std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws,
-    numa_domain_type num_numa_domains)
+    numa_domain_type num_numa_domains,
+    bool verbose)
 {
     auto P = ws.size();
 
@@ -46,6 +48,10 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses(
         P, std::vector<cache_miss_type>(num_numa_domains, 0));
 
     for (auto t = 0u; t < T_max; ++t) {
+        if (verbose && (t % (T_max / 100)) == 0) {
+            std::cerr << (int) (100.0*(t/(double)T_max)) << " %" << std::endl;
+        }
+
         for (auto p = 0u; p < P; ++p) {
             if (t < T[p]) {
                 memory_reference_type const & memory_reference = ws[p][t].first;

@@ -2,6 +2,7 @@
 #include "trace-config.hpp"
 
 #include <map>
+#include <iostream>
 #include <ostream>
 #include <sstream>
 #include <string>
@@ -85,7 +86,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     TraceConfig const & trace_config,
     Kernel const & kernel,
     Cache const & cache,
-    bool warmup)
+    bool warmup,
+    bool verbose)
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     int num_threads = thread_affinities.size();
@@ -111,14 +113,16 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
         replacement::trace_cache_misses(
             replacement_algorithm,
             memory_reference_strings,
-            num_numa_domains);
+            num_numa_domains,
+            verbose);
     }
 
     std::vector<std::vector<cache_miss_type>> active_threads_cache_misses =
         replacement::trace_cache_misses(
             replacement_algorithm,
             memory_reference_strings,
-            num_numa_domains);
+            num_numa_domains,
+            verbose);
 
     std::vector<std::vector<cache_miss_type>> cache_misses(
         num_threads, std::vector<cache_miss_type>(num_numa_domains, 0));
@@ -130,7 +134,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
 CacheTrace trace_cache_misses(
     TraceConfig const & trace_config,
     Kernel const & kernel,
-    bool warmup)
+    bool warmup,
+    bool verbose)
 {
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> cache_misses;
 
@@ -139,10 +144,14 @@ CacheTrace trace_cache_misses(
         std::string name = (*it).first;
         Cache const & cache = (*it).second;
 
+        if (verbose) {
+            std::cerr << "Tracing for cache: " << name << std::endl;
+        }
+
         std::vector<std::vector<cache_miss_type>>
             num_cache_misses_per_thread_per_numa_domain =
             trace_cache_misses_per_cache(
-                trace_config, kernel, cache, warmup);
+                trace_config, kernel, cache, warmup, verbose);
         cache_misses.emplace(
             cache.name,
             num_cache_misses_per_thread_per_numa_domain);

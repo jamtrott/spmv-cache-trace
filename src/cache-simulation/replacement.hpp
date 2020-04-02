@@ -133,7 +133,8 @@ private:
 std::vector<cache_miss_type> trace_cache_misses(
     ReplacementAlgorithm & A,
     MemoryReferenceString const & w,
-    numa_domain_type num_numa_domains);
+    numa_domain_type num_numa_domains,
+    bool verbose);
 
 /*
  * Compute the cost (number of replacements) of processing memory
@@ -147,7 +148,8 @@ std::vector<cache_miss_type> trace_cache_misses(
 std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws,
-    numa_domain_type num_numa_domains);
+    numa_domain_type num_numa_domains,
+    bool verbose);
 
 std::ostream & operator<<(
     std::ostream & o,

@@ -32,7 +32,8 @@ private:
 CacheTrace trace_cache_misses(
     TraceConfig const & trace_config,
     Kernel const & kernel,
-    bool warmup);
+    bool warmup,
+    bool verbose);
 
 std::ostream & operator<<(
     std::ostream & o,

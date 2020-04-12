@@ -148,6 +148,7 @@ $(cache_simulation_a): $(cache_simulation_objects)
 kernels_a = src/cache-simulation/kernels.a
 kernels_sources = \
 	src/kernels/coo-spmv.cpp \
+	src/kernels/coo-spmv-atomic.cpp \
 	src/kernels/csr-spmv.cpp \
 	src/kernels/ellpack-spmv.cpp \
 	src/kernels/mkl-csr-spmv.cpp \
@@ -156,6 +157,7 @@ kernels_sources = \
 	src/kernels/kernel.cpp
 kernels_headers = \
 	src/kernels/coo-spmv.hpp \
+	src/kernels/coo-spmv-atomic.hpp \
 	src/kernels/csr-spmv.hpp \
 	src/kernels/ellpack-spmv.hpp \
 	src/kernels/mkl-csr-spmv.hpp \

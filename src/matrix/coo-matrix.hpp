@@ -52,6 +52,14 @@ public:
         int const * numa_domains,
         int page_size) const;
 
+    std::vector<std::pair<uintptr_t, int>> spmv_atomic_memory_reference_string(
+        value_array_type const & x,
+        value_array_type const & y,
+        int thread,
+        int num_threads,
+        int const * numa_domains,
+        int page_size) const;
+
 public:
     index_type rows;
     index_type columns;
@@ -73,6 +81,13 @@ void spmv(
     value_array_type const & x,
     value_array_type & y,
     value_array_type & workspace,
+    index_type chunk_size = 0);
+
+void spmv_atomic(
+    int num_threads,
+    Matrix const & A,
+    value_array_type const & x,
+    value_array_type & y,
     index_type chunk_size = 0);
 
 value_array_type operator*(

@@ -140,6 +140,50 @@ Matrix::spmv_memory_reference_string(
     return w;
 }
 
+std::vector<std::pair<uintptr_t, int>>
+Matrix::spmv_atomic_memory_reference_string(
+    value_array_type const & x,
+    value_array_type const & y,
+    int thread,
+    int num_threads,
+    int const * numa_domains,
+    int page_size) const
+{
+    index_type num_entries_per_thread = (num_entries + num_threads - 1) / num_threads;
+    index_type thread_start_entry = std::min(num_entries, thread * num_entries_per_thread);
+    index_type thread_end_entry = std::min(num_entries, (thread + 1) * num_entries_per_thread);
+    index_type thread_num_entries = thread_end_entry - thread_start_entry;
+
+    std::vector<std::pair<uintptr_t, int>> w(
+        5 * thread_num_entries, std::make_pair(0,0));
+    for (size_type k = thread_start_entry, l = 0;
+         k < thread_end_entry; ++k, l += 5)
+    {
+        index_type i = row_index[k];
+        index_type j = column_index[k];
+        w[l+0] = std::make_pair(
+            uintptr_t(&row_index[k]),
+            numa_domains[thread]);
+        w[l+1] = std::make_pair(
+            uintptr_t(&column_index[k]),
+            numa_domains[thread]);
+        w[l+2] = std::make_pair(
+            uintptr_t(&value[k]),
+            numa_domains[thread]);
+        int column_thread = thread_of_index<value_type>(
+            x.data(), columns, j, num_threads, page_size);
+        w[l+3] = std::make_pair(
+            uintptr_t(&x[j]),
+            numa_domains[column_thread]);
+        int row_thread = thread_of_index<value_type>(
+            y.data(), rows, i, num_threads, page_size);
+        w[l+4] = std::make_pair(
+            uintptr_t(&y[i]),
+            numa_domains[row_thread]);
+    }
+    return w;
+}
+
 bool operator==(Matrix const & a, Matrix const & b)
 {
     return a.rows == b.rows &&
@@ -240,6 +284,30 @@ void coo_spmv(
     }
 }
 
+void coo_spmv_atomic(
+    int num_threads,
+    index_type const num_rows,
+    size_type const num_entries,
+    index_type const * row_index,
+    index_type const * column_index,
+    value_type const * value,
+    value_type const * x,
+    value_type * y,
+    index_type chunk_size)
+{
+    if (num_threads == 1) {
+        for (size_type k = 0; k < num_entries; ++k) {
+            y[row_index[k]] += value[k] * x[column_index[k]];
+        }
+    } else {
+        #pragma omp for schedule(static, chunk_size)
+        for (size_type k = 0; k < num_entries; ++k) {
+            #pragma omp atomic
+            y[row_index[k]] += value[k] * x[column_index[k]];
+        }
+    }
+}
+
 }
 
 void spmv(
@@ -264,6 +332,29 @@ void spmv(
              y.data(),
              workspace.data(),
              chunk_size);
+}
+
+void spmv_atomic(
+    int num_threads,
+    coo_matrix::Matrix const & A,
+    coo_matrix::value_array_type const & x,
+    coo_matrix::value_array_type & y,
+    coo_matrix::index_type chunk_size)
+{
+    if (chunk_size <= 0) {
+        chunk_size = (A.num_entries + num_threads - 1) / num_threads;
+    }
+
+    coo_spmv_atomic(
+        num_threads,
+        A.rows,
+        A.num_entries,
+        A.row_index.data(),
+        A.column_index.data(),
+        A.value.data(),
+        x.data(),
+        y.data(),
+        chunk_size);
 }
 
 coo_matrix::value_array_type operator*(

@@ -12,7 +12,8 @@ namespace replacement
 std::vector<cache_miss_type> trace_cache_misses(
     ReplacementAlgorithm & A,
     MemoryReferenceString const & w,
-    numa_domain_type num_numa_domains)
+    numa_domain_type num_numa_domains,
+    bool verbose)
 {
     std::vector<cache_miss_type> cache_misses(num_numa_domains, 0);
     for (auto const & x : w) {

@@ -1,0 +1,12 @@
+2022-06-19 James D. Trotter <james@simula.no>
+
+	Improve printing of progress information while the tracing and
+	simulation is ongoing.
+
+2020-04-10 James D. Trotter <james@simula.no>
+
+        Initial version.
+
+Copyright (C) 2022 James D. Trotter
+Copying and distribution of this file, with or without modification, are
+permitted provided the copyright notice and this notice are preserved.

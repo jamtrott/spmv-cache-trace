@@ -87,7 +87,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     Kernel const & kernel,
     Cache const & cache,
     bool warmup,
-    bool verbose)
+    bool verbose,
+    int progress_interval)
 {
     auto const & thread_affinities = trace_config.thread_affinities();
     int num_threads = thread_affinities.size();
@@ -97,11 +98,20 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     std::vector<int> threads = active_threads(
         trace_config, cache);
     int num_active_threads = threads.size();
+    if (num_active_threads <= 0) {
+        return std::vector<std::vector<cache_miss_type>>();
+    }
 
     // Obtain the memory reference strings for each thread
     std::vector<replacement::MemoryReferenceString>
         memory_reference_strings(num_active_threads);
     for (int n = 0; n < num_active_threads; n++) {
+        if (verbose) {
+            std::cerr << "Tracing memory accesses of kernel " << kernel.name()
+                      << " for cache " << cache.name
+                      << " (thread " << threads[n] << ")" << std::endl;
+        }
+
         memory_reference_strings[n] =
             kernel.memory_reference_string(
                 trace_config, threads[n], num_threads);
@@ -110,11 +120,22 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
     int num_cache_lines = (cache.size + (cache.line_size-1)) / cache.line_size;
     replacement::LRU replacement_algorithm(num_cache_lines, cache.line_size);
     if (warmup) {
+        if (verbose) {
+            std::cerr << "Simulating LRU cache replacement "
+                      << "for cache " << cache.name << " (warmup run)" << std::endl;
+        }
+
         replacement::trace_cache_misses(
             replacement_algorithm,
             memory_reference_strings,
             num_numa_domains,
-            verbose);
+            verbose,
+            progress_interval);
+    }
+
+    if (verbose) {
+        std::cerr << "Simulating LRU cache replacement "
+                  << "for cache " << cache.name << std::endl;
     }
 
     std::vector<std::vector<cache_miss_type>> active_threads_cache_misses =
@@ -122,7 +143,8 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses_per_cache(
             replacement_algorithm,
             memory_reference_strings,
             num_numa_domains,
-            verbose);
+            verbose,
+            progress_interval);
 
     std::vector<std::vector<cache_miss_type>> cache_misses(
         num_threads, std::vector<cache_miss_type>(num_numa_domains, 0));
@@ -135,7 +157,8 @@ CacheTrace trace_cache_misses(
     TraceConfig const & trace_config,
     Kernel const & kernel,
     bool warmup,
-    bool verbose)
+    bool verbose,
+    int progress_interval)
 {
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> cache_misses;
 
@@ -144,14 +167,10 @@ CacheTrace trace_cache_misses(
         std::string name = (*it).first;
         Cache const & cache = (*it).second;
 
-        if (verbose) {
-            std::cerr << "Tracing for cache: " << name << std::endl;
-        }
-
         std::vector<std::vector<cache_miss_type>>
             num_cache_misses_per_thread_per_numa_domain =
             trace_cache_misses_per_cache(
-                trace_config, kernel, cache, warmup, verbose);
+                trace_config, kernel, cache, warmup, verbose, progress_interval);
         cache_misses.emplace(
             cache.name,
             num_cache_misses_per_thread_per_numa_domain);

@@ -7,6 +7,8 @@
 
 #include <argp.h>
 
+#include <locale.h>
+
 #include <algorithm>
 #include <cctype>
 #include <cstdlib>
@@ -33,6 +35,7 @@ struct arguments
         , flush_caches(false)
         , list_perf_events(false)
         , verbose(false)
+        , progress_interval(1)
     {
     }
 
@@ -43,6 +46,7 @@ struct arguments
     bool flush_caches;
     bool list_perf_events;
     bool verbose;
+    int progress_interval;
 };
 
 enum class short_options
@@ -177,6 +181,8 @@ error_t parse_option(int key, char * arg, argp_state * state)
 
 int main(int argc, char ** argv)
 {
+    setlocale(LC_ALL, "");
+
     argp_option options[] = {
         {"trace-config", int(short_options::trace_config), "PATH", 0,
          "Read cache parameters from a configuration file in JSON format."},
@@ -230,7 +236,8 @@ int main(int argc, char ** argv)
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(
-                trace_config, *(args.kernel.get()), args.warmup, args.verbose);
+                trace_config, *(args.kernel.get()), args.warmup,
+                args.verbose, args.progress_interval);
             auto o = json_ostreambuf(std::cout);
             std::cout << cache_trace << '\n';
         }

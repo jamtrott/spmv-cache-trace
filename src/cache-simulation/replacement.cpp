@@ -6,6 +6,12 @@
 #include <ostream>
 #include <utility>
 
+#include <inttypes.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <unistd.h>
+
 namespace replacement
 {
 
@@ -25,18 +31,26 @@ std::vector<cache_miss_type> trace_cache_misses(
     return cache_misses;
 }
 
+volatile sig_atomic_t print_progress = 0;
+
+void signal_handler(int status)
+{
+    print_progress = 1;
+}
+
 std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     ReplacementAlgorithm & A,
     std::vector<MemoryReferenceString> const & ws,
     numa_domain_type num_numa_domains,
-    bool verbose)
+    bool verbose,
+    int progress_interval)
 {
     auto P = ws.size();
 
     // Get the the length of each CPU's reference string and the
     // longest reference string.
     std::vector<memory_reference_type> T(P, 0u);
-    auto T_max = 0u;
+    uint64_t T_max = 0;
     for (auto p = 0u; p < P; ++p) {
         T[p] = ws[p].size();
         if (T_max < T[p])
@@ -48,9 +62,18 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     std::vector<std::vector<cache_miss_type>> cache_misses(
         P, std::vector<cache_miss_type>(num_numa_domains, 0));
 
-    for (auto t = 0u; t < T_max; ++t) {
-        if (verbose && (t % (T_max / 100)) == 0) {
-            std::cerr << (int) (100.0*(t/(double)T_max)) << " %" << std::endl;
+    if (verbose && progress_interval > 0) {
+        print_progress = 0;
+        signal(SIGALRM, signal_handler);
+        alarm(progress_interval);
+    }
+
+    for (uint64_t t = 0; t < T_max; ++t) {
+        if (verbose && progress_interval > 0 && print_progress) {
+            fprintf(stderr, "%'" PRIu64 " of %'" PRIu64 " (%4.1f %%)\n",
+                    t, T_max, T_max > 0 ? 100.0 * (t / (double) T_max) : 0.0);
+            print_progress = 0;
+            alarm(progress_interval);
         }
 
         for (auto p = 0u; p < P; ++p) {
@@ -61,6 +84,11 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses(
                     A.allocate(memory_reference, numa_domain);
             }
         }
+    }
+
+    if (verbose && progress_interval > 0) {
+        alarm(0);
+        signal(SIGALRM, SIG_DFL);
     }
     return cache_misses;
 }

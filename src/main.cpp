@@ -232,7 +232,7 @@ int main(int argc, char ** argv)
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
 
-        args.kernel->init(trace_config, std::cout, args.verbose);
+        args.kernel->init(trace_config, std::cerr, args.verbose);
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(
@@ -250,7 +250,7 @@ int main(int argc, char ** argv)
                 args.flush_caches,
                 args.profile,
                 libpfm_context,
-                std::cout,
+                std::cerr,
                 args.verbose);
             auto o = json_ostreambuf(std::cout);
             std::cout << profiling << '\n';

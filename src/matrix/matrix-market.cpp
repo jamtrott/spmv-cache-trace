@@ -309,20 +309,20 @@ std::vector<index_type> Matrix::row_lengths() const
 void Matrix::permute (std::vector<int> const & new_order)
 {
   if (format() != Format::coordinate) {
-    std::cout<<"Expected matrix in coordinate format!\n";
-    std::cout<<"No permutation is done.\n";
+    std::cerr << "Expected matrix in coordinate format!\n";
+    std::cerr << "No permutation is done.\n";
     return;
   }
 
   if (field() != Field::real) {
-    std::cout<<"Expected matrix with real values!\n";
-    std::cout<<"No permutation is done.\n";
+    std::cerr << "Expected matrix with real values!\n";
+    std::cerr << "No permutation is done.\n";
     return;
   }
 
   if (new_order.size() != size().rows || new_order.size() != size().columns) {
-    std::cout<<"The dimension of the matrix doesn't match!\n";
-    std::cout<<"No permutation is done.\n";
+    std::cerr << "The dimension of the matrix doesn't match!\n";
+    std::cerr << "No permutation is done.\n";
     return;
   }
 

@@ -89,6 +89,7 @@ std::vector<std::vector<cache_miss_type>> trace_cache_misses(
     if (verbose && progress_interval > 0) {
         alarm(0);
         signal(SIGALRM, SIG_DFL);
+        fprintf(stderr, "%'" PRIu64 " of %'" PRIu64 " (%4.1f %%)\n", T_max, T_max, 100.0);
     }
     return cache_misses;
 }

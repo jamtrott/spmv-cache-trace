@@ -20,7 +20,7 @@
 #include <stdexcept>
 #include <string>
 
-char const * argp_program_version = "spmv-cache-trace 1.0";
+char const * argp_program_version = "spmv-cache-trace 2.0";
 char const * argp_program_bug_address = "<james@simula.no>";
 
 typedef unsigned int size_type;

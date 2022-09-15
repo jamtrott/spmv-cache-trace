@@ -93,9 +93,11 @@ std::ostream & mkl_csr_spmv_kernel::print(
         << '"' << "name" << '"' << ": " << '"' << name() << '"' << ',' << '\n'
         << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path << '"' << ',' << '\n'
         << '"' << "matrix_format" << '"' << ": " << '"' << "csr" << '"' << ',' << '\n'
-        << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
-        << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
-        << '"' << "nonzeros" << '"' << ": "  << A.num_entries  << ',' << '\n'
-        << '"' << "matrix_size" << '"' << ": "  << A.size()
+        << '"' << "rows" << '"' << ": " << A.rows << ',' << '\n'
+        << '"' << "columns" << '"' << ": " << A.columns << ',' << '\n'
+        << '"' << "nonzeros" << '"' << ": " << A.num_entries << ',' << '\n'
+        << '"' << "matrix_size" << '"' << ": " << A.size() << ',' << '\n'
+        << '"' << "x_size" << '"' << ": " << sizeof(csr_matrix::value_array_type) * A.columns << ',' << '\n'
+        << '"' << "y_size" << '"' << ": " << sizeof(csr_matrix::value_array_type) * A.rows
         << "\n}";
 }

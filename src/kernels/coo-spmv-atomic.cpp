@@ -103,9 +103,11 @@ std::ostream & coo_spmv_atomic_kernel::print(
         << '"' << "name" << '"' << ": " << '"' << name() << '"' << ',' << '\n'
         << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path << '"' << ',' << '\n'
         << '"' << "matrix_format" << '"' << ": " << '"' << "coo" << '"' << ',' << '\n'
-        << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
-        << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
-        << '"' << "nonzeros" << '"' << ": "  << A.num_entries  << ',' << '\n'
-        << '"' << "matrix_size" << '"' << ": "  << A.size()
+        << '"' << "rows" << '"' << ": " << A.rows << ',' << '\n'
+        << '"' << "columns" << '"' << ": " << A.columns << ',' << '\n'
+        << '"' << "nonzeros" << '"' << ": " << A.num_entries << ',' << '\n'
+        << '"' << "matrix_size" << '"' << ": " << A.size() << ',' << '\n'
+        << '"' << "x_size" << '"' << ": " << sizeof(coo_matrix::value_type) * A.columns << ',' << '\n'
+        << '"' << "y_size" << '"' << ": " << sizeof(coo_matrix::value_type) * A.rows
         << "\n}";
 }

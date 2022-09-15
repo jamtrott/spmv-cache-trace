@@ -104,6 +104,8 @@ std::ostream & ellpack_spmv_kernel::print(
         << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
         << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
         << '"' << "nonzeros" << '"' << ": "  << A.num_entries  << ',' << '\n'
-        << '"' << "matrix_size" << '"' << ": "  << A.size()
+        << '"' << "matrix_size" << '"' << ": "  << A.size() << ',' << '\n'
+        << '"' << "x_size" << '"' << ": " << sizeof(ellpack_matrix::value_type) * A.columns << ',' << '\n'
+        << '"' << "y_size" << '"' << ": " << sizeof(ellpack_matrix::value_type) * A.rows
         << "\n}";
 }

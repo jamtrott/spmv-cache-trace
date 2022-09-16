@@ -2,7 +2,7 @@
 #define HYBRID_MATRIX_HPP
 
 #include "matrix/coo-matrix.hpp"
-#include "matrix/ellpack-matrix.hpp"
+#include "matrix/ell-matrix.hpp"
 #include "util/aligned-allocator.hpp"
 
 #include <cstdint>
@@ -28,11 +28,11 @@ public:
     Matrix(index_type rows,
            index_type columns,
            size_type num_entries,
-           index_type ellpack_row_length,
-           size_type num_ellpack_entries,
-           index_array_type const & ellpack_column_index,
-           value_array_type const & ellpack_value,
-           bool ellpack_skip_padding,
+           index_type ell_row_length,
+           size_type num_ell_entries,
+           index_array_type const & ell_column_index,
+           value_array_type const & ell_value,
+           bool ell_skip_padding,
            size_type num_coo_entries,
            index_array_type const & coo_row_index,
            index_array_type const & coo_column_index,
@@ -53,7 +53,7 @@ public:
     index_type spmv_rows_per_thread(int thread, int num_threads) const;
     size_type spmv_nonzeros_per_thread(int thread, int num_threads) const;
 
-    std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string_ellpack(
+    std::vector<std::pair<uintptr_t, int>> spmv_memory_reference_string_ell(
         value_array_type const & x,
         value_array_type const & y,
         value_array_type const & workspace,
@@ -83,11 +83,11 @@ public:
     index_type columns;
     size_type num_entries;
 
-    index_type ellpack_row_length;
-    size_type num_ellpack_entries;
-    index_array_type ellpack_column_index;
-    value_array_type ellpack_value;
-    bool ellpack_skip_padding;
+    index_type ell_row_length;
+    size_type num_ell_entries;
+    index_array_type ell_column_index;
+    value_array_type ell_value;
+    bool ell_skip_padding;
 
     size_type num_coo_entries;
     index_array_type coo_row_index;

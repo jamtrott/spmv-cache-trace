@@ -5,7 +5,7 @@
 #include "kernels/coo-spmv.hpp"
 #include "kernels/coo-spmv-atomic.hpp"
 #include "kernels/csr-spmv.hpp"
-#include "kernels/ellpack-spmv.hpp"
+#include "kernels/ell-spmv.hpp"
 #include "kernels/mkl-csr-spmv.hpp"
 #include "kernels/hybrid-spmv.hpp"
 

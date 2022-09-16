@@ -64,7 +64,7 @@ enum class short_options
     coo,
     coo_atomic,
     csr,
-    ellpack,
+    ell,
     mkl_csr,
     hybrid,
 };
@@ -142,10 +142,10 @@ error_t parse_option(int key, char * arg, argp_state * state)
                 matrix_path);
             break;
         }
-    case int(short_options::ellpack):
+    case int(short_options::ell):
         {
             std::string matrix_path = arg;
-            args.kernel = std::make_unique<ellpack_spmv_kernel>(
+            args.kernel = std::make_unique<ell_spmv_kernel>(
                 matrix_path);
             break;
         }
@@ -205,7 +205,7 @@ int main(int argc, char ** argv)
         {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},
         {"coo-atomic", int(short_options::coo_atomic), "PATH", 0, "Coordinate format with atomic writes", 0},
         {"csr", int(short_options::csr), "PATH", 0, "Compressed sparse row", 0},
-        {"ellpack", int(short_options::ellpack), "PATH", 0, "ELLPACK", 0},
+        {"ell", int(short_options::ell), "PATH", 0, "ELLPACK", 0},
         {"mkl-csr", int(short_options::mkl_csr), "PATH", 0, "Compressed sparse row using Intel MKL", 0},
         {"hybrid", int(short_options::hybrid), "PATH", 0, "Hybrid of ELLPACK and COO", 0},
         {nullptr}};

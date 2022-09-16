@@ -107,7 +107,7 @@ matrix_sources = \
 	src/matrix/coo-matrix.cpp \
 	src/matrix/csr-matrix.cpp \
 	src/matrix/csr-matrix-spmv.cpp \
-	src/matrix/ellpack-matrix.cpp \
+	src/matrix/ell-matrix.cpp \
 	src/matrix/hybrid-matrix.cpp \
 	src/matrix/matrix-error.cpp \
 	src/matrix/matrix-market.cpp \
@@ -115,7 +115,7 @@ matrix_sources = \
 matrix_headers = \
 	src/matrix/coo-matrix.hpp \
 	src/matrix/csr-matrix.hpp \
-	src/matrix/ellpack-matrix.hpp \
+	src/matrix/ell-matrix.hpp \
 	src/matrix/hybrid-matrix.hpp \
 	src/matrix/matrix-error.hpp \
 	src/matrix/matrix-market.hpp \
@@ -150,7 +150,7 @@ kernels_sources = \
 	src/kernels/coo-spmv.cpp \
 	src/kernels/coo-spmv-atomic.cpp \
 	src/kernels/csr-spmv.cpp \
-	src/kernels/ellpack-spmv.cpp \
+	src/kernels/ell-spmv.cpp \
 	src/kernels/mkl-csr-spmv.cpp \
 	src/kernels/hybrid-spmv.cpp \
 	src/kernels/triad.cpp \
@@ -159,7 +159,7 @@ kernels_headers = \
 	src/kernels/coo-spmv.hpp \
 	src/kernels/coo-spmv-atomic.hpp \
 	src/kernels/csr-spmv.hpp \
-	src/kernels/ellpack-spmv.hpp \
+	src/kernels/ell-spmv.hpp \
 	src/kernels/mkl-csr-spmv.hpp \
 	src/kernels/hybrid-spmv.hpp \
 	src/kernels/triad.hpp \
@@ -206,7 +206,7 @@ unittest_sources = \
 	test/test_matrix-market.cpp \
 	test/test_coo-matrix.cpp \
 	test/test_csr-matrix.cpp \
-	test/test_ellpack-matrix.cpp \
+	test/test_ell-matrix.cpp \
 	test/test_hybrid-matrix.cpp \
 	test/test_perf-events.cpp \
 	test/test_replacement.cpp \

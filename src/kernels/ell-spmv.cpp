@@ -1,9 +1,9 @@
-#include "ellpack-spmv.hpp"
+#include "ell-spmv.hpp"
 #include "kernel.hpp"
 #include "trace-config.hpp"
 
 #include "cache-simulation/replacement.hpp"
-#include "matrix/ellpack-matrix.hpp"
+#include "matrix/ell-matrix.hpp"
 #include "matrix/matrix-error.hpp"
 #include "matrix/matrix-market.hpp"
 
@@ -12,18 +12,18 @@
 #include <sstream>
 #include <string>
 
-ellpack_spmv_kernel::ellpack_spmv_kernel(
+ell_spmv_kernel::ell_spmv_kernel(
     std::string const & matrix_path)
     : Kernel()
     , matrix_path(matrix_path)
 {
 }
 
-ellpack_spmv_kernel::~ellpack_spmv_kernel()
+ell_spmv_kernel::~ell_spmv_kernel()
 {
 }
 
-void ellpack_spmv_kernel::init(
+void ell_spmv_kernel::init(
     TraceConfig const & trace_config,
     std::ostream & o,
     bool verbose)
@@ -31,9 +31,9 @@ void ellpack_spmv_kernel::init(
     try {
         matrix_market::Matrix mm =
             matrix_market::load_matrix(matrix_path, o, verbose);
-        A = ellpack_matrix::from_matrix_market(mm);
-        x = ellpack_matrix::value_array_type(A.columns, 1.0);
-        y = ellpack_matrix::value_array_type(A.rows, 0.0);
+        A = ell_matrix::from_matrix_market(mm);
+        x = ell_matrix::value_array_type(A.columns, 1.0);
+        y = ell_matrix::value_array_type(A.rows, 0.0);
     } catch (matrix::matrix_error & e) {
         std::stringstream s;
         s << matrix_path << ": " << e.what();
@@ -45,7 +45,7 @@ void ellpack_spmv_kernel::init(
     }
 }
 
-void ellpack_spmv_kernel::prepare(
+void ell_spmv_kernel::prepare(
         TraceConfig const & trace_config)
 {
     auto const & thread_affinities = trace_config.thread_affinities();
@@ -60,12 +60,12 @@ void ellpack_spmv_kernel::prepare(
     distribute_pages(y.data(), y.size(), num_threads, cpus.data());
 }
 
-void ellpack_spmv_kernel::run(TraceConfig const & trace_config)
+void ell_spmv_kernel::run(TraceConfig const & trace_config)
 {
-    ellpack_matrix::spmv(A, x, y);
+    ell_matrix::spmv(A, x, y);
 }
 
-replacement::MemoryReferenceString ellpack_spmv_kernel::memory_reference_string(
+replacement::MemoryReferenceString ell_spmv_kernel::memory_reference_string(
     TraceConfig const & trace_config,
     int thread,
     int num_threads) const
@@ -88,24 +88,24 @@ replacement::MemoryReferenceString ellpack_spmv_kernel::memory_reference_string(
         page_size);
 }
 
-std::string ellpack_spmv_kernel::name() const
+std::string ell_spmv_kernel::name() const
 {
-    return "ellpack-spmv";
+    return "ell-spmv";
 }
 
-std::ostream & ellpack_spmv_kernel::print(
+std::ostream & ell_spmv_kernel::print(
     std::ostream & o) const
 {
     return o
         << "{\n"
         << '"' << "name" << '"' << ": " << '"' << name() << '"' << ',' << '\n'
         << '"' << "matrix_path" << '"' << ": " << '"' << matrix_path << '"' << ',' << '\n'
-        << '"' << "matrix_format" << '"' << ": " << '"' << "ellpack" << '"' << ',' << '\n'
+        << '"' << "matrix_format" << '"' << ": " << '"' << "ell" << '"' << ',' << '\n'
         << '"' << "rows" << '"' << ": "  << A.rows << ',' << '\n'
         << '"' << "columns" << '"' << ": "  << A.columns  << ',' << '\n'
         << '"' << "nonzeros" << '"' << ": "  << A.num_entries  << ',' << '\n'
         << '"' << "matrix_size" << '"' << ": "  << A.size() << ',' << '\n'
-        << '"' << "x_size" << '"' << ": " << sizeof(ellpack_matrix::value_type) * A.columns << ',' << '\n'
-        << '"' << "y_size" << '"' << ": " << sizeof(ellpack_matrix::value_type) * A.rows
+        << '"' << "x_size" << '"' << ": " << sizeof(ell_matrix::value_type) * A.columns << ',' << '\n'
+        << '"' << "y_size" << '"' << ": " << sizeof(ell_matrix::value_type) * A.rows
         << "\n}";
 }

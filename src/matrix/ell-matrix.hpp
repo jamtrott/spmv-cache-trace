@@ -9,7 +9,7 @@
 
 namespace matrix_market { class Matrix; }
 
-namespace ellpack_matrix
+namespace ell_matrix
 {
 
 typedef int32_t size_type;

@@ -4,16 +4,16 @@
 #include "kernel.hpp"
 #include "trace-config.hpp"
 #include "cache-simulation/replacement.hpp"
-#include "matrix/ellpack-matrix.hpp"
+#include "matrix/ell-matrix.hpp"
 
 #include <iosfwd>
 #include <string>
 
-class ellpack_spmv_kernel : public Kernel
+class ell_spmv_kernel : public Kernel
 {
 public:
-    ellpack_spmv_kernel(std::string const & matrix_path);
-    ~ellpack_spmv_kernel();
+    ell_spmv_kernel(std::string const & matrix_path);
+    ~ell_spmv_kernel();
 
     void init(TraceConfig const & trace_config,
               std::ostream & o,
@@ -33,9 +33,9 @@ public:
 
 private:
     std::string matrix_path;
-    ellpack_matrix::Matrix A;
-    ellpack_matrix::value_array_type x;
-    ellpack_matrix::value_array_type y;
+    ell_matrix::Matrix A;
+    ell_matrix::value_array_type x;
+    ell_matrix::value_array_type y;
 };
 
 #endif

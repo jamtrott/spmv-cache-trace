@@ -27,14 +27,14 @@ hybrid_matrix::Matrix testMatrix()
     hybrid_matrix::index_type num_columns = 5;
     hybrid_matrix::index_type num_nonzeros = 9;
 
-    hybrid_matrix::size_type ellpack_row_length = 2;
-    hybrid_matrix::size_type num_ellpack_entries = num_rows * ellpack_row_length;
-    bool ellpack_skip_padding = false;
+    hybrid_matrix::size_type ell_row_length = 2;
+    hybrid_matrix::size_type num_ell_entries = num_rows * ell_row_length;
+    bool ell_skip_padding = false;
 
     auto pad = 0.0;
-    hybrid_matrix::index_array_type ellpack_column_index{
+    hybrid_matrix::index_array_type ell_column_index{
         {0u,   1u,  0u,  1u,  2u,  2u,  3u,  4u}};
-    hybrid_matrix::value_array_type ellpack_value{
+    hybrid_matrix::value_array_type ell_value{
         {1.0, 2.0, 4.0, 1.0, 3.0, pad, 2.0, 1.0}};
 
     hybrid_matrix::size_type num_coo_entries = 2;
@@ -44,8 +44,8 @@ hybrid_matrix::Matrix testMatrix()
 
     return hybrid_matrix::Matrix(
         num_rows, num_columns, num_nonzeros,
-        ellpack_row_length, num_ellpack_entries,
-        ellpack_column_index, ellpack_value, ellpack_skip_padding,
+        ell_row_length, num_ell_entries,
+        ell_column_index, ell_value, ell_skip_padding,
         num_coo_entries, coo_row_index, coo_column_index, coo_value);
 }
 
@@ -57,15 +57,15 @@ TEST(hybrid_matrix, create)
     ASSERT_EQ(m.rows, 4u);
     ASSERT_EQ(m.columns, 5u);
     ASSERT_EQ(m.num_entries, 9u);
-    ASSERT_EQ(m.ellpack_row_length, 2u);
-    ASSERT_EQ(m.num_ellpack_entries, 8u);
-    hybrid_matrix::index_array_type ellpack_column_index{
+    ASSERT_EQ(m.ell_row_length, 2u);
+    ASSERT_EQ(m.num_ell_entries, 8u);
+    hybrid_matrix::index_array_type ell_column_index{
         {0u, 1u, 0u, 1u, 2u, 2u, 3u, 4u}};
-    ASSERT_EQ(m.ellpack_column_index, ellpack_column_index);
+    ASSERT_EQ(m.ell_column_index, ell_column_index);
     auto pad = 0.0;
-    hybrid_matrix::value_array_type ellpack_value{
+    hybrid_matrix::value_array_type ell_value{
         {1.0, 2.0, 4.0, 1.0, 3.0, pad, 2.0, 1.0}};
-    ASSERT_EQ(m.ellpack_value, ellpack_value);
+    ASSERT_EQ(m.ell_value, ell_value);
 
     ASSERT_EQ(m.num_coo_entries, 2u);
     hybrid_matrix::index_array_type coo_row_index{0, 0};
@@ -123,6 +123,6 @@ TEST(hybrid_matrix, poisson2D)
 TEST(hybrid_matrix, aligned_arrays)
 {
     auto A = testMatrix();
-    ASSERT_EQ(0u, intptr_t(A.ellpack_column_index.data()) % 64);
-    ASSERT_EQ(0u, intptr_t(A.ellpack_value.data()) % 64);
+    ASSERT_EQ(0u, intptr_t(A.ell_column_index.data()) % 64);
+    ASSERT_EQ(0u, intptr_t(A.ell_value.data()) % 64);
 }

@@ -65,8 +65,8 @@ void hybrid_spmv_kernel::prepare(TraceConfig const & trace_config)
     for (int thread = 0; thread < num_threads; thread++)
         cpus[thread] = thread_affinities[thread].cpu;
 
-    distribute_pages(A.ellpack_column_index.data(), A.ellpack_column_index.size(), num_threads, cpus.data());
-    distribute_pages(A.ellpack_value.data(), A.ellpack_value.size(), num_threads, cpus.data());
+    distribute_pages(A.ell_column_index.data(), A.ell_column_index.size(), num_threads, cpus.data());
+    distribute_pages(A.ell_value.data(), A.ell_value.size(), num_threads, cpus.data());
     distribute_pages(A.coo_row_index.data(), A.coo_row_index.size(), num_threads, cpus.data());
     distribute_pages(A.coo_column_index.data(), A.coo_column_index.size(), num_threads, cpus.data());
     distribute_pages(A.coo_value.data(), A.coo_value.size(), num_threads, cpus.data());
@@ -124,8 +124,8 @@ std::ostream & hybrid_spmv_kernel::print(
         << '"' << "matrix_size" << '"' << ": "  << A.size() << ',' << '\n' << ',' << '\n'
         << '"' << "x_size" << '"' << ": " << sizeof(hybrid_matrix::value_type) * A.columns << ',' << '\n'
         << '"' << "y_size" << '"' << ": " << sizeof(hybrid_matrix::value_type) * A.rows << ',' << '\n'
-        << '"' << "ellpack_row_length" << '"' << ": " << A.ellpack_row_length << ',' << '\n'
-        << '"' << "num_ellpack_entries" << '"' << ": " << A.num_ellpack_entries << ',' << '\n'
+        << '"' << "ell_row_length" << '"' << ": " << A.ell_row_length << ',' << '\n'
+        << '"' << "num_ell_entries" << '"' << ": " << A.num_ell_entries << ',' << '\n'
         << '"' << "num_coo_entries" << '"' << ": " << A.num_coo_entries
         << "\n}";
 }

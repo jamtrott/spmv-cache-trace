@@ -24,11 +24,11 @@ Matrix::Matrix()
     : rows(0)
     , columns(0)
     , num_entries(0)
-    , ellpack_row_length(0)
-    , num_ellpack_entries(0)
-    , ellpack_column_index()
-    , ellpack_value()
-    , ellpack_skip_padding(false)
+    , ell_row_length(0)
+    , num_ell_entries(0)
+    , ell_column_index()
+    , ell_value()
+    , ell_skip_padding(false)
     , num_coo_entries(0)
     , coo_row_index()
     , coo_column_index()
@@ -40,11 +40,11 @@ Matrix::Matrix(
     index_type rows,
     index_type columns,
     size_type num_entries,
-    index_type ellpack_row_length,
-    size_type num_ellpack_entries,
-    index_array_type const & ellpack_column_index,
-    value_array_type const & ellpack_value,
-    bool ellpack_skip_padding,
+    index_type ell_row_length,
+    size_type num_ell_entries,
+    index_array_type const & ell_column_index,
+    value_array_type const & ell_value,
+    bool ell_skip_padding,
     size_type num_coo_entries,
     index_array_type const & coo_row_index,
     index_array_type const & coo_column_index,
@@ -52,11 +52,11 @@ Matrix::Matrix(
     : rows(rows)
     , columns(columns)
     , num_entries(num_entries)
-    , ellpack_row_length(ellpack_row_length)
-    , num_ellpack_entries(num_ellpack_entries)
-    , ellpack_column_index(ellpack_column_index)
-    , ellpack_value(ellpack_value)
-    , ellpack_skip_padding(ellpack_skip_padding)
+    , ell_row_length(ell_row_length)
+    , num_ell_entries(num_ell_entries)
+    , ell_column_index(ell_column_index)
+    , ell_value(ell_value)
+    , ell_skip_padding(ell_skip_padding)
     , num_coo_entries(num_coo_entries)
     , coo_row_index(coo_row_index)
     , coo_column_index(coo_column_index)
@@ -72,32 +72,32 @@ std::size_t Matrix::size() const
 std::size_t Matrix::value_size() const
 {
     return
-        (sizeof(decltype(ellpack_value)::value_type) *
-         ellpack_value.size()) +
-        (sizeof(decltype(ellpack_value)::value_type) * coo_value.size());
+        (sizeof(decltype(ell_value)::value_type) *
+         ell_value.size()) +
+        (sizeof(decltype(ell_value)::value_type) * coo_value.size());
 }
 
 std::size_t Matrix::index_size() const
 {
     return
-        (sizeof(decltype(ellpack_column_index)::value_type) *
-         ellpack_column_index.size()) +
+        (sizeof(decltype(ell_column_index)::value_type) *
+         ell_column_index.size()) +
         (sizeof(decltype(coo_column_index)::value_type) * coo_column_index.size());
 }
 
 size_type Matrix::num_padding_entries() const
 {
-    return (ellpack_value.size() + coo_value.size()) - num_entries;
+    return (ell_value.size() + coo_value.size()) - num_entries;
 }
 
 std::size_t Matrix::value_padding_size() const
 {
-    return sizeof(decltype(ellpack_value)::value_type) * num_padding_entries();
+    return sizeof(decltype(ell_value)::value_type) * num_padding_entries();
 }
 
 std::size_t Matrix::index_padding_size() const
 {
-    return sizeof(decltype(ellpack_column_index)::value_type) * num_padding_entries();
+    return sizeof(decltype(ell_column_index)::value_type) * num_padding_entries();
 }
 
 index_type Matrix::spmv_rows_per_thread(int thread, int num_threads) const
@@ -114,14 +114,14 @@ size_type Matrix::spmv_nonzeros_per_thread(int thread, int num_threads) const
     index_type rows_per_thread = (rows + num_threads - 1) / num_threads;
     index_type start_row = std::min(rows, thread * rows_per_thread);
     index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
-    size_type start_nonzero = start_row * ellpack_row_length;
-    size_type end_nonzero = end_row * ellpack_row_length;
+    size_type start_nonzero = start_row * ell_row_length;
+    size_type end_nonzero = end_row * ell_row_length;
     size_type nonzeros = end_nonzero - start_nonzero;
     return nonzeros;
 }
 
 std::vector<std::pair<uintptr_t, int>>
-Matrix::spmv_memory_reference_string_ellpack(
+Matrix::spmv_memory_reference_string_ell(
     value_array_type const & x,
     value_array_type const & y,
     value_array_type const & workspace,
@@ -134,8 +134,8 @@ Matrix::spmv_memory_reference_string_ellpack(
     index_type start_row = std::min(rows, thread * rows_per_thread);
     index_type end_row = std::min(rows, (thread + 1) * rows_per_thread);
     index_type rows = end_row - start_row;
-    size_type start_nonzero = start_row * ellpack_row_length;
-    size_type end_nonzero = end_row * ellpack_row_length;
+    size_type start_nonzero = start_row * ell_row_length;
+    size_type end_nonzero = end_row * ell_row_length;
     size_type nonzeros = end_nonzero - start_nonzero;
 
     size_type num_references = 3 * nonzeros + 1 * rows;
@@ -143,15 +143,15 @@ Matrix::spmv_memory_reference_string_ellpack(
         num_references, std::make_pair(0,0));
     size_type l = 0;
     for (index_type i = start_row; i < end_row; ++i) {
-        for (size_type k = i * ellpack_row_length;
-             k < (i+1)*ellpack_row_length; ++k)
+        for (size_type k = i * ell_row_length;
+             k < (i+1)*ell_row_length; ++k)
         {
-            index_type j = ellpack_column_index[k];
+            index_type j = ell_column_index[k];
             w[l++] = std::make_pair(
-                uintptr_t(&ellpack_column_index[k]),
+                uintptr_t(&ell_column_index[k]),
                 numa_domains[thread]);
             w[l++] = std::make_pair(
-                uintptr_t(&ellpack_value[k]),
+                uintptr_t(&ell_value[k]),
                 numa_domains[thread]);
             int column_thread = thread_of_index<value_type>(
                 x.data(), columns, j, num_threads, page_size);
@@ -238,7 +238,7 @@ Matrix::spmv_memory_reference_string(
         int const * numa_domains,
         int page_size) const
 {
-    auto w0 = spmv_memory_reference_string_ellpack(
+    auto w0 = spmv_memory_reference_string_ell(
         x, y, workspace, thread, num_threads,
         numa_domains, page_size);
     auto w1 = spmv_memory_reference_string_coo(
@@ -253,16 +253,16 @@ bool operator==(Matrix const & a, Matrix const & b)
     return a.rows == b.rows &&
         a.columns == b.columns &&
         a.num_entries == b.num_entries &&
-        a.ellpack_row_length == b.ellpack_row_length &&
-        a.num_ellpack_entries == b.num_ellpack_entries &&
+        a.ell_row_length == b.ell_row_length &&
+        a.num_ell_entries == b.num_ell_entries &&
         std::equal(
-            std::begin(a.ellpack_column_index),
-            std::end(a.ellpack_column_index),
-            std::begin(b.ellpack_column_index)) &&
+            std::begin(a.ell_column_index),
+            std::end(a.ell_column_index),
+            std::begin(b.ell_column_index)) &&
         std::equal(
-            std::begin(a.ellpack_value),
-            std::end(a.ellpack_value),
-            std::begin(b.ellpack_value)) &&
+            std::begin(a.ell_value),
+            std::end(a.ell_value),
+            std::begin(b.ell_value)) &&
         std::equal(
             std::begin(a.coo_row_index),
             std::end(a.coo_row_index),
@@ -295,10 +295,10 @@ std::ostream & operator<<(std::ostream & o, Matrix const & x)
 {
     return o << x.rows << ' ' << x.columns << ' '
              << x.num_entries << ' '
-             << x.ellpack_row_length << ' '
-             << x.num_ellpack_entries << ' '
-             << x.ellpack_column_index << ' '
-             << x.ellpack_value << ' '
+             << x.ell_row_length << ' '
+             << x.num_ell_entries << ' '
+             << x.ell_column_index << ' '
+             << x.ell_value << ' '
              << x.num_coo_entries << ' '
              << x.coo_row_index << ' '
              << x.coo_column_index << ' '
@@ -315,7 +315,7 @@ Matrix from_matrix_market_default(
 
 Matrix from_matrix_market(
     matrix_market::Matrix const & m,
-    bool ellpack_skip_padding,
+    bool ell_skip_padding,
     std::ostream & o,
     bool verbose)
 {
@@ -345,19 +345,19 @@ Matrix from_matrix_market(
 
     // Compute the row length and number of entries (including padding)
     index_type rows = m.rows();
-    index_type ellpack_row_length = median_row_length;
-    size_type num_ellpack_entries;
-    if (__builtin_mul_overflow(rows, ellpack_row_length, &num_ellpack_entries)) {
+    index_type ell_row_length = median_row_length;
+    size_type num_ell_entries;
+    if (__builtin_mul_overflow(rows, ell_row_length, &num_ell_entries)) {
         throw matrix::matrix_error(
             "Failed to convert to HYBRID: "
             "Integer overflow when computing number of non-zeros");
     }
-    num_ellpack_entries = rows * ellpack_row_length;
+    num_ell_entries = rows * ell_row_length;
 
     /* The remaining entries are stored in COO format. */
     index_type num_coo_entries = 0;
-    for (index_type l = ellpack_row_length+1; l <= max_row_length; l++) {
-        num_coo_entries += num_rows_per_row_length[l] * (l - ellpack_row_length);
+    for (index_type l = ell_row_length+1; l <= max_row_length; l++) {
+        num_coo_entries += num_rows_per_row_length[l] * (l - ell_row_length);
     }
 
     // Sort the matrix entries
@@ -367,39 +367,39 @@ Matrix from_matrix_market(
     auto values = m_sorted.values_real();
 
     // Insert the values and column indices with the required padding
-    index_array_type ellpack_columns(num_ellpack_entries, 0);
-    value_array_type ellpack_values(num_ellpack_entries, 0.0);
+    index_array_type ell_columns(num_ell_entries, 0);
+    value_array_type ell_values(num_ell_entries, 0.0);
     index_array_type coo_rows(num_coo_entries, 0);
     index_array_type coo_columns(num_coo_entries, 0);
     value_array_type coo_values(num_coo_entries, 0.0);
     size_type k = 0;
-    num_ellpack_entries = 0;
+    num_ell_entries = 0;
     num_coo_entries = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
-        if (row_lengths[r] < ellpack_row_length) {
+        if (row_lengths[r] < ell_row_length) {
             for (index_type j = 0; j < row_lengths[r]; j++) {
-                ellpack_columns[num_ellpack_entries] = column_indices[k] - 1;
-                ellpack_values[num_ellpack_entries] = values[k];
-                num_ellpack_entries++;
+                ell_columns[num_ell_entries] = column_indices[k] - 1;
+                ell_values[num_ell_entries] = values[k];
+                num_ell_entries++;
                 k++;
             }
 
-            for (index_type j = row_lengths[r]; j < ellpack_row_length; j++) {
-                ellpack_columns[num_ellpack_entries] = ellpack_skip_padding
+            for (index_type j = row_lengths[r]; j < ell_row_length; j++) {
+                ell_columns[num_ell_entries] = ell_skip_padding
                     ? std::numeric_limits<index_type>::max()
                     : (k>0 ? column_indices[k-1] - 1 : 0);
-                ellpack_values[num_ellpack_entries] = 0.0;
-                num_ellpack_entries++;
+                ell_values[num_ell_entries] = 0.0;
+                num_ell_entries++;
             }
         } else {
-            for (index_type j = 0; j < ellpack_row_length; j++) {
-                ellpack_columns[num_ellpack_entries] = column_indices[k] - 1;
-                ellpack_values[num_ellpack_entries] = values[k];
-                num_ellpack_entries++;
+            for (index_type j = 0; j < ell_row_length; j++) {
+                ell_columns[num_ell_entries] = column_indices[k] - 1;
+                ell_values[num_ell_entries] = values[k];
+                num_ell_entries++;
                 k++;
             }            
 
-            for (index_type j = ellpack_row_length; j < row_lengths[r]; j++) {
+            for (index_type j = ell_row_length; j < row_lengths[r]; j++) {
                 coo_rows[num_coo_entries] = row_indices[k] - 1;
                 coo_columns[num_coo_entries] = column_indices[k] - 1;
                 coo_values[num_coo_entries] = values[k];
@@ -411,15 +411,15 @@ Matrix from_matrix_market(
 
     return Matrix(
         m.rows(), m.columns(), m.num_entries(),
-        ellpack_row_length, num_ellpack_entries,
-        ellpack_columns, ellpack_values, ellpack_skip_padding,
+        ell_row_length, num_ell_entries,
+        ell_columns, ell_values, ell_skip_padding,
         num_coo_entries, coo_rows, coo_columns, coo_values);
 }
 
 namespace
 {
 
-inline void ellpack_spmv_inner_loop(
+inline void ell_spmv_inner_loop(
     index_type i,
     index_type row_length,
     index_type const * j,
@@ -436,7 +436,7 @@ inline void ellpack_spmv_inner_loop(
     y[i] += z;
 }
 
-inline void ellpack_spmv(
+inline void ell_spmv(
     index_type num_rows,
     index_type row_length,
     index_type const * column_index,
@@ -447,11 +447,11 @@ inline void ellpack_spmv(
 {
     #pragma omp for nowait schedule(static, chunk_size)
     for (index_type i = 0; i < num_rows; ++i) {
-        ellpack_spmv_inner_loop(i, row_length, column_index, value, x, y);
+        ell_spmv_inner_loop(i, row_length, column_index, value, x, y);
     }
 }
 
-inline void ellpack_spmv_inner_loop_skip_padding(
+inline void ell_spmv_inner_loop_skip_padding(
     index_type i,
     index_type row_length,
     index_type const * j,
@@ -470,7 +470,7 @@ inline void ellpack_spmv_inner_loop_skip_padding(
     y[i] += z;
 }
 
-void ellpack_spmv_skip_padding(
+void ell_spmv_skip_padding(
     index_type num_rows,
     index_type row_length,
     index_type const * column_index,
@@ -481,7 +481,7 @@ void ellpack_spmv_skip_padding(
 {
     #pragma omp for nowait schedule(static, chunk_size)
     for (index_type i = 0; i < num_rows; ++i) {
-        ellpack_spmv_inner_loop_skip_padding(i, row_length, column_index, value, x, y);
+        ell_spmv_inner_loop_skip_padding(i, row_length, column_index, value, x, y);
     }
 }
 
@@ -544,14 +544,14 @@ void spmv(
         chunk_size = (A.rows + num_threads - 1) / num_threads;
     }
 
-    if (!A.ellpack_skip_padding) {
-        ellpack_spmv(
-            A.rows, A.ellpack_row_length, A.ellpack_column_index.data(),
-            A.ellpack_value.data(), x.data(), y.data(), chunk_size);
+    if (!A.ell_skip_padding) {
+        ell_spmv(
+            A.rows, A.ell_row_length, A.ell_column_index.data(),
+            A.ell_value.data(), x.data(), y.data(), chunk_size);
     } else {
-        ellpack_spmv_skip_padding(
-            A.rows, A.ellpack_row_length, A.ellpack_column_index.data(),
-            A.ellpack_value.data(), x.data(), y.data(), chunk_size);
+        ell_spmv_skip_padding(
+            A.rows, A.ell_row_length, A.ell_column_index.data(),
+            A.ell_value.data(), x.data(), y.data(), chunk_size);
     }
 
     coo_spmv(num_threads,

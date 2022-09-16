@@ -1,4 +1,4 @@
-#include "ellpack-matrix.hpp"
+#include "ell-matrix.hpp"
 #include "matrix-market.hpp"
 #include "matrix-error.hpp"
 
@@ -17,7 +17,7 @@
 
 using namespace std::literals::string_literals;
 
-namespace ellpack_matrix
+namespace ell_matrix
 {
 
 Matrix::Matrix()
@@ -212,35 +212,35 @@ Matrix from_matrix_market(
     auto values = m_sorted.values_real();
 
     // Insert the values and column indices with the required padding
-    index_array_type columns_ellpack(num_entries, 0);
-    value_array_type values_ellpack(num_entries, 0.0);
+    index_array_type columns_ell(num_entries, 0);
+    value_array_type values_ell(num_entries, 0.0);
     size_type k = 0;
     size_type l = 0;
     for (index_type r = 0; r < m.rows(); ++r) {
         while (k < (size_type) m.num_entries() && row_indices[k] - 1 == r) {
-            columns_ellpack[l] = column_indices[k] - 1;
-            values_ellpack[l] = values[k];
+            columns_ell[l] = column_indices[k] - 1;
+            values_ell[l] = values[k];
             ++k;
             ++l;
         }
         while (l < (r + 1) * row_length) {
-            columns_ellpack[l] = skip_padding
+            columns_ell[l] = skip_padding
                 ? std::numeric_limits<index_type>::max()
                 : column_indices[k-1] - 1;
-            values_ellpack[l] = 0.0;
+            values_ell[l] = 0.0;
             ++l;
         }
     }
 
     return Matrix(
         m.rows(), m.columns(), m.num_entries(),
-        row_length, columns_ellpack, values_ellpack, skip_padding);
+        row_length, columns_ell, values_ell, skip_padding);
 }
 
 namespace
 {
 
-inline void ellpack_spmv_inner_loop(
+inline void ell_spmv_inner_loop(
     index_type i,
     index_type row_length,
     index_type const * j,
@@ -257,7 +257,7 @@ inline void ellpack_spmv_inner_loop(
     y[i] += z;
 }
 
-inline void ellpack_spmv(
+inline void ell_spmv(
     index_type num_rows,
     index_type row_length,
     index_type const * column_index,
@@ -268,11 +268,11 @@ inline void ellpack_spmv(
 {
     #pragma omp for nowait schedule(static, chunk_size)
     for (index_type i = 0; i < num_rows; ++i) {
-        ellpack_spmv_inner_loop(i, row_length, column_index, value, x, y);
+        ell_spmv_inner_loop(i, row_length, column_index, value, x, y);
     }
 }
 
-inline void ellpack_spmv_inner_loop_skip_padding(
+inline void ell_spmv_inner_loop_skip_padding(
     index_type i,
     index_type row_length,
     index_type const * j,
@@ -291,7 +291,7 @@ inline void ellpack_spmv_inner_loop_skip_padding(
     y[i] += z;
 }
 
-void ellpack_spmv_skip_padding(
+void ell_spmv_skip_padding(
     index_type num_rows,
     index_type row_length,
     index_type const * column_index,
@@ -302,16 +302,16 @@ void ellpack_spmv_skip_padding(
 {
     #pragma omp for nowait schedule(static, chunk_size)
     for (index_type i = 0; i < num_rows; ++i) {
-        ellpack_spmv_inner_loop_skip_padding(i, row_length, column_index, value, x, y);
+        ell_spmv_inner_loop_skip_padding(i, row_length, column_index, value, x, y);
     }
 }
 
 }
 
 void spmv(
-    ellpack_matrix::Matrix const & A,
-    ellpack_matrix::value_array_type const & x,
-    ellpack_matrix::value_array_type & y,
+    ell_matrix::Matrix const & A,
+    ell_matrix::value_array_type const & x,
+    ell_matrix::value_array_type & y,
     index_type chunk_size)
 {
     if (chunk_size <= 0) {
@@ -324,19 +324,19 @@ void spmv(
     }
 
     if (!A.skip_padding) {
-        ellpack_spmv(
+        ell_spmv(
             A.rows, A.row_length, A.column_index.data(),
             A.value.data(), x.data(), y.data(), chunk_size);
     } else {
-        ellpack_spmv_skip_padding(
+        ell_spmv_skip_padding(
             A.rows, A.row_length, A.column_index.data(),
             A.value.data(), x.data(), y.data(), chunk_size);
     }
 }
 
-ellpack_matrix::value_array_type operator*(
-    ellpack_matrix::Matrix const & A,
-    ellpack_matrix::value_array_type const & x)
+ell_matrix::value_array_type operator*(
+    ell_matrix::Matrix const & A,
+    ell_matrix::value_array_type const & x)
 {
     if (A.columns != (index_type) x.size()) {
         throw matrix::matrix_error(
@@ -346,7 +346,7 @@ ellpack_matrix::value_array_type operator*(
             "x.size()=" + std::to_string(x.size()));
     }
 
-    ellpack_matrix::value_array_type y(A.rows, 0.0);
+    ell_matrix::value_array_type y(A.rows, 0.0);
     spmv(A, x, y);
     return y;
 }

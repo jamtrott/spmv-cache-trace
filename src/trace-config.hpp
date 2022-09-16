@@ -41,6 +41,19 @@ std::ostream & operator<<(
     std::ostream & o,
     Cache const & trace_config);
 
+class EventGroup
+{
+public:
+    EventGroup(
+        int pid,
+        int cpu,
+        std::vector<std::string> const & events);
+
+    int pid;
+    int cpu;
+    std::vector<std::string> events;
+};
+
 class ThreadAffinity
 {
 public:
@@ -49,13 +62,13 @@ public:
         int cpu,
         std::string const & cache,
         int numa_domain,
-        std::vector<std::vector<std::string>> const & event_groups);
+        std::vector<EventGroup> const & event_groups);
 
     int thread;
     int cpu;
     std::string cache;
     int numa_domain;
-    std::vector<std::vector<std::string>> event_groups;
+    std::vector<EventGroup> event_groups;
 };
 
 class TraceConfig

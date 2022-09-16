@@ -93,7 +93,7 @@ Profiling::Profiling(
     for (int thread = 0; thread < num_threads; thread++) {
         auto const & event_groups = thread_affinities[thread].event_groups;
         for (auto const & event_group : event_groups) {
-            for (auto const & event : event_group) {
+            for (auto const & event : event_group.events) {
                 profiling_events_.push_back(
                     make_profiling_event(event, thread, profiling_runs));
             }
@@ -201,7 +201,7 @@ Profiling profile_kernel(
     bool flush_caches,
     int runs,
     perf::libpfm_context const & libpfm_context,
-    std::vector<std::vector<std::vector<std::string>>> const & events_per_thread_per_event_group,
+    std::vector<std::vector<EventGroup>> const & eventgroups_per_thread,
     std::ostream & o,
     bool verbose)
 {
@@ -220,8 +220,8 @@ Profiling profile_kernel(
     }
 #endif
 
-    std::vector<std::vector<perf::EventGroup>> event_groups_per_thread(
-        events_per_thread_per_event_group.size());
+    std::vector<std::vector<perf::EventGroup>> perf_event_groups_per_thread(
+        eventgroups_per_thread.size());
     std::vector<ProfilingRun> profiling_runs(runs);
 
     #pragma omp parallel
@@ -245,15 +245,16 @@ Profiling profile_kernel(
 #endif
 
             // Configure per-thread hardware performance counters
-            if ((size_t) thread < events_per_thread_per_event_group.size()) {
+            if ((size_t) thread < eventgroups_per_thread.size()) {
                 for (size_t event_group = 0;
-                     event_group < events_per_thread_per_event_group[thread].size();
+                     event_group < eventgroups_per_thread[thread].size();
                      event_group++)
                 {
-                    event_groups_per_thread[thread].emplace_back(
+                    perf_event_groups_per_thread[thread].emplace_back(
                         libpfm_context.make_event_group(
-                            events_per_thread_per_event_group[thread][event_group],
-                            0, cpu));
+                            eventgroups_per_thread[thread][event_group].events,
+                            eventgroups_per_thread[thread][event_group].pid,
+                            cpu));
                 }
             }
 
@@ -267,25 +268,25 @@ Profiling profile_kernel(
                     flush_cache(trace_config.max_cache_size());
 
                 duration_type execution_time = profile_kernel_run(
-                    trace_config, kernel, event_groups_per_thread);
+                    trace_config, kernel, perf_event_groups_per_thread);
 
                 #pragma omp master
                 {
                     std::vector<std::vector<EventGroupValues>>
                         event_group_values_per_thread_per_event_group(num_threads);
                     for (int thread = 0;
-                         (size_t) thread < event_groups_per_thread.size();
+                         (size_t) thread < perf_event_groups_per_thread.size();
                          thread++)
                     {
                         for (size_t event_group = 0;
-                             event_group < events_per_thread_per_event_group[thread].size();
+                             event_group < eventgroups_per_thread[thread].size();
                              event_group++)
                         {
                             event_group_values_per_thread_per_event_group[thread]
                                 .emplace_back(
-                                    event_groups_per_thread[thread][event_group].time_enabled(),
-                                    event_groups_per_thread[thread][event_group].time_running(),
-                                    event_groups_per_thread[thread][event_group].event_counts());
+                                    perf_event_groups_per_thread[thread][event_group].time_enabled(),
+                                    perf_event_groups_per_thread[thread][event_group].time_running(),
+                                    perf_event_groups_per_thread[thread][event_group].event_counts());
                         }
                     }
                     profiling_runs[run] = ProfilingRun(
@@ -324,16 +325,15 @@ Profiling profile_kernel(
     auto const & thread_affinities = trace_config.thread_affinities();
     int num_threads = thread_affinities.size();
 
-    std::vector<std::vector<std::vector<std::string>>>
-        events_per_thread_per_event_group;
+    std::vector<std::vector<EventGroup>> eventgroups_per_thread;
     for (int thread = 0; thread < num_threads; thread++) {
-        events_per_thread_per_event_group.push_back(
+        eventgroups_per_thread.push_back(
             thread_affinities[thread].event_groups);
     }
 
     return profile_kernel(
         trace_config, kernel, warmup, flush_caches,
-        runs, libpfm_context, events_per_thread_per_event_group,
+        runs, libpfm_context, eventgroups_per_thread,
         o, verbose);
 }
 

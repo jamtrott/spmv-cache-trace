@@ -45,12 +45,22 @@ Cache::Cache(
     }
 }
 
+EventGroup::EventGroup(
+    int pid,
+    int cpu,
+    std::vector<std::string> const & events)
+    : pid(pid)
+    , cpu(cpu)
+    , events(events)
+{
+}
+
 ThreadAffinity::ThreadAffinity(
     int thread,
     int cpu,
     std::string const & cache,
     int numa_domain,
-    std::vector<std::vector<std::string>> const & event_groups)
+    std::vector<EventGroup> const & event_groups)
     : thread(thread)
     , cpu(cpu)
     , cache(cache)
@@ -285,29 +295,39 @@ std::vector<ThreadAffinity> parse_thread_affinities(
         if (json_event_groups && !json_is_array(json_event_groups))
             throw trace_config_error("Expected \"event_groups\": (array)");
 
-        std::vector<std::vector<std::string>> event_groups;
+        std::vector<EventGroup> event_groups;
         for (struct json * json_event_group =
                  json_event_groups ? json_array_begin(json_event_groups) : NULL;
              json_event_group != json_array_end();
              json_event_group = json_array_next(json_event_group))
         {
-            if (!json_is_array(json_event_group)) {
+            if (!json_is_object(json_event_group)) {
                 throw trace_config_error(
-                    "Expected \"event_group\": (array)");
+                    "Expected '\"event_groups\": "
+                    "{\"pid\": ..., \"cpu\": ..., \"events\": ...}");
             }
 
+            struct json * pid = json_object_get(json_event_group, "pid");
+            if (!pid || !json_is_number(pid))
+                throw trace_config_error("Expected \"pid\": (number)");
+            struct json * cpu = json_object_get(json_event_group, "cpu");
+            if (!cpu || !json_is_number(cpu))
+                throw trace_config_error("Expected \"cpu\": (number)");
+            struct json * json_events = json_object_get(json_event_group, "events");
+            if (!json_events || !json_is_array(json_events))
+                throw trace_config_error("Expected \"events\": (array)");
+
             std::vector<std::string> events;
-            for (struct json * json_event = json_array_begin(json_event_group);
+            for (struct json * json_event = json_array_begin(json_events);
                  json_event != json_array_end();
                  json_event = json_array_next(json_event))
             {
-                if (!json_is_string(json_event)) {
-                    throw trace_config_error(
-                        "Expected \"event\": (string)");
-                }
+                if (!json_is_string(json_event))
+                    throw trace_config_error("Expected \"event\": (string)");
                 events.push_back(std::string(json_to_string(json_event)));
             }
-            event_groups.push_back(events);
+            event_groups.push_back(
+                EventGroup(json_to_int(pid), json_to_int(cpu), events));
         }
 
         thread_affinities.push_back(
@@ -464,6 +484,35 @@ std::ostream & operator<<(
     o << '"' << cache.first << '"' << ": "
       << cache.second << '\n';
     return o << '}';
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    EventGroup const & eventgroup)
+{
+    return o << '{'
+             << '"' << "pid" << '"' << ": "
+             << eventgroup.pid << ',' << ' '
+             << '"' << "cpu" << '"' << ": "
+             << eventgroup.cpu << ',' << ' '
+             << '"' << "events" << '"' << ": "
+             << eventgroup.events
+             << '}';
+}
+
+std::ostream & operator<<(
+    std::ostream & o,
+    std::vector<EventGroup> const & xs)
+{
+    if (xs.empty())
+        return o << "[]";
+
+    o << '[' << '\n';
+    auto it = std::cbegin(xs);
+    auto end = --std::cend(xs);
+    for (; it != end; ++it)
+        o << *it << ',' << '\n';
+    return o << *it << '\n' << ']';
 }
 
 std::ostream & operator<<(

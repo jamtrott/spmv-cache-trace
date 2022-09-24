@@ -735,7 +735,22 @@ bool ends_with(std::string const & s, std::string const & t)
         std::equal(t.rbegin(), t.rend(), s.rbegin());
 }
 
-matrix_market::Matrix load_compressed_matrix(
+matrix_market::Matrix load_gz_matrix(
+    std::ifstream & f,
+    std::string const & path,
+    std::string const & extension,
+    std::ostream & o,
+    bool verbose)
+{
+    try {
+        zlib::izlibstream gzstream(f.rdbuf());
+        return matrix_market::fromStream(gzstream);
+    } catch (zlib::zlibstream_error const & e) {
+        throw matrix::matrix_error(e.what());
+    }
+}
+
+matrix_market::Matrix load_targz_matrix(
     std::ifstream & f,
     std::string const & path,
     std::string const & extension,
@@ -799,7 +814,7 @@ matrix_market::Matrix load_matrix(
         throw matrix::matrix_error(strerror(errno));
 
     if (ends_with(path_, ".tar.gz"s)) {
-        matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tar.gz"s, o, verbose);
+        matrix_market::Matrix m=load_targz_matrix(f, path_, ".tar.gz"s, o, verbose);
         if (reorder_RCM) {
           std::vector<int> new_order = find_new_order_RCM (m);
           m.permute (new_order);
@@ -810,7 +825,18 @@ matrix_market::Matrix load_matrix(
         }
         return m;
     } else if (ends_with(path_, ".tgz"s)) {
-        matrix_market::Matrix m=load_compressed_matrix(f, path_, ".tgz"s, o, verbose);
+        matrix_market::Matrix m=load_targz_matrix(f, path_, ".tgz"s, o, verbose);
+        if (reorder_RCM) {
+          std::vector<int> new_order = find_new_order_RCM (m);
+          m.permute (new_order);
+        }
+        if (reorder_GP) {
+          std::vector<int> new_order = find_new_order_GP (m, nparts);
+          m.permute (new_order);
+        }
+        return m;
+    } else if (ends_with(path_, ".gz"s)) {
+        matrix_market::Matrix m=load_gz_matrix(f, path_, ".gz"s, o, verbose);
         if (reorder_RCM) {
           std::vector<int> new_order = find_new_order_RCM (m);
           m.permute (new_order);

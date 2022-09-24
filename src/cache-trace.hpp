@@ -16,16 +16,19 @@ class CacheTrace
 public:
     CacheTrace(TraceConfig const & trace_config,
                Kernel const & kernel,
+               bool warmup,
                std::map<std::string, std::vector<std::vector<cache_miss_type>>> const & cache_misses);
     ~CacheTrace();
 
     TraceConfig const & trace_config() const;
     Kernel const & kernel() const;
+    bool warmup() const;
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> const & cache_misses() const;
 
 private:
     TraceConfig const & trace_config_;
     Kernel const & kernel_;
+    bool warmup_;
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> const cache_misses_;
 };
 

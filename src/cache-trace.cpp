@@ -10,9 +10,11 @@
 CacheTrace::CacheTrace(
     TraceConfig const & trace_config,
     Kernel const & kernel,
+    bool warmup,
     std::map<std::string, std::vector<std::vector<cache_miss_type>>> const & cache_misses)
     : trace_config_(trace_config)
     , kernel_(kernel)
+    , warmup_(warmup)
     , cache_misses_(cache_misses)
 {
 }
@@ -29,6 +31,11 @@ TraceConfig const & CacheTrace::trace_config() const
 Kernel const & CacheTrace::kernel() const
 {
     return kernel_;
+}
+
+bool CacheTrace::warmup() const
+{
+    return warmup_;
 }
 
 std::map<std::string, std::vector<std::vector<cache_miss_type>>> const &
@@ -176,7 +183,7 @@ CacheTrace trace_cache_misses(
             num_cache_misses_per_thread_per_numa_domain);
     }
 
-    return CacheTrace(trace_config, kernel, cache_misses);
+    return CacheTrace(trace_config, kernel, warmup, cache_misses);
 }
 
 std::ostream & operator<<(
@@ -240,6 +247,9 @@ std::ostream & operator<<(
              << cache_trace.trace_config() << ',' << '\n'
              << '"' << "kernel" << '"' << ": "
              << cache_trace.kernel() << ',' << '\n'
+             << '"' << "warmup" << '"' << ": "
+             << (cache_trace.warmup()
+                 ? std::string("true") : std::string("false")) << ',' << '\n'
              << '"' << "cache_misses" << '"' << ": "
              << cache_trace.cache_misses()
              << '\n' << '}';

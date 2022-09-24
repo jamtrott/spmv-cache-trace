@@ -25,11 +25,24 @@ char const * argp_program_bug_address = "<james@simula.no>";
 
 typedef unsigned int size_type;
 
+enum kernel_type
+{
+    kernel_triad,
+    kernel_coo,
+    kernel_coo_atomic,
+    kernel_csr,
+    kernel_ell,
+    kernel_mkl_csr,
+    kernel_hybrid,
+};
+
 struct arguments
 {
     arguments()
-        : trace_config()
-        , kernel()
+        : kernel_type(kernel_triad)
+        , N(0)
+        , matrix_path()
+        , trace_config()
         , profile(0)
         , warmup(false)
         , flush_caches(false)
@@ -39,8 +52,10 @@ struct arguments
     {
     }
 
+    enum kernel_type kernel_type;
+    size_type N;
+    std::string matrix_path;
     std::string trace_config;
-    std::unique_ptr<Kernel> kernel;
     int profile;
     bool warmup;
     bool flush_caches;
@@ -51,6 +66,7 @@ struct arguments
 
 enum class short_options
 {
+    matrix = 'm',
     trace_config = 'c',
     profile = 'p',
     verbose = 'v',
@@ -61,12 +77,7 @@ enum class short_options
     warmup,
     flush_caches,
     triad,
-    coo,
-    coo_atomic,
-    csr,
-    ell,
-    mkl_csr,
-    hybrid,
+    spmv_format,
 };
 
 error_t parse_option(int key, char * arg, argp_state * state)
@@ -74,6 +85,10 @@ error_t parse_option(int key, char * arg, argp_state * state)
     arguments & args = *(static_cast<arguments *>(state->input));
 
     switch (key) {
+    case int(short_options::matrix):
+        args.matrix_path = arg;
+        break;
+
     case int(short_options::trace_config):
         args.trace_config = arg;
         break;
@@ -107,7 +122,8 @@ error_t parse_option(int key, char * arg, argp_state * state)
         /* STREAM-like kernels. */
     case int(short_options::triad):
         {
-            triad::size_type num_entries;
+            args.kernel_type = kernel_triad;
+            triad::size_type num_entries = 0;
             try {
                 num_entries = std::stoul(arg);
             } catch (std::out_of_range const & e) {
@@ -115,60 +131,24 @@ error_t parse_option(int key, char * arg, argp_state * state)
             } catch (std::invalid_argument const & e) {
                 argp_error(state, "triad: expected integer");
             }
-            args.kernel = std::make_unique<triad_kernel>(
-                num_entries);
+            args.N = num_entries;
             break;
         }
 
         /* Sparse matrix-vector multplication kernels. */
-    case int(short_options::coo):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<coo_spmv_kernel>(
-                matrix_path);
-            break;
-        }
-    case int(short_options::coo_atomic):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<coo_spmv_atomic_kernel>(
-                matrix_path);
-            break;
-        }
-    case int(short_options::csr):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<csr_spmv_kernel>(
-                matrix_path);
-            break;
-        }
-    case int(short_options::ell):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<ell_spmv_kernel>(
-                matrix_path);
-            break;
-        }
-    case int(short_options::mkl_csr):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<mkl_csr_spmv_kernel>(
-                matrix_path);
-            break;
-        }
-    case int(short_options::hybrid):
-        {
-            std::string matrix_path = arg;
-            args.kernel = std::make_unique<hybrid_spmv_kernel>(
-                matrix_path);
-            break;
-        }
+    case int(short_options::spmv_format):
+        if (strcmp(arg, "coo") == 0) args.kernel_type = kernel_coo;
+        else if (strcmp(arg, "coo-atomic") == 0) args.kernel_type = kernel_coo_atomic;
+        else if (strcmp(arg, "csr") == 0) args.kernel_type = kernel_csr;
+        else if (strcmp(arg, "ell") == 0) args.kernel_type = kernel_ell;
+        else if (strcmp(arg, "mkl-csr") == 0) args.kernel_type = kernel_mkl_csr;
+        else if (strcmp(arg, "hybrid") == 0) args.kernel_type = kernel_hybrid;
+        else argp_error(state, "invalid argument");
+        break;
 
     case ARGP_KEY_END:
         if (args.list_perf_events)
             break;
-        if (!args.kernel)
-            argp_error(state, "Please specify a kernel");
         if (args.trace_config.empty())
             argp_error(state, "Please specify --trace-config");
         break;
@@ -184,6 +164,8 @@ int main(int argc, char ** argv)
     setlocale(LC_ALL, "");
 
     argp_option options[] = {
+        {"matrix", int(short_options::matrix), "PATH", 0,
+         "Read matrix from file in Matrix Market format."},
         {"trace-config", int(short_options::trace_config), "PATH", 0,
          "Read cache parameters from a configuration file in JSON format."},
         {"profile", int(short_options::profile), "N", 0,
@@ -195,19 +177,14 @@ int main(int argc, char ** argv)
         {"list-perf-events", int(short_options::list_perf_events), nullptr, 0,
          "Show available hardware performance monitoring events", 0},
         {"verbose", int(short_options::verbose), nullptr, 0,
-         "Produce verbose output"},
+         "be more verbose"},
 
         {0, 0, 0, 0, "STREAM-like kernels:" },
         {"triad", int(short_options::triad), "N", 0,
          "Triad: a(i)=b(i)+q*c(i), 24 bytes and 2 flops per iteration", 0},
 
         {0, 0, 0, 0, "Sparse matrix-vector multplication kernels:" },
-        {"coo", int(short_options::coo), "PATH", 0, "Coordinate format", 0},
-        {"coo-atomic", int(short_options::coo_atomic), "PATH", 0, "Coordinate format with atomic writes", 0},
-        {"csr", int(short_options::csr), "PATH", 0, "Compressed sparse row", 0},
-        {"ell", int(short_options::ell), "PATH", 0, "ELLPACK", 0},
-        {"mkl-csr", int(short_options::mkl_csr), "PATH", 0, "Compressed sparse row using Intel MKL", 0},
-        {"hybrid", int(short_options::hybrid), "PATH", 0, "Hybrid of ELLPACK and COO", 0},
+        {"spmv-format", int(short_options::spmv_format), "FMT", 0, "choose one of: coo, coo-atomic, csr, ell, mkl-csr and hybrid", 0},
         {nullptr}};
 
     auto arginfo = argp{
@@ -229,14 +206,39 @@ int main(int argc, char ** argv)
         return EXIT_SUCCESS;
     }
 
+    std::unique_ptr<Kernel> kernel;
+    switch (args.kernel_type) {
+    case kernel_triad:
+        kernel = std::make_unique<triad_kernel>(args.N);
+        break;
+    case kernel_coo:
+        kernel = std::make_unique<coo_spmv_kernel>(args.matrix_path);
+        break;
+    case kernel_coo_atomic:
+        kernel = std::make_unique<coo_spmv_atomic_kernel>(args.matrix_path);
+        break;
+    case kernel_csr:
+        kernel = std::make_unique<csr_spmv_kernel>(args.matrix_path);
+        break;
+    case kernel_ell:
+        kernel = std::make_unique<ell_spmv_kernel>(args.matrix_path);
+        break;
+    case kernel_mkl_csr:
+        kernel = std::make_unique<mkl_csr_spmv_kernel>(args.matrix_path);
+        break;
+    case kernel_hybrid:
+        kernel = std::make_unique<hybrid_spmv_kernel>(args.matrix_path);
+        break;
+    }
+
     try {
         TraceConfig trace_config = read_trace_config(args.trace_config);
 
-        args.kernel->init(trace_config, std::cerr, args.verbose);
+        kernel->init(trace_config, std::cerr, args.verbose);
 
         if (args.profile == 0) {
             CacheTrace cache_trace = trace_cache_misses(
-                trace_config, *(args.kernel.get()), args.warmup,
+                trace_config, *(kernel.get()), args.warmup,
                 args.verbose, args.progress_interval);
             auto o = json_ostreambuf(std::cout);
             std::cout << cache_trace << '\n';
@@ -245,7 +247,7 @@ int main(int argc, char ** argv)
             perf::libpfm_context libpfm_context;
             Profiling profiling = profile_kernel(
                 trace_config,
-                *(args.kernel.get()),
+                *(kernel.get()),
                 true,
                 args.flush_caches,
                 args.profile,
@@ -260,7 +262,7 @@ int main(int argc, char ** argv)
         std::cerr << args.trace_config << ": " << e.what() << '\n';
         return EXIT_FAILURE;
     } catch (kernel_error const & e) {
-        std::cerr << args.kernel->name() << ": " << e.what() << '\n';
+        std::cerr << kernel->name() << ": " << e.what() << '\n';
         return EXIT_FAILURE;
     } catch (perf::perf_error const & e) {
         std::cerr << e.what() << '\n';

@@ -39,8 +39,8 @@ ifdef DEBUG
 CFLAGS += -O2 -g -fsanitize=address
 CXXFLAGS += -O2 -g -fsanitize=address
 else
-CFLAGS += -O3 -march=native
-CXXFLAGS += -O3 -march=native
+CFLAGS += -O3
+CXXFLAGS += -O3
 endif
 
 ifeq ($(CXX),icpc)
